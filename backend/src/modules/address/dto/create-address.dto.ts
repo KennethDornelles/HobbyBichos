@@ -1,11 +1,11 @@
 export class CreateAddressDto {
-  street: string;
-  number: string;
+  street!: string;
+  number!: string;
   complement?: string;
-  neighborhood: string;
-  city: string;
-  state: string;
-  zipCode: string;
+  neighborhood!: string;
+  city!: string;
+  state!: string;
+  zipCode!: string;
   isDefault?: boolean;
-  userId: string;
+  userId!: string;
 }
