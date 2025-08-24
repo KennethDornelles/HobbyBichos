@@ -1,15 +1,21 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../../common/jwt-auth.guard';
+import { Roles } from '../../decorators/roles.decorator';
+import { User } from '../../decorators/user.decorator';
 import { AddressService } from './address.service';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
 
 @Controller('address')
+@UseGuards(JwtAuthGuard)
 export class AddressController {
   constructor(private readonly addressService: AddressService) {}
 
   @Post()
-  create(@Body() createAddressDto: CreateAddressDto) {
-    return this.addressService.create(createAddressDto);
+  @Roles('CUSTOMER')
+  create(@Body() createAddressDto: CreateAddressDto, @User() user: any) {
+    // Exemplo: associar userId ao endereço
+    return this.addressService.create({ ...createAddressDto, userId: user.userId });
   }
 
   @Get()

@@ -1,14 +1,19 @@
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../../common/jwt-auth.guard';
+import { Roles } from '../../decorators/roles.decorator';
+import { User } from '../../decorators/user.decorator';
 import { ProductImageService } from './product-image.service';
 import { CreateProductImageDto } from './dto/create-product-image.dto';
 import { UpdateProductImageDto } from './dto/update-product-image.dto';
 
 @Controller('product-images')
+@UseGuards(JwtAuthGuard)
 export class ProductImageController {
   constructor(private readonly productImageService: ProductImageService) {}
 
   @Post()
-  create(@Body() createProductImageDto: CreateProductImageDto) {
+  @Roles('ADMIN')
+  create(@Body() createProductImageDto: CreateProductImageDto, @User() user: any) {
     return this.productImageService.create(createProductImageDto);
   }
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '@prisma/prisma.service';
+import { PrismaService } from '../../database/prisma/prisma.service';
 
 @Injectable()
 export class UsersService {
@@ -23,5 +23,8 @@ export class UsersService {
 
   async remove(id: string) {
     return this.prisma.user.delete({ where: { id } });
+  }
+  async findByEmail(email: string) {
+    return this.prisma.user.findUnique({ where: { email } });
   }
 }
