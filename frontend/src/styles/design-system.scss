@@ -1,0 +1,13 @@
+// Design System para HobbyBichos
+// Exemplo de variáveis e mixins
+
+$color-primary: #6c63ff;
+$color-secondary: #ff6584;
+$color-accent: #ffd600;
+
+@mixin card {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 1rem;
+}

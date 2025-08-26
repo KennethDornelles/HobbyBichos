@@ -1,3 +1,63 @@
+$space-sm: 8px;
+$space-md: 16px;
+$space-lg: 24px;
+$space-xl: 32px;
+$space-2xl: 48px;
+$space-3xl: 64px;
+$space-4xl: 96px;
+
+$spacing-xs: $space-xs;
+$spacing-sm: $space-sm;
+$spacing-md: $space-md;
+$spacing-lg: $space-lg;
+$spacing-xl: $space-xl;
+// ...existing code...
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+$border-radius-xl: 16px;
+$border-radius-full: 50%;
+
+$card-border-radius: $border-radius-lg;
+// =============================================
+// HOBBY BICHOS DESIGN SYSTEM
+// =============================================
+
+// BRAND COLORS
+// Based on the HobbyBichos logo colors
+$primary-yellow: #FFDB44;      // Main yellow from logo background
+$primary-blue: #1E88E5;        // Dog's collar blue
+$secondary-blue: #0D47A1;      // Darker blue for accents
+$text-blue: #2C5282;           // Logo text blue
+$orange-accent: #FF6B35;       // Orange/red details from logo
+$brown-accent: #8B4513;        // Dog's brown/tan color
+
+// NEUTRAL COLORS
+$white: #FFFFFF;
+$light-gray: #F7F7F7;
+$medium-gray: #E2E8F0;
+$dark-gray: #718096;
+$charcoal: #2D3748;
+$black: #1A202C;
+
+$border-light: $medium-gray;
+$bg-light: $light-gray;
+$text-gray: $dark-gray;
+$space-xs: 4px;
+$space-sm: 8px;
+$space-md: 16px;
+$space-lg: 24px;
+$space-xl: 32px;
+$space-2xl: 48px;
+$space-3xl: 64px;
+$space-4xl: 96px;
+
+$spacing-xs: $space-xs;
+$spacing-sm: $space-sm;
+$spacing-md: $space-md;
+$spacing-lg: $space-lg;
+$spacing-xl: $space-xl;
+$card-border-radius: $border-radius-lg;
 // =============================================
 // HOBBY BICHOS DESIGN SYSTEM
 // =============================================

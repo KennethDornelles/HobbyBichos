@@ -1,0 +1,39 @@
+<div class="container mx-auto py-8">
+  <app-logo></app-logo>
+  <h1 class="text-3xl font-bold mb-6 text-primary">Bem-vindo ao HobbyBichos!</h1>
+  <section class="mb-10">
+    <h2 class="text-xl font-semibold mb-4">Categorias</h2>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div *ngFor="let category of categories" class="card bg-white shadow-md p-4 rounded-lg flex flex-col items-center">
+        <span class="font-medium text-secondary">{{ category.name }}</span>
+        <span class="text-xs text-gray-500">{{ category.description }}</span>
+      </div>
+    </div>
+  </section>
+  <section class="mb-10">
+    <h2 class="text-xl font-semibold mb-4">Produtos em Destaque</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div *ngFor="let product of products" class="card bg-white shadow-lg rounded-lg overflow-hidden">
+        <img [src]="product.imageUrl" [alt]="product.name" class="w-full h-48 object-cover">
+        <div class="p-4">
+          <h3 class="font-bold text-lg text-primary">{{ product.name }}</h3>
+          <p class="text-sm text-gray-600 mb-2">{{ product.description }}</p>
+          <span class="text-base font-semibold text-accent">R$ {{ product.price | number:'1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section>
+    <h2 class="text-xl font-semibold mb-4">Avaliações Recentes</h2>
+    <div class="space-y-4">
+      <div *ngFor="let review of reviews" class="bg-gray-50 p-4 rounded shadow">
+        <div class="flex items-center mb-2">
+          <span class="font-bold text-primary">{{ review.userName }}</span>
+          <span class="ml-2 text-xs text-gray-400">{{ review.date | date:'shortDate' }}</span>
+        </div>
+        <p class="text-gray-700">{{ review.comment }}</p>
+        <span class="text-yellow-500">{{ review.rating }} ★</span>
+      </div>
+    </div>
+  </section>
+</div>

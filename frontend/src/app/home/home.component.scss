@@ -1,0 +1,17 @@
+@use '../../styles/design-system' as ds;
+
+.container {
+  max-width: 1200px;
+}
+.card {
+  @include ds.card;
+}
+.text-primary {
+  color: var(--color-primary);
+}
+.text-secondary {
+  color: var(--color-secondary);
+}
+.text-accent {
+  color: var(--color-accent);
+}

@@ -23,14 +23,14 @@
   }
   
   &--small {
-    height: 36px;
-    padding: vars.$spacing-sm vars.$spacing-md;
+        height: 36px;
+    padding: vars.$space-sm vars.$space-md;
     font-size: vars.$text-sm;
   }
   
   &--large {
-    height: 56px;
-    padding: vars.$spacing-lg vars.$spacing-xl;
+        height: 56px;
+    padding: vars.$space-lg vars.$space-xl;
     font-size: vars.$text-lg;
   }
   
@@ -39,7 +39,7 @@
   }
   
   &--with-icon {
-    gap: vars.$spacing-sm;
+    gap: vars.$space-sm;
     
     .icon {
       font-size: 1.2em;
@@ -66,15 +66,15 @@
       margin: 0;
     }
     
-    .subtitle {
+        .subtitle {
       font-size: vars.$text-sm;
       color: vars.$text-gray;
-      margin: vars.$spacing-xs 0 0 0;
+      margin: vars.$space-xs 0 0 0;
     }
   }
   
   &__body {
-    padding: vars.$spacing-lg;
+    padding: vars.$space-lg;
     
     .description {
       margin: 0;
@@ -84,13 +84,13 @@
   }
   
   &__footer {
-    padding: vars.$spacing-lg;
+    padding: vars.$space-lg;
     border-top: 1px solid vars.$border-light;
     @include mixins.flex-between;
     
     .actions {
       display: flex;
-      gap: vars.$spacing-sm;
+      gap: vars.$space-sm;
     }
   }
   
@@ -127,7 +127,7 @@
   &__age {
     display: flex;
     align-items: center;
-    gap: vars.$spacing-xs;
+    gap: vars.$space-xs;
     font-size: vars.$text-xs;
     color: vars.$text-gray;
     
@@ -179,15 +179,15 @@
     @extend .form__input;
     height: auto;
     min-height: 120px;
-    padding: vars.$spacing-md;
+    padding: vars.$space-md;
     resize: vertical;
   }
   
   &__select {
     @extend .form__input;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+        background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
     background-repeat: no-repeat;
-    background-position: right vars.$spacing-md center;
+    background-position: right vars.$space-md center;
     background-size: 16px;
     padding-right: calc(#{vars.$input-padding-x} + 24px);
     appearance: none;
@@ -196,7 +196,7 @@
   &__error {
     font-size: vars.$text-sm;
     color: vars.$error;
-    margin-top: vars.$spacing-xs;
+    margin-top: vars.$space-xs;
   }
   
   &__help {
