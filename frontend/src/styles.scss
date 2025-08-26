@@ -1,1 +1,319 @@
-/* You can add global styles to this file, and also import other style files */
+// Import Design System first (Sass @use rules must come first)
+@use 'styles/variables' as vars;
+@use 'styles/mixins' as mixins;
+@use 'styles/components';
+@use 'styles/utilities';
+
+/* =============================================
+   HOBBY BICHOS - MAIN STYLES
+   ============================================= */
+
+// Import Google Fonts
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&family=Fredoka+One&display=swap');
+
+/* =============================================
+   GLOBAL STYLES
+   ============================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: vars.$font-family-primary;
+  font-size: vars.$text-base;
+  font-weight: vars.$font-weight-normal;
+  line-height: vars.$leading-normal;
+  color: vars.$text-charcoal;
+  background-color: vars.$bg-light;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* =============================================
+   TYPOGRAPHY DEFAULTS
+   ============================================= */
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: vars.$font-weight-semibold;
+  line-height: vars.$leading-tight;
+  color: vars.$text-charcoal;
+}
+
+h1 {
+  font-family: vars.$font-family-brand;
+  font-size: vars.$text-4xl;
+  font-weight: vars.$font-weight-bold;
+  
+  @include mixins.mobile {
+    font-size: vars.$text-3xl;
+  }
+}
+
+h2 {
+  font-size: vars.$text-3xl;
+  
+  @include mixins.mobile {
+    font-size: vars.$text-2xl;
+  }
+}
+
+h3 {
+  font-size: vars.$text-2xl;
+  
+  @include mixins.mobile {
+    font-size: vars.$text-xl;
+  }
+}
+
+h4 {
+  font-size: vars.$text-xl;
+  
+  @include mixins.mobile {
+    font-size: vars.$text-lg;
+  }
+}
+
+h5 {
+  font-size: vars.$text-lg;
+}
+
+h6 {
+  font-size: vars.$text-base;
+  font-weight: vars.$font-weight-medium;
+}
+
+p {
+  margin: 0 0 vars.$spacing-md 0;
+  line-height: vars.$leading-relaxed;
+  color: vars.$text-gray;
+}
+
+a {
+  color: vars.$primary-blue;
+  text-decoration: none;
+  transition: color vars.$transition-fast;
+  
+  &:hover {
+    color: vars.$secondary-blue;
+  }
+  
+  &:focus {
+    outline: 2px solid vars.$primary-blue;
+    outline-offset: 2px;
+  }
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  
+  &:focus {
+    outline: 2px solid vars.$primary-blue;
+    outline-offset: 2px;
+  }
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+ul, ol {
+  margin: 0;
+  padding-left: vars.$spacing-lg;
+}
+
+li {
+  margin-bottom: vars.$spacing-xs;
+}
+
+blockquote {
+  margin: vars.$spacing-lg 0;
+  padding: vars.$spacing-md vars.$spacing-lg;
+  border-left: 4px solid vars.$primary-yellow;
+  background: vars.$bg-light;
+  font-style: italic;
+}
+
+code {
+  font-family: 'Courier New', monospace;
+  background: vars.$bg-light;
+  padding: vars.$spacing-xs vars.$spacing-sm;
+  border-radius: vars.$border-radius-sm;
+  font-size: 0.9em;
+}
+
+pre {
+  background: vars.$text-charcoal;
+  color: vars.$white;
+  padding: vars.$spacing-lg;
+  border-radius: vars.$border-radius-md;
+  overflow-x: auto;
+  
+  code {
+    background: none;
+    padding: 0;
+    color: inherit;
+  }
+}
+
+/* =============================================
+   FORM DEFAULTS
+   ============================================= */
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+}
+
+/* =============================================
+   SCROLLBAR STYLES
+   ============================================= */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: vars.$bg-light;
+}
+
+::-webkit-scrollbar-thumb {
+  background: vars.$text-gray;
+  border-radius: vars.$border-radius-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: vars.$text-charcoal;
+}
+
+/* =============================================
+   SELECTION STYLES
+   ============================================= */
+
+::selection {
+  background: vars.$primary-yellow;
+  color: vars.$text-blue;
+}
+
+::-moz-selection {
+  background: vars.$primary-yellow;
+  color: vars.$text-blue;
+}
+
+/* =============================================
+   FOCUS STYLES
+   ============================================= */
+
+.focus-visible {
+  outline: 2px solid vars.$primary-blue;
+  outline-offset: 2px;
+}
+
+/* =============================================
+   ACCESSIBILITY
+   ============================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* =============================================
+   KEYFRAME ANIMATIONS
+   ============================================= */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: none;
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: .5;
+  }
+}
