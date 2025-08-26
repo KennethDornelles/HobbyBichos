@@ -27,7 +27,7 @@ export default tseslint.config(
         expect: 'readonly',
       },
       parserOptions: {
-        projectService: true,
+        project: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },

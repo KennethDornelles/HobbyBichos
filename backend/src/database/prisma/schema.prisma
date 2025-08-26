@@ -11,7 +11,7 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id        Int      @id @default(autoincrement())
   email     String   @unique
   password  String
   name      String
@@ -30,7 +30,7 @@ model User {
 }
 
 model Address {
-  id           String  @id @default(cuid())
+  id           Int     @id @default(autoincrement())
   street       String
   number       String
   complement   String?
@@ -40,8 +40,8 @@ model Address {
   zipCode      String
   isDefault    Boolean @default(false)
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   orders Order[]
 
@@ -49,7 +49,7 @@ model Address {
 }
 
 model Category {
-  id          String   @id @default(cuid())
+  id          Int      @id @default(autoincrement())
   name        String   @unique
   description String?
   imageUrl    String?
@@ -63,7 +63,7 @@ model Category {
 }
 
 model Product {
-  id          String   @id @default(cuid())
+  id          Int      @id @default(autoincrement())
   name        String
   description String
   price       Decimal  @db.Decimal(10, 2)
@@ -78,7 +78,7 @@ model Product {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  categoryId String
+  categoryId Int
   category   Category @relation(fields: [categoryId], references: [id])
 
   images     ProductImage[]
@@ -89,20 +89,20 @@ model Product {
 }
 
 model ProductImage {
-  id       String @id @default(cuid())
+  id       Int     @id @default(autoincrement())
   url      String
   alt      String
   isMain   Boolean @default(false)
   position Int     @default(0)
 
-  productId String
+  productId Int
   product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   @@map("product_images")
 }
 
 model Order {
-  id            String      @id @default(cuid())
+  id            Int         @id @default(autoincrement())
   orderNumber   String      @unique
   status        OrderStatus @default(PENDING)
   subtotal      Decimal     @db.Decimal(10, 2)
@@ -113,10 +113,9 @@ model Order {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-
-  addressId String
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id])
+  addressId Int
   address   Address @relation(fields: [addressId], references: [id])
 
   orderItems OrderItem[]
@@ -125,31 +124,29 @@ model Order {
 }
 
 model OrderItem {
-  id       String  @id @default(cuid())
+  id       Int     @id @default(autoincrement())
   quantity Int
   price    Decimal @db.Decimal(10, 2)
   total    Decimal @db.Decimal(10, 2)
 
-  orderId String
-  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  productId String
+  orderId   Int
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId Int
   product   Product @relation(fields: [productId], references: [id])
 
   @@map("order_items")
 }
 
 model Review {
-  id        String   @id @default(cuid())
+  id        Int      @id @default(autoincrement())
   rating    Int      @db.SmallInt
   comment   String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-
-  productId String
+  userId    Int
+  user      User    @relation(fields: [userId], references: [id])
+  productId Int
   product   Product @relation(fields: [productId], references: [id])
 
   @@unique([userId, productId])
