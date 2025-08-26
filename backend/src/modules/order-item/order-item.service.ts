@@ -8,22 +8,38 @@ export class OrderItemService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateOrderItemDto) {
-    return this.prisma.orderItem.create({ data });
+    return this.prisma.orderItem.create({ 
+      data: {
+        quantity: data.quantity,
+        price: data.price,
+        total: data.total,
+        orderId: data.orderId,
+        productId: data.productId,
+      }
+    });
   }
 
   async findAll() {
     return this.prisma.orderItem.findMany();
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     return this.prisma.orderItem.findUnique({ where: { id } });
   }
 
-  async update(id: string, data: UpdateOrderItemDto) {
-    return this.prisma.orderItem.update({ where: { id }, data });
+  async update(id: number, data: UpdateOrderItemDto) {
+    return this.prisma.orderItem.update({ 
+      where: { id }, 
+      data: {
+        quantity: data.quantity,
+        price: data.price,
+        total: data.total,
+        productId: data.productId,
+      }
+    });
   }
 
-  async remove(id: string) {
+  async remove(id: number) {
     return this.prisma.orderItem.delete({ where: { id } });
   }
 }

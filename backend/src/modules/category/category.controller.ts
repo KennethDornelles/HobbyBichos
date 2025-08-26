@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/jwt-auth.guard';
 import { Roles } from '../../decorators/roles.decorator';
-import { User } from '../../decorators/user.decorator';
 import { CategoryService } from './category.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -13,7 +12,7 @@ export class CategoryController {
 
   @Post()
   @Roles('ADMIN')
-  create(@Body() createCategoryDto: CreateCategoryDto, @User() user: any) {
+  create(@Body() createCategoryDto: CreateCategoryDto) {
     return this.categoryService.create(createCategoryDto);
   }
 
@@ -23,17 +22,17 @@ export class CategoryController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.categoryService.findOne(id);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateCategoryDto: UpdateCategoryDto) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateCategoryDto: UpdateCategoryDto) {
     return this.categoryService.update(id, updateCategoryDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.categoryService.remove(id);
   }
 }

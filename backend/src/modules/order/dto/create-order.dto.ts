@@ -1,4 +1,5 @@
 import { OrderStatus } from '@prisma/client';
+
 export class CreateOrderDto {
   orderNumber!: string;
   status?: OrderStatus;
@@ -7,6 +8,5 @@ export class CreateOrderDto {
   total!: number;
   paymentMethod!: string;
   notes?: string;
-  userId!: string;
-  addressId!: string;
+  addressId!: number;
 }

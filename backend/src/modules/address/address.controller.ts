@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/jwt-auth.guard';
 import { Roles } from '../../decorators/roles.decorator';
 import { User } from '../../decorators/user.decorator';
+import { User as UserInterface } from '../../interfaces/user.interface';
 import { AddressService } from './address.service';
 import { CreateAddressDto } from './dto/create-address.dto';
 import { UpdateAddressDto } from './dto/update-address.dto';
@@ -13,9 +14,8 @@ export class AddressController {
 
   @Post()
   @Roles('CUSTOMER')
-  create(@Body() createAddressDto: CreateAddressDto, @User() user: any) {
-    // Exemplo: associar userId ao endereço
-    return this.addressService.create({ ...createAddressDto, userId: user.userId });
+  create(@Body() createAddressDto: CreateAddressDto, @User() user: UserInterface) {
+    return this.addressService.create({ ...createAddressDto, userId: user.id });
   }
 
   @Get()
@@ -24,17 +24,17 @@ export class AddressController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.addressService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAddressDto: UpdateAddressDto) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateAddressDto: UpdateAddressDto) {
     return this.addressService.update(id, updateAddressDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.addressService.remove(id);
   }
 }

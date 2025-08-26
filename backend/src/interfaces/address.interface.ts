@@ -1,5 +1,5 @@
 export interface Address {
-  id: string;
+  id: number;
   street: string;
   number: string;
   complement?: string;
@@ -8,5 +8,5 @@ export interface Address {
   state: string;
   zipCode: string;
   isDefault: boolean;
-  userId: string;
+  userId: number;
 }

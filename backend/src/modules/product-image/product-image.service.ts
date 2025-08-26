@@ -8,22 +8,38 @@ export class ProductImageService {
   constructor(private prisma: PrismaService) {}
 
   async create(data: CreateProductImageDto) {
-    return this.prisma.productImage.create({ data });
+    return this.prisma.productImage.create({ 
+      data: {
+        url: data.url,
+        alt: data.alt,
+        isMain: data.isMain,
+        position: data.position,
+        productId: data.productId,
+      }
+    });
   }
 
   async findAll() {
     return this.prisma.productImage.findMany();
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     return this.prisma.productImage.findUnique({ where: { id } });
   }
 
-  async update(id: string, data: UpdateProductImageDto) {
-    return this.prisma.productImage.update({ where: { id }, data });
+  async update(id: number, data: UpdateProductImageDto) {
+    return this.prisma.productImage.update({ 
+      where: { id }, 
+      data: {
+        url: data.url,
+        alt: data.alt,
+        isMain: data.isMain,
+        position: data.position,
+      }
+    });
   }
 
-  async remove(id: string) {
+  async remove(id: number) {
     return this.prisma.productImage.delete({ where: { id } });
   }
 }

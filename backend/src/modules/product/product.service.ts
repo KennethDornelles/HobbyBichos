@@ -15,15 +15,15 @@ export class ProductService {
     return this.prisma.product.findMany();
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     return this.prisma.product.findUnique({ where: { id } });
   }
 
-  async update(id: string, data: UpdateProductDto) {
+  async update(id: number, data: UpdateProductDto) {
     return this.prisma.product.update({ where: { id }, data });
   }
 
-  async remove(id: string) {
+  async remove(id: number) {
     return this.prisma.product.delete({ where: { id } });
   }
 }

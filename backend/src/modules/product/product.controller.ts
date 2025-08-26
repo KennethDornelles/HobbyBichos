@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/jwt-auth.guard';
 import { Roles } from '../../decorators/roles.decorator';
-import { User } from '../../decorators/user.decorator';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
@@ -13,8 +12,7 @@ export class ProductController {
 
   @Post()
   @Roles('ADMIN')
-  create(@Body() createProductDto: CreateProductDto, @User() user: any) {
-    // Exemplo: associar userId ao produto se necessário
+  create(@Body() createProductDto: CreateProductDto) {
     return this.productService.create(createProductDto);
   }
 
@@ -24,17 +22,17 @@ export class ProductController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.productService.findOne(id);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateProductDto: UpdateProductDto) {
     return this.productService.update(id, updateProductDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.productService.remove(id);
   }
 }

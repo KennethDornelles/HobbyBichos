@@ -7,23 +7,47 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 export class OrderService {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: CreateOrderDto) {
-    return this.prisma.order.create({ data });
+  async create(data: CreateOrderDto & { userId: number }) {
+    return this.prisma.order.create({ 
+      data: {
+        orderNumber: data.orderNumber,
+        status: data.status,
+        subtotal: data.subtotal,
+        shippingCost: data.shippingCost,
+        total: data.total,
+        paymentMethod: data.paymentMethod,
+        notes: data.notes,
+        userId: data.userId,
+        addressId: data.addressId,
+      }
+    });
   }
 
   async findAll() {
     return this.prisma.order.findMany();
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     return this.prisma.order.findUnique({ where: { id } });
   }
 
-  async update(id: string, data: UpdateOrderDto) {
-    return this.prisma.order.update({ where: { id }, data });
+  async update(id: number, data: UpdateOrderDto) {
+    return this.prisma.order.update({ 
+      where: { id }, 
+      data: {
+        orderNumber: data.orderNumber,
+        status: data.status,
+        subtotal: data.subtotal,
+        shippingCost: data.shippingCost,
+        total: data.total,
+        paymentMethod: data.paymentMethod,
+        notes: data.notes,
+        addressId: data.addressId,
+      }
+    });
   }
 
-  async remove(id: string) {
+  async remove(id: number) {
     return this.prisma.order.delete({ where: { id } });
   }
 }

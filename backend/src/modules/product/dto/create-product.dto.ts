@@ -10,5 +10,5 @@ export class CreateProductDto {
   brand?: string;
   isActive?: boolean;
   isFeatured?: boolean;
-  categoryId!: string;
+  categoryId!: number;
 }

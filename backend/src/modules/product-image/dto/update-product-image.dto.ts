@@ -3,5 +3,5 @@ export class UpdateProductImageDto {
   alt?: string;
   isMain?: boolean;
   position?: number;
-  productId?: string;
+  productId?: number;
 }

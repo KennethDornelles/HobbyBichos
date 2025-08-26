@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/jwt-auth.guard';
 import { Roles } from '../../decorators/roles.decorator';
 import { User } from '../../decorators/user.decorator';
+import { User as UserInterface } from '../../interfaces/user.interface';
 import { ReviewService } from './review.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UpdateReviewDto } from './dto/update-review.dto';
@@ -13,9 +14,8 @@ export class ReviewController {
 
   @Post()
   @Roles('CUSTOMER')
-  create(@Body() createReviewDto: CreateReviewDto, @User() user: any) {
-    // Exemplo: associar userId à review
-    return this.reviewService.create({ ...createReviewDto, userId: user.userId });
+  create(@Body() createReviewDto: CreateReviewDto, @User() user: UserInterface) {
+    return this.reviewService.create({ ...createReviewDto, userId: user.id });
   }
 
   @Get()
@@ -24,17 +24,17 @@ export class ReviewController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.reviewService.findOne(id);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateReviewDto: UpdateReviewDto) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateReviewDto: UpdateReviewDto) {
     return this.reviewService.update(id, updateReviewDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.reviewService.remove(id);
   }
 }

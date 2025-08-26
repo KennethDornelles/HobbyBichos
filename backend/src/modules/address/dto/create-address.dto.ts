@@ -7,5 +7,4 @@ export class CreateAddressDto {
   state!: string;
   zipCode!: string;
   isDefault?: boolean;
-  userId!: string;
 }

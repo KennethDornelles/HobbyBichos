@@ -1,5 +1,5 @@
 export interface Order {
-  id: string;
+  id: number;
   orderNumber: string;
   status: string;
   subtotal: number;
@@ -7,8 +7,8 @@ export interface Order {
   total: number;
   paymentMethod: string;
   notes?: string;
-  userId: string;
-  addressId: string;
+  userId: number;
+  addressId: number;
   createdAt: Date;
   updatedAt: Date;
 }

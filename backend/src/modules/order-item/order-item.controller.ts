@@ -1,7 +1,6 @@
-import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, UseGuards, ParseIntPipe } from '@nestjs/common';
 import { JwtAuthGuard } from '../../common/jwt-auth.guard';
 import { Roles } from '../../decorators/roles.decorator';
-import { User } from '../../decorators/user.decorator';
 import { OrderItemService } from './order-item.service';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderItemDto } from './dto/update-order-item.dto';
@@ -13,7 +12,7 @@ export class OrderItemController {
 
   @Post()
   @Roles('ADMIN')
-  create(@Body() createOrderItemDto: CreateOrderItemDto, @User() user: any) {
+  create(@Body() createOrderItemDto: CreateOrderItemDto) {
     return this.orderItemService.create(createOrderItemDto);
   }
 
@@ -23,17 +22,17 @@ export class OrderItemController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.orderItemService.findOne(id);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateOrderItemDto: UpdateOrderItemDto) {
+  update(@Param('id', ParseIntPipe) id: number, @Body() updateOrderItemDto: UpdateOrderItemDto) {
     return this.orderItemService.update(id, updateOrderItemDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  remove(@Param('id', ParseIntPipe) id: number) {
     return this.orderItemService.remove(id);
   }
 }

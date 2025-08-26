@@ -1,8 +1,8 @@
 export interface ProductImage {
-  id: string;
+  id: number;
   url: string;
   alt: string;
   isMain: boolean;
   position: number;
-  productId: string;
+  productId: number;
 }

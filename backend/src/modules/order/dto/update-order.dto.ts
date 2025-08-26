@@ -7,5 +7,5 @@ export class UpdateOrderDto {
   total?: number;
   paymentMethod?: string;
   notes?: string;
-  addressId?: string;
+  addressId?: number;
 }

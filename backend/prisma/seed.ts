@@ -4,7 +4,15 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Usuários
-  
+  const admin = await prisma.user.create({
+    data: {
+      email: 'admin@hobbybichos.com',
+      password: 'admin123',
+      name: 'Admin',
+      role: Role.ADMIN,
+      isActive: true,
+    },
+  });
 
   const customer = await prisma.user.create({
     data: {
@@ -100,15 +108,11 @@ async function main() {
   });
 }
 
-async function runSeed() {
-  try {
-    await main();
-  } catch (e) {
+main()
+  .catch((e) => {
     console.error(e);
     process.exit(1);
-  } finally {
+  })
+  .finally(async () => {
     await prisma.$disconnect();
-  }
-}
-
-void runSeed();
+  });
