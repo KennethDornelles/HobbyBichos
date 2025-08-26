@@ -1,109 +1,75 @@
-// Import Design System first (Sass @use rules must come first)
-@use 'styles/design-system';
-@use 'styles/variables' as vars;
-@use 'styles/mixins' as mixins;
-@use 'styles/components';
-@use 'styles/utilities';
-
-/* =============================================
-   HOBBY BICHOS - MAIN STYLES
-   ============================================= */
-
-// Import Google Fonts
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&family=Fredoka+One&display=swap');
-
-/* =============================================
-   GLOBAL STYLES
-   ============================================= */
+@use 'design-system/design-system' as ds;
+@use 'design-system/variables' as *;
+@use 'design-system/mixins' as mixins;
 
 * {
   box-sizing: border-box;
 }
 
 body {
+  font-family: $font-primary;
+  background: $bg-light;
+  color: $text-gray;
   margin: 0;
   padding: 0;
-  font-family: vars.$font-family-primary;
-  font-size: vars.$text-base;
-  font-weight: vars.$font-weight-normal;
-  line-height: vars.$leading-normal;
-  color: vars.$text-charcoal;
-  background-color: vars.$bg-light;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
-
-/* =============================================
-   TYPOGRAPHY DEFAULTS
-   ============================================= */
 
 h1, h2, h3, h4, h5, h6 {
+  font-family: $font-accent;
+  color: $primary-blue;
   margin: 0;
-  font-weight: vars.$font-weight-semibold;
-  line-height: vars.$leading-tight;
-  color: vars.$text-charcoal;
-}
-
-h1 {
-  font-family: vars.$font-family-brand;
-  font-size: vars.$text-4xl;
-  font-weight: vars.$font-weight-bold;
-  
-  @include mixins.mobile {
-    font-size: vars.$text-3xl;
-  }
 }
 
 h2 {
-  font-size: vars.$text-3xl;
+  font-size: $text-3xl;
   
   @include mixins.mobile {
-    font-size: vars.$text-2xl;
+    font-size: $text-2xl;
   }
 }
 
 h3 {
-  font-size: vars.$text-2xl;
+  font-size: $text-2xl;
   
   @include mixins.mobile {
-    font-size: vars.$text-xl;
+    font-size: $text-xl;
   }
 }
 
 h4 {
-  font-size: vars.$text-xl;
+  font-size: $text-xl;
   
   @include mixins.mobile {
-    font-size: vars.$text-lg;
+    font-size: $text-lg;
   }
 }
 
 h5 {
-  font-size: vars.$text-lg;
+  font-size: $text-lg;
 }
 
 h6 {
-  font-size: vars.$text-base;
-  font-weight: vars.$font-weight-medium;
+  font-size: $text-base;
+  font-weight: $font-weight-medium;
 }
 
 p {
-  margin: 0 0 vars.$spacing-md 0;
-  line-height: vars.$leading-relaxed;
-  color: vars.$text-gray;
+  margin: 0 0 $spacing-md 0;
+  line-height: $leading-relaxed;
+  color: $text-gray;
 }
 
 a {
-  color: vars.$primary-blue;
+  color: $primary-blue;
   text-decoration: none;
-  transition: color vars.$transition-fast;
+  transition: color $transition-fast;
   
   &:hover {
-    color: vars.$secondary-blue;
+    color: $secondary-blue;
   }
   
   &:focus {
-    outline: 2px solid vars.$primary-blue;
+    outline: 2px solid $primary-blue;
     outline-offset: 2px;
   }
 }
@@ -113,7 +79,7 @@ button {
   cursor: pointer;
   
   &:focus {
-    outline: 2px solid vars.$primary-blue;
+    outline: 2px solid $primary-blue;
     outline-offset: 2px;
   }
 }
@@ -126,54 +92,37 @@ img {
 
 ul, ol {
   margin: 0;
-  padding-left: vars.$spacing-lg;
+  padding-left: $spacing-lg;
 }
 
 li {
-  margin-bottom: vars.$spacing-xs;
+  margin-bottom: $spacing-xs;
 }
 
 blockquote {
-  margin: vars.$spacing-lg 0;
-  padding: vars.$spacing-md vars.$spacing-lg;
-  border-left: 4px solid vars.$primary-yellow;
-  background: vars.$bg-light;
+  margin: $spacing-lg 0;
+  padding: $spacing-md $spacing-lg;
+  border-left: 4px solid $primary-yellow;
+  background: $bg-light;
   font-style: italic;
 }
 
 code {
-  font-family: 'Courier New', monospace;
-  background: vars.$bg-light;
-  padding: vars.$spacing-xs vars.$spacing-sm;
-  border-radius: vars.$border-radius-sm;
-  font-size: 0.9em;
-}
+  ul, ol {
+    font-size: 0.9em;
+  }
 
-pre {
-  background: vars.$text-charcoal;
-  color: vars.$white;
-  padding: vars.$spacing-lg;
-  border-radius: vars.$border-radius-md;
-  overflow-x: auto;
-  
-  code {
-    background: none;
-    padding: 0;
-    color: inherit;
+  pre {
+    li {
+      border-radius: $border-radius-md;
+      overflow-x: auto;
+    }
   }
 }
-
-/* =============================================
-   FORM DEFAULTS
-   ============================================= */
 
 input, textarea, select {
   font-family: inherit;
   font-size: inherit;
-}
-
-input:focus, textarea:focus, select:focus {
-  outline: none;
 }
 
 /* =============================================
@@ -184,31 +133,18 @@ input:focus, textarea:focus, select:focus {
   width: 8px;
 }
 
-::-webkit-scrollbar-track {
-  background: vars.$bg-light;
-}
-
-::-webkit-scrollbar-thumb {
-  background: vars.$text-gray;
-  border-radius: vars.$border-radius-full;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: vars.$text-charcoal;
-}
-
 /* =============================================
    SELECTION STYLES
    ============================================= */
 
 ::selection {
-  background: vars.$primary-yellow;
-  color: vars.$text-blue;
+  background: $primary-yellow;
+  color: $text-blue;
 }
 
 ::-moz-selection {
-  background: vars.$primary-yellow;
-  color: vars.$text-blue;
+  background: $primary-yellow;
+  color: $text-blue;
 }
 
 /* =============================================
@@ -216,7 +152,7 @@ input:focus, textarea:focus, select:focus {
    ============================================= */
 
 .focus-visible {
-  outline: 2px solid vars.$primary-blue;
+  outline: 2px solid $primary-blue;
   outline-offset: 2px;
 }
 

@@ -1,0 +1,83 @@
+<div class="product-detail" *ngIf="!isLoading && product">
+  <div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <!-- Imagens do produto -->
+      <div class="product-images">
+        <div class="main-image">
+          <img [src]="product.images?.[0]?.url || '/assets/images/no-image.png'" 
+               [alt]="product.name" 
+               class="w-full h-96 object-cover rounded-lg">
+        </div>
+      </div>
+
+      <!-- Informações do produto -->
+      <div class="product-info">
+        <h1 class="text-3xl font-bold mb-4">{{ product.name }}</h1>
+        <div class="price mb-4">
+          <span *ngIf="product.salePrice" class="sale-price text-2xl font-bold text-primary">
+            R$ {{ product.salePrice | number:'1.2-2' }}
+          </span>
+          <span [class]="product.salePrice ? 'original-price text-lg line-through text-gray-500 ml-2' : 'current-price text-2xl font-bold text-primary'">
+            R$ {{ product.price | number:'1.2-2' }}
+          </span>
+        </div>
+
+        <p class="description text-gray-700 mb-6">{{ product.description }}</p>
+
+        <div class="product-details mb-6">
+          <p *ngIf="product.brand" class="mb-2"><strong>Marca:</strong> {{ product.brand }}</p>
+          <p class="mb-2"><strong>SKU:</strong> {{ product.sku }}</p>
+          <p *ngIf="product.weight" class="mb-2"><strong>Peso:</strong> {{ product.weight }}g</p>
+          <p *ngIf="product.dimensions" class="mb-2"><strong>Dimensões:</strong> {{ product.dimensions }}</p>
+          <p class="mb-2"><strong>Estoque:</strong> {{ product.stock }} unidades</p>
+        </div>
+
+        <!-- Controles de quantidade -->
+        <div class="quantity-controls mb-6" *ngIf="product.stock > 0">
+          <label class="block text-sm font-medium mb-2">Quantidade:</label>
+          <div class="flex items-center">
+            <button (click)="decreaseQuantity()" 
+                    class="btn-outline px-3 py-1 text-lg"
+                    [disabled]="quantity <= 1">-</button>
+            <span class="mx-4 text-xl">{{ quantity }}</span>
+            <button (click)="increaseQuantity()" 
+                    class="btn-outline px-3 py-1 text-lg"
+                    [disabled]="quantity >= product.stock">+</button>
+          </div>
+        </div>
+
+        <!-- Botões de ação -->
+        <div class="actions">
+          <button *ngIf="product.stock > 0" 
+                  (click)="addToCart()" 
+                  class="btn-primary w-full mb-4">
+            Adicionar ao Carrinho
+          </button>
+          <p *ngIf="product.stock === 0" class="text-red-500 font-medium">Produto fora de estoque</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reviews -->
+    <div class="reviews-section mt-12">
+      <h2 class="text-2xl font-bold mb-6">Avaliações</h2>
+      <div *ngIf="reviews.length === 0" class="text-gray-500">
+        Nenhuma avaliação ainda.
+      </div>
+      <div *ngFor="let review of reviews" class="review-card mb-4">
+        <div class="flex items-center mb-2">
+          <div class="rating">
+            <span *ngFor="let star of [1,2,3,4,5]" 
+                  [class]="star <= review.rating ? 'text-yellow-500' : 'text-gray-300'">★</span>
+          </div>
+          <span class="ml-2 text-sm text-gray-600">{{ review.user?.name }}</span>
+        </div>
+        <p>{{ review.comment }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="isLoading" class="loading text-center py-8">
+  Carregando...
+</div>

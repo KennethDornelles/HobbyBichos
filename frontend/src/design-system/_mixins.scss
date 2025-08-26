@@ -1,0 +1,65 @@
+@use 'variables' as *;
+
+// Breakpoints responsivos
+@mixin mobile { @media (max-width: 639px) { @content; } }
+@mixin tablet { @media (min-width: 640px) and (max-width: 1023px) { @content; } }
+@mixin desktop { @media (min-width: 1024px) { @content; } }
+@mixin large-desktop { @media (min-width: 1280px) { @content; } }
+
+// Flexbox
+@mixin flex-center { display: flex; justify-content: center; align-items: center; }
+@mixin flex-between { display: flex; justify-content: space-between; align-items: center; }
+@mixin flex-column-center { display: flex; flex-direction: column; justify-content: center; align-items: center; }
+
+// Botões
+@mixin button-base {
+  font-family: $font-primary;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: box-shadow 0.2s, background 0.2s;
+  cursor: pointer;
+}
+@mixin button-primary {
+  @include button-base;
+  background: linear-gradient(90deg, $primary-yellow 60%, $orange-accent 100%);
+  color: $charcoal;
+}
+@mixin button-secondary {
+  @include button-base;
+  background: linear-gradient(90deg, $primary-blue 60%, $secondary-blue 100%);
+  color: $white;
+}
+@mixin button-outline {
+  @include button-base;
+  background: transparent;
+  border: 2px solid $primary-blue;
+  color: $primary-blue;
+}
+
+// Cards
+@mixin card-base {
+  background: $white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  padding: $space-md;
+}
+@mixin card-hover {
+  @include card-base;
+  transition: box-shadow 0.2s;
+  &:hover { box-shadow: 0 10px 15px rgba(0,0,0,0.15); }
+}
+
+// Animações
+@mixin fade-in-up($delay: 0s) {
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.6s $delay forwards;
+}
+@mixin fade-in($delay: 0s) {
+  opacity: 0;
+  animation: fadeIn 0.6s $delay forwards;
+}
+@mixin scale-hover {
+  transition: transform 0.2s;
+  &:hover { transform: scale(1.05); }
+}

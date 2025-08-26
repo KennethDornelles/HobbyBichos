@@ -1,0 +1,32 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// Botões
+.btn--primary { @include button-primary; }
+.btn--secondary { @include button-secondary; }
+.btn--outline { @include button-outline; }
+.btn--small { height: 36px; font-size: 0.875rem; }
+.btn--large { height: 56px; font-size: 1.125rem; }
+
+// Cards
+.card { @include card-base; }
+.card--hover { @include card-hover; }
+.card--pet { @include card-base; border: 2px solid $primary-yellow; }
+
+// Formulários
+.form__group { margin-bottom: $space-md; }
+.form__label { font-family: $font-secondary; font-weight: 500; margin-bottom: $space-xs; display: block; }
+.form__input, .form__textarea, .form__select {
+  font-family: $font-primary;
+  border: 1px solid $medium-gray;
+  border-radius: 8px;
+  padding: $space-sm $space-md;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+// Alertas
+.alert--success { background: $success; color: $white; border-radius: 8px; padding: $space-md; }
+.alert--warning { background: $warning; color: $white; border-radius: 8px; padding: $space-md; }
+.alert--error { background: $error; color: $white; border-radius: 8px; padding: $space-md; }
+.alert--info { background: $info; color: $white; border-radius: 8px; padding: $space-md; }

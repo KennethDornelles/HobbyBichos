@@ -1,0 +1,177 @@
+<header class="header shadow-lg bg-white sticky top-0 z-50">
+  <div class="container mx-auto px-4">
+    <!-- Top Header -->
+    <div class="flex items-center justify-between py-4">
+      <!-- Logo -->
+      <div class="flex items-center">
+        <a routerLink="/" class="flex items-center space-x-2">
+          <app-logo></app-logo>
+          <span class="text-2xl font-bold text-primary-yellow hidden sm:block">HobbyBichos</span>
+        </a>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="flex-1 max-w-2xl mx-8 hidden md:block">
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="onSearch()"
+            placeholder="Buscar produtos para seu pet..."
+            class="w-full px-4 py-3 rounded-full border-2 border-gray-200 focus:border-primary-yellow focus:outline-none pr-12"
+          >
+          <button
+            (click)="onSearch()"
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-primary-yellow"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Icons -->
+      <div class="flex items-center space-x-4">
+        <!-- User Menu -->
+        <div class="relative">
+          <button
+            (click)="toggleUserMenu()"
+            class="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100"
+          >
+            <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+            <span class="hidden sm:block text-sm font-medium text-gray-700">
+              {{ isLoggedIn() ? currentUser?.name : 'Entrar' }}
+            </span>
+          </button>
+
+          <!-- User Dropdown -->
+          <div
+            *ngIf="isUserMenuOpen"
+            class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border z-50"
+          >
+            <div *ngIf="!isLoggedIn()" class="py-2">
+              <a routerLink="/login" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                Fazer Login
+              </a>
+              <a routerLink="/register" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                Criar Conta
+              </a>
+            </div>
+            <div *ngIf="isLoggedIn()" class="py-2">
+              <a routerLink="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                Meu Perfil
+              </a>
+              <a routerLink="/orders" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                Meus Pedidos
+              </a>
+              <hr class="my-2">
+              <button
+                (click)="logout()"
+                class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+              >
+                Sair
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cart -->
+        <a routerLink="/cart" class="relative p-2 rounded-lg hover:bg-gray-100">
+          <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 2.5M7 13l2.5 2.5M21 21v-2a2 2 0 00-2-2H9a2 2 0 00-2 2v2"/>
+          </svg>
+          <span
+            *ngIf="cart.itemCount > 0"
+            class="absolute -top-2 -right-2 bg-primary-yellow text-white text-xs rounded-full h-6 w-6 flex items-center justify-center"
+          >
+            {{ cart.itemCount }}
+          </span>
+        </a>
+
+        <!-- Mobile Menu Button -->
+        <button
+          (click)="toggleMenu()"
+          class="md:hidden p-2 rounded-lg hover:bg-gray-100"
+        >
+          <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Menu -->
+    <nav class="border-t border-gray-200 py-4 hidden md:block">
+      <ul class="flex space-x-8">
+        <li>
+          <a routerLink="/" class="text-gray-600 hover:text-primary-yellow font-medium">
+            Home
+          </a>
+        </li>
+        <li *ngFor="let category of categories">
+          <a
+            [routerLink]="['/category', category.id]"
+            class="text-gray-600 hover:text-primary-yellow font-medium"
+          >
+            {{ category.name }}
+          </a>
+        </li>
+        <li>
+          <a routerLink="/products" class="text-gray-600 hover:text-primary-yellow font-medium">
+            Todos os Produtos
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div *ngIf="isMenuOpen" class="md:hidden border-t border-gray-200 py-4">
+      <!-- Mobile Search -->
+      <div class="mb-4">
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (keyup.enter)="onSearch()"
+            placeholder="Buscar produtos..."
+            class="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary-yellow focus:outline-none pr-12"
+          >
+          <button
+            (click)="onSearch()"
+            class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Navigation -->
+      <ul class="space-y-4">
+        <li>
+          <a routerLink="/" (click)="toggleMenu()" class="block text-gray-600 hover:text-primary-yellow font-medium">
+            Home
+          </a>
+        </li>
+        <li *ngFor="let category of categories">
+          <a
+            [routerLink]="['/category', category.id]"
+            (click)="toggleMenu()"
+            class="block text-gray-600 hover:text-primary-yellow font-medium"
+          >
+            {{ category.name }}
+          </a>
+        </li>
+        <li>
+          <a routerLink="/products" (click)="toggleMenu()" class="block text-gray-600 hover:text-primary-yellow font-medium">
+            Todos os Produtos
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</header>

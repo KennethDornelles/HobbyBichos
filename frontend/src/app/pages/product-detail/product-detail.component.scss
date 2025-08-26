@@ -1,0 +1,51 @@
+.product-detail {
+  .product-images {
+    .main-image img {
+      transition: transform 0.3s ease;
+      
+      &:hover {
+        transform: scale(1.05);
+      }
+    }
+  }
+
+  .price {
+    .sale-price {
+      color: #e74c3c;
+    }
+    
+    .original-price {
+      text-decoration: line-through;
+    }
+  }
+
+  .quantity-controls {
+    button {
+      min-width: 40px;
+      height: 40px;
+      border: 1px solid #ddd;
+      background: white;
+      transition: all 0.3s ease;
+      
+      &:hover:not(:disabled) {
+        background: #f8f9fa;
+      }
+      
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  .review-card {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
+  }
+
+  .rating {
+    font-size: 1.2rem;
+  }
+}

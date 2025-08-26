@@ -1,0 +1,19 @@
+@use 'variables' as *;
+@use './index' as ds;
+// Fontes globais
+body {
+  font-family: $font-primary;
+  background: $light-gray;
+  color: $charcoal;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: $font-accent;
+  color: $primary-blue;
+}
+
+// Acessibilidade: foco visível
+:focus {
+  outline: 2px solid $primary-blue;
+  outline-offset: 2px;
+}

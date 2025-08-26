@@ -1,0 +1,58 @@
+$text-3xl: 2.25rem;
+$text-2xl: 1.5rem;
+$text-xl: 1.25rem;
+$text-lg: 1.125rem;
+$text-base: 1rem;
+
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+$spacing-xs: 4px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+
+$leading-relaxed: 1.7;
+
+$text-gray: #718096;
+
+$transition-fast: 0.2s;
+
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-full: 999px;
+
+$light-gray: #F7F7F7;
+$bg-light: $light-gray;
+// Paleta de cores
+$primary-yellow: #FFDB44;
+$primary-blue: #1E88E5;
+$secondary-blue: #0D47A1;
+$text-blue: #2C5282;
+$orange-accent: #FF6B35;
+$brown-accent: #8B4513;
+$white: #FFFFFF;
+$medium-gray: #E2E8F0;
+$dark-gray: #718096;
+$charcoal: #2D3748;
+$black: #1A202C;
+$success: #48BB78;
+$warning: #ED8936;
+$error: #F56565;
+$info: $primary-blue;
+
+// Tipografia
+$font-primary: 'Inter', sans-serif;
+$font-secondary: 'Poppins', sans-serif;
+$font-accent: 'Fredoka One', cursive;
+
+// Espaçamentos
+$space-0: 0;
+$space-xs: 4px;
+$space-sm: 8px;
+$space-md: 16px;
+$space-lg: 24px;
+$space-xl: 32px;
+$space-2xl: 40px;
+$space-3xl: 48px;
+$space-4xl: 64px;
