@@ -24,13 +24,13 @@
   
   &--small {
     height: 36px;
-    padding: vars.$spacing-sm vars.$spacing-md;
+    padding: vars.$space-sm vars.$space-md;
     font-size: vars.$text-sm;
   }
   
   &--large {
     height: 56px;
-    padding: vars.$spacing-lg vars.$spacing-xl;
+    padding: vars.$space-lg vars.$space-xl;
     font-size: vars.$text-lg;
   }
   
@@ -39,7 +39,7 @@
   }
   
   &--with-icon {
-    gap: vars.$spacing-sm;
+    gap: vars.$space-sm;
     
     .icon {
       font-size: 1.2em;
@@ -56,41 +56,41 @@
   }
   
   &__header {
-    padding: vars.$spacing-lg;
-    border-bottom: 1px solid vars.$border-light;
+    padding: vars.$space-lg;
+    border-bottom: 1px solid vars.$gray-200;
     
     .title {
       font-size: vars.$text-xl;
       font-weight: vars.$font-weight-semibold;
-      color: vars.$text-charcoal;
+      color: vars.$charcoal;
       margin: 0;
     }
     
     .subtitle {
       font-size: vars.$text-sm;
-      color: vars.$text-gray;
-      margin: vars.$spacing-xs 0 0 0;
+      color: vars.$dark-gray;
+      margin: vars.$space-xs 0 0 0;
     }
   }
   
   &__body {
-    padding: vars.$spacing-lg;
+    padding: vars.$space-lg;
     
     .description {
       margin: 0;
-      color: vars.$text-gray;
+      color: vars.$dark-gray;
       line-height: 1.6;
     }
   }
   
   &__footer {
-    padding: vars.$spacing-lg;
-    border-top: 1px solid vars.$border-light;
+    padding: vars.$space-lg;
+    border-top: 1px solid vars.$gray-200;
     @include mixins.flex-between;
     
     .actions {
       display: flex;
-      gap: vars.$spacing-sm;
+      gap: vars.$space-sm;
     }
   }
   
@@ -116,20 +116,20 @@
   
   &__breed {
     display: inline-block;
-    padding: vars.$spacing-xs vars.$spacing-sm;
-    background: vars.$bg-light;
+    padding: vars.$space-xs vars.$space-sm;
+    background: vars.$light-gray;
     border-radius: vars.$border-radius-full;
     font-size: vars.$text-xs;
     font-weight: vars.$font-weight-medium;
-    color: vars.$text-charcoal;
+    color: vars.$charcoal;
   }
   
   &__age {
     display: flex;
     align-items: center;
-    gap: vars.$spacing-xs;
+    gap: vars.$space-xs;
     font-size: vars.$text-xs;
-    color: vars.$text-gray;
+    color: vars.$dark-gray;
     
     .icon {
       font-size: 0.9em;
@@ -140,7 +140,7 @@
 // FORMS
 .form {
   &__group {
-    margin-bottom: vars.$spacing-lg;
+    margin-bottom: vars.$space-lg;
   }
   
   &__label {
@@ -149,7 +149,7 @@
     &--required::after {
       content: '*';
       color: vars.$error;
-      margin-left: vars.$spacing-xs;
+      margin-left: vars.$space-xs;
     }
   }
   
@@ -179,7 +179,7 @@
     @extend .form__input;
     height: auto;
     min-height: 120px;
-    padding: vars.$spacing-md;
+    padding: vars.$space-md;
     resize: vertical;
   }
   
@@ -187,22 +187,22 @@
     @extend .form__input;
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
     background-repeat: no-repeat;
-    background-position: right vars.$spacing-md center;
+    background-position: right vars.$space-md center;
     background-size: 16px;
-    padding-right: calc(#{vars.$input-padding-x} + 24px);
+    padding-right: calc(#{vars.$space-md} + 24px);
     appearance: none;
   }
   
   &__error {
     font-size: vars.$text-sm;
     color: vars.$error;
-    margin-top: vars.$spacing-xs;
+    margin-top: vars.$space-xs;
   }
   
   &__help {
     font-size: vars.$text-sm;
-    color: vars.$text-gray;
-    margin-top: vars.$spacing-xs;
+    color: vars.$dark-gray;
+    margin-top: vars.$space-xs;
   }
 }
 
@@ -216,16 +216,16 @@
   z-index: vars.$z-sticky;
   
   &__container {
+    height: 100%;
     @include mixins.container;
     @include mixins.flex-between;
-    height: 100%;
   }
   
   &__brand {
-    @include mixins.flex-center;
-    gap: vars.$spacing-sm;
+    gap: vars.$space-sm;
     text-decoration: none;
     color: vars.$text-blue;
+    @include mixins.flex-center;
     
     .logo {
       height: 40px;
@@ -233,7 +233,7 @@
     }
     
     .text {
-      font-family: vars.$font-family-brand;
+      font-family: vars.$font-family-accent;
       font-size: vars.$text-xl;
       font-weight: vars.$font-weight-bold;
     }
@@ -241,13 +241,13 @@
   
   &__nav {
     display: flex;
-    gap: vars.$spacing-lg;
+    gap: vars.$space-lg;
     
     .nav-link {
       font-weight: vars.$font-weight-medium;
       text-decoration: none;
-      color: vars.$text-charcoal;
-      padding: vars.$spacing-sm vars.$spacing-md;
+      color: vars.$charcoal;
+      padding: vars.$space-sm vars.$space-md;
       border-radius: vars.$border-radius-md;
       transition: all vars.$transition-fast;
       
@@ -262,11 +262,11 @@
 
 // ALERTS
 .alert {
-  padding: vars.$spacing-md vars.$spacing-lg;
+  padding: vars.$space-md vars.$space-lg;
   border-radius: vars.$border-radius-md;
-  margin-bottom: vars.$spacing-lg;
+  margin-bottom: vars.$space-lg;
+  gap: vars.$space-sm;
   @include mixins.flex-center;
-  gap: vars.$spacing-sm;
   
   .icon {
     font-size: vars.$text-lg;
@@ -277,7 +277,7 @@
     
     .title {
       font-weight: vars.$font-weight-semibold;
-      margin: 0 0 vars.$spacing-xs 0;
+      margin: 0 0 vars.$space-xs 0;
     }
     
     .message {
@@ -315,7 +315,7 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  padding: vars.$spacing-xs vars.$spacing-sm;
+  padding: vars.$space-xs vars.$space-sm;
   border-radius: vars.$border-radius-full;
   font-size: vars.$text-xs;
   font-weight: vars.$font-weight-medium;
@@ -359,7 +359,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: vars.$spacing-lg;
+  padding: vars.$space-lg;
   
   &__backdrop {
     position: absolute;
@@ -384,14 +384,14 @@
   }
   
   &__header {
-    padding: vars.$spacing-lg;
-    border-bottom: 1px solid vars.$border-light;
+    padding: vars.$space-lg;
+    border-bottom: 1px solid vars.$gray-200;
     @include mixins.flex-between;
     
     .title {
       font-size: vars.$text-xl;
       font-weight: vars.$font-weight-semibold;
-      color: vars.$text-charcoal;
+      color: vars.$charcoal;
       margin: 0;
     }
     
@@ -399,27 +399,27 @@
       background: none;
       border: none;
       font-size: vars.$text-xl;
-      color: vars.$text-gray;
+      color: vars.$dark-gray;
       cursor: pointer;
-      padding: vars.$spacing-sm;
+      padding: vars.$space-sm;
       border-radius: vars.$border-radius-sm;
       transition: all vars.$transition-fast;
       
       &:hover {
-        background: vars.$bg-light;
+        background: vars.$light-gray;
       }
     }
   }
   
   &__body {
-    padding: vars.$spacing-lg;
+    padding: vars.$space-lg;
   }
   
   &__footer {
-    padding: vars.$spacing-lg;
-    border-top: 1px solid vars.$border-light;
+    padding: vars.$space-lg;
+    border-top: 1px solid vars.$gray-200;
+    gap: vars.$space-md;
     @include mixins.flex-between;
-    gap: vars.$spacing-md;
   }
 }
 
@@ -428,7 +428,7 @@
   display: inline-block;
   width: 20px;
   height: 20px;
-  border: 2px solid vars.$bg-light;
+  border: 2px solid vars.$light-gray;
   border-radius: 50%;
   border-top-color: vars.$primary-blue;
   animation: spin 1s ease-in-out infinite;
@@ -459,9 +459,9 @@
     bottom: 125%;
     left: 50%;
     transform: translateX(-50%);
-    background: vars.$text-charcoal;
+    background: vars.$charcoal;
     color: vars.$white;
-    padding: vars.$spacing-sm vars.$spacing-md;
+    padding: vars.$space-sm vars.$space-md;
     border-radius: vars.$border-radius-sm;
     font-size: vars.$text-xs;
     white-space: nowrap;
@@ -474,7 +474,7 @@
       left: 50%;
       transform: translateX(-50%);
       border: 4px solid transparent;
-      border-top-color: vars.$text-charcoal;
+      border-top-color: vars.$charcoal;
     }
   }
   
@@ -488,22 +488,22 @@
 .tabs {
   &__nav {
     display: flex;
-    border-bottom: 2px solid vars.$border-light;
-    margin-bottom: vars.$spacing-lg;
+    border-bottom: 2px solid vars.$gray-200;
+    margin-bottom: vars.$space-lg;
   }
   
   &__tab {
-    padding: vars.$spacing-md vars.$spacing-lg;
+    padding: vars.$space-md vars.$space-lg;
     background: none;
     border: none;
     cursor: pointer;
     font-weight: vars.$font-weight-medium;
-    color: vars.$text-gray;
+    color: vars.$dark-gray;
     border-bottom: 2px solid transparent;
     transition: all vars.$transition-fast;
     
     &:hover {
-      color: vars.$text-charcoal;
+      color: vars.$charcoal;
     }
     
     &--active {

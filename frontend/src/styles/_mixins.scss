@@ -39,22 +39,28 @@
    ============================================= */
 
 @mixin flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  & {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 @mixin flex-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  & {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
 }
 
 @mixin flex-column-center {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  & {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
 }
 
 /* =============================================
@@ -135,7 +141,7 @@
 
 @mixin card-base {
   background: vars.$white;
-  border-radius: vars.$card-border-radius;
+  border-radius: vars.$border-radius-md;
   box-shadow: vars.$shadow-sm;
   transition: all vars.$transition-normal;
 }
@@ -156,16 +162,18 @@
 @mixin fade-in-up($delay: 0s) {
   opacity: 0;
   transform: translateY(30px);
-  animation: fadeInUp vars.$animation-duration ease-out $delay forwards;
+  animation: fadeInUp vars.$transition-normal ease-out $delay forwards;
 }
 
 @mixin fade-in($delay: 0s) {
   opacity: 0;
-  animation: fadeIn vars.$animation-duration ease-out $delay forwards;
+  animation: fadeIn vars.$transition-normal ease-out $delay forwards;
 }
 
 @mixin scale-hover {
-  transition: transform vars.$transition-fast;
+  & {
+    transition: transform vars.$transition-fast;
+  }
   
   &:hover {
     transform: scale(1.05);
@@ -193,13 +201,15 @@
    ============================================= */
 
 @mixin form-input {
-  width: 100%;
-  padding: vars.$input-padding-y vars.$input-padding-x;
-  border: 2px solid vars.$border-light;
-  border-radius: vars.$input-border-radius;
-  font-family: vars.$font-family-primary;
-  font-size: vars.$text-base;
-  transition: all vars.$transition-normal;
+  & {
+    width: 100%;
+    padding: vars.$space-sm vars.$space-md;
+    border: 2px solid vars.$gray-200;
+    border-radius: vars.$input-border-radius;
+    font-family: vars.$font-family-primary;
+    font-size: vars.$text-base;
+    transition: all vars.$transition-normal;
+  }
   
   &:focus {
     outline: none;
@@ -214,9 +224,9 @@
 
 @mixin form-label {
   display: block;
-  margin-bottom: vars.$spacing-xs;
+  margin-bottom: vars.$space-xs;
   font-weight: vars.$font-weight-medium;
-  color: vars.$text-charcoal;
+  color: vars.$charcoal;
 }
 
 /* =============================================
@@ -244,7 +254,9 @@
 }
 
 @mixin aspect-ratio($width: 16, $height: 9) {
-  position: relative;
+  & {
+    position: relative;
+  }
   
   &::before {
     content: "";
@@ -274,7 +286,7 @@
 }
 
 @mixin gradient-accent($direction: 135deg) {
-  background: linear-gradient($direction, vars.$accent-orange 0%, vars.$accent-red 100%);
+  background: linear-gradient($direction, vars.$orange-accent 0%, vars.$orange-accent-light 100%);
 }
 
 /* =============================================
@@ -282,30 +294,34 @@
    ============================================= */
 
 @mixin container {
-  width: 100%;
-  max-width: vars.$container-max-width;
-  margin: 0 auto;
-  padding: 0 vars.$spacing-md;
+  & {
+    width: 100%;
+    max-width: vars.$container-max-width;
+    margin: 0 auto;
+    padding: 0 vars.$space-md;
+  }
   
   @include tablet {
-    padding: 0 vars.$spacing-lg;
+    padding: 0 vars.$space-lg;
   }
   
   @include desktop {
-    padding: 0 vars.$spacing-xl;
+    padding: 0 vars.$space-xl;
   }
 }
 
-@mixin grid($columns: 12, $gap: vars.$spacing-md) {
+@mixin grid($columns: 12, $gap: vars.$space-md) {
   display: grid;
   grid-template-columns: repeat($columns, 1fr);
   gap: $gap;
 }
 
 @mixin grid-responsive($mobile: 1, $tablet: 2, $desktop: 3) {
-  display: grid;
-  gap: vars.$spacing-md;
-  grid-template-columns: repeat($mobile, 1fr);
+  & {
+    display: grid;
+    gap: vars.$space-md;
+    grid-template-columns: repeat($mobile, 1fr);
+  }
   
   @include tablet {
     grid-template-columns: repeat($tablet, 1fr);

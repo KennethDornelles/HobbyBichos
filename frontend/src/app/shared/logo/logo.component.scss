@@ -1,0 +1,13 @@
+@use '../../../styles/variables' as *;
+
+.logo {
+  // The .navbar__brand .logo has some styles in _components.scss.
+  // Add more specific styles here if needed.
+  height: 40px;
+  width: auto;
+  transition: transform $transition-fast;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+}
