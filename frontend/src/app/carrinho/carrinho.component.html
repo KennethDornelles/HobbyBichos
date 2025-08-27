@@ -1,246 +1,378 @@
 <!-- Carrinho de Compras -->
-<div class="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+<div class="carrinho-page">
   <!-- Header do Carrinho -->
-  <div class="bg-white shadow-lg border-b">
-    <div class="container max-w-7xl mx-auto px-4 py-6">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-4">
-          <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
-            🛒
-          </div>
-          <div>
-            <h1 class="text-3xl font-bold text-gray-800">Meu Carrinho</h1>
-            <p class="text-gray-600">{{ itensCarrinho.length }} {{ itensCarrinho.length === 1 ? 'item' : 'itens' }} adicionado{{ itensCarrinho.length === 1 ? '' : 's' }}</p>
-          </div>
+  <div class="carrinho-header">
+    <div class="carrinho-header__container">
+      <div class="carrinho-header__title-group">
+        <div class="carrinho-header__icon">
+          🛒
         </div>
-        <div class="text-right">
-          <p class="text-sm text-gray-500">Total</p>
-          <p class="text-3xl font-bold text-blue-600">R$ {{ totalCarrinho | number:'1.2-2' }}</p>
+        <div>
+          <h1 class="carrinho-header__title">Meu Carrinho</h1>
+          <p class="carrinho-header__subtitle">{{ itensCarrinho.length }} {{ itensCarrinho.length === 1 ? 'item' : 'itens' }} adicionado{{ itensCarrinho.length === 1 ? '' : 's' }}</p>
         </div>
+      </div>
+      <div class="carrinho-header__total">
+        <p class="carrinho-header__total-label">Total</p>
+        <p class="carrinho-header__total-value">R$ {{ totalFinal | number:'1.2-2' }}</p>
+        <p *ngIf="totalDesconto > 0" class="carrinho-header__discount">
+          Economia: R$ {{ totalDesconto | number:'1.2-2' }}
+        </p>
       </div>
     </div>
   </div>
 
-  <div class="container max-w-7xl mx-auto px-4 py-8">
-    <!-- Layout Principal -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <!-- Lista de Itens do Carrinho -->
-      <div class="lg:col-span-2">
-        <div *ngIf="itensCarrinho.length > 0; else carrinhoVazio" class="space-y-4">
-          <!-- Header da Lista -->
-          <div class="bg-white rounded-2xl shadow-sm border p-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-2 flex items-center gap-2">
-              📦 Itens no Carrinho
-            </h2>
-            <p class="text-gray-600">Revise seus itens antes de finalizar a compra</p>
+  <!-- Mensagens de Sucesso/Erro Globais -->
+  <div class="carrinho-content">
+    <div *ngIf="successMessage" class="alert alert--success">
+      <span>✅</span>
+      <div class="content">
+        <p class="message">{{ successMessage }}</p>
+      </div>
+    </div>
+
+    <div *ngIf="errorMessage && !showCheckoutForm" class="alert alert--error">
+      <span>⚠️</span>
+      <div class="content">
+        <p class="message">{{ errorMessage }}</p>
+      </div>
+    </div>
+
+    <div class="carrinho-grid">
+      <div class="carrinho-list">
+        <div *ngIf="itensCarrinho.length > 0; else carrinhoVazio">
+          <div class="carrinho-list__header">
+            <h2>📦 Itens no Carrinho</h2>
+            <p>Revise seus itens antes de finalizar a compra</p>
           </div>
 
-          <!-- Itens do Carrinho -->
-          <div class="space-y-4">
-            <div *ngFor="let item of itensCarrinho" 
-                 class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 overflow-hidden">
-              <div class="p-6">
-                <div class="flex flex-col sm:flex-row gap-6">
-                  <!-- Imagem/Ícone do Produto -->
-                  <div class="flex-shrink-0">
-                    <div class="w-24 h-24 bg-gradient-to-br from-yellow-400 via-orange-400 to-red-400 rounded-2xl flex items-center justify-center text-4xl shadow-lg transform hover:scale-105 transition-transform duration-200">
-                      {{ item.imagem }}
-                    </div>
-                  </div>
-
-                  <!-- Informações do Produto -->
-                  <div class="flex-1 min-w-0">
-                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                      <div class="flex-1">
-                        <h3 class="text-xl font-bold text-gray-800 mb-2">{{ item.nome }}</h3>
-                        <p class="text-gray-600 mb-3">{{ item.descricao }}</p>
-                        <div class="flex items-center gap-2">
-                          <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-                            Preço unitário
-                          </span>
-                          <span class="text-xl font-bold text-blue-600">R$ {{ item.preco | number:'1.2-2' }}</span>
-                        </div>
-                      </div>
-
-                      <!-- Controles e Preço -->
-                      <div class="flex flex-col items-end gap-4 min-w-fit">
-                        <!-- Controles de Quantidade -->
-                        <div class="flex items-center gap-3 bg-gray-50 rounded-2xl p-2 border">
-                          <button 
-                            class="w-10 h-10 rounded-full bg-white border-2 border-gray-300 hover:border-blue-500 hover:bg-blue-50 flex items-center justify-center font-bold text-gray-700 hover:text-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                            (click)="diminuirQuantidade(item.id)"
-                            [disabled]="item.quantidade <= 1">
-                            <span class="text-lg">−</span>
-                          </button>
-                          
-                          <div class="bg-white border-2 border-gray-200 rounded-lg px-4 py-2 min-w-16 text-center">
-                            <span class="text-lg font-bold text-gray-800">{{ item.quantidade }}</span>
-                          </div>
-                          
-                          <button 
-                            class="w-10 h-10 rounded-full bg-white border-2 border-gray-300 hover:border-blue-500 hover:bg-blue-50 flex items-center justify-center font-bold text-gray-700 hover:text-blue-600 transition-all duration-200"
-                            (click)="aumentarQuantidade(item.id)">
-                            <span class="text-lg">+</span>
-                          </button>
-                        </div>
-
-                        <!-- Subtotal -->
-                        <div class="text-right">
-                          <p class="text-sm text-gray-500 mb-1">Subtotal</p>
-                          <p class="text-2xl font-bold text-green-600">
-                            R$ {{ (item.preco * item.quantidade) | number:'1.2-2' }}
-                          </p>
-                        </div>
-
-                        <!-- Botão Remover -->
-                        <button 
-                          class="flex items-center gap-2 text-red-600 hover:text-red-800 hover:bg-red-50 px-4 py-2 rounded-lg transition-all duration-200 font-medium"
-                          (click)="removerItem(item.id)">
-                          <span class="text-lg">🗑️</span>
-                          Remover
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+          <div class="carrinho-list__items">
+            <div *ngFor="let item of itensCarrinho" class="carrinho-item">
+              <div class="carrinho-item__image">
+                {{ item.imagem }}
+              </div>
+              <div class="carrinho-item__details">
+                <h3>{{ item.nome }}</h3>
+                <p>{{ item.descricao }}</p>
+                <div class="carrinho-item__price-group">
+                  <span>Preço unitário</span>
+                  <span>R$ {{ item.preco | number:'1.2-2' }}</span>
                 </div>
+                <div class="carrinho-item__stock" [class.carrinho-item__stock--low]="item.estoque <= 3">
+                  <span *ngIf="item.estoque > 3">✅ {{ item.estoque }} em estoque</span>
+                  <span *ngIf="item.estoque <= 3">⚠️ Apenas {{ item.estoque }} restantes</span>
+                </div>
+              </div>
+              <div class="carrinho-item__actions">
+                <div class="quantity-control">
+                  <button 
+                    (click)="diminuirQuantidade(item.id)" 
+                    [disabled]="item.quantidade <= 1 || loadingItems.has(item.id)">
+                    <span *ngIf="!loadingItems.has(item.id)">−</span>
+                    <span *ngIf="loadingItems.has(item.id)" class="spinner spinner--small"></span>
+                  </button>
+                  <div>
+                    <span>{{ item.quantidade }}</span>
+                  </div>
+                  <button 
+                    (click)="aumentarQuantidade(item.id)" 
+                    [disabled]="item.quantidade >= item.estoque || loadingItems.has(item.id)">
+                    <span *ngIf="!loadingItems.has(item.id)">+</span>
+                    <span *ngIf="loadingItems.has(item.id)" class="spinner spinner--small"></span>
+                  </button>
+                </div>
+                <div class="carrinho-item__subtotal">
+                  <p>Subtotal</p>
+                  <p>R$ {{ (item.preco * item.quantidade) | number:'1.2-2' }}</p>
+                </div>
+                <button class="carrinho-item__remove-btn" (click)="removerItem(item.id)">
+                  <span>🗑️</span> Remover
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Carrinho Vazio -->
         <ng-template #carrinhoVazio>
-          <div class="bg-white rounded-2xl shadow-sm p-12 text-center border">
-            <div class="w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span class="text-6xl opacity-50">🛒</span>
+          <div class="carrinho-empty">
+            <div class="carrinho-empty__icon">
+              <span>🛒</span>
             </div>
-            <h2 class="text-3xl font-bold text-gray-800 mb-4">Carrinho Vazio</h2>
-            <p class="text-lg text-gray-600 mb-8 max-w-md mx-auto leading-relaxed">
-              Que tal adicionar alguns produtos incríveis para seu pet? Eles vão adorar!
-            </p>
-            <a href="/" 
-               class="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl">
-              <span class="text-xl">🐾</span>
+            <h2>Carrinho Vazio</h2>
+            <p>Que tal adicionar alguns produtos incríveis para seu pet? Eles vão adorar!</p>
+            <a href="/" class="btn btn--primary btn--large">
+              <span>🐾</span>
               Explorar Produtos
             </a>
           </div>
         </ng-template>
       </div>
 
-      <!-- Resumo do Pedido -->
-      <div class="lg:col-span-1" *ngIf="itensCarrinho.length > 0">
-        <div class="sticky top-6 space-y-6">
-          <!-- Card do Resumo -->
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <!-- Header do Resumo -->
-            <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
-              <h3 class="text-xl font-bold flex items-center gap-2">
-                <span class="text-2xl">�</span>
-                Resumo do Pedido
-              </h3>
+      <div class="order-summary-container" *ngIf="itensCarrinho.length > 0">
+        <div class="order-summary">
+          <div class="order-summary__header">
+            <h3>
+              <span>🧾</span>
+              Resumo do Pedido
+            </h3>
+          </div>
+          <div class="order-summary__body">
+            <div class="order-summary__items">
+              <h4>Itens:</h4>
+              <div *ngFor="let item of itensCarrinho" class="order-summary__item">
+                <div class="order-summary__item-details">
+                  <div class="order-summary__item-image">
+                    {{ item.imagem }}
+                  </div>
+                  <div>
+                    <p>{{ item.nome }}</p>
+                    <p>Qty: {{ item.quantidade }}</p>
+                  </div>
+                </div>
+                <span>R$ {{ (item.preco * item.quantidade) | number:'1.2-2' }}</span>
+              </div>
             </div>
-            
-            <div class="p-6 space-y-6">
-              <!-- Lista de Itens no Resumo -->
-              <div class="space-y-3">
-                <h4 class="font-semibold text-gray-800 mb-3">Itens:</h4>
-                <div *ngFor="let item of itensCarrinho" class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
-                  <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center text-sm">
-                      {{ item.imagem }}
-                    </div>
-                    <div>
-                      <p class="font-medium text-gray-800 text-sm">{{ item.nome }}</p>
-                      <p class="text-xs text-gray-500">Qty: {{ item.quantidade }}</p>
-                    </div>
-                  </div>
-                  <span class="font-bold text-gray-800">R$ {{ (item.preco * item.quantidade) | number:'1.2-2' }}</span>
+
+            <hr>
+
+            <div class="order-summary__calculations">
+              <div>
+                <span>Subtotal:</span>
+                <span>R$ {{ totalCarrinho | number:'1.2-2' }}</span>
+              </div>
+              <div>
+                <span>Frete:</span>
+                <div class="frete-info">
+                  <span class="frete-gratis">GRÁTIS</span>
+                  <span>R$ 0,00</span>
                 </div>
               </div>
-
-              <!-- Separador -->
-              <div class="border-t border-gray-200"></div>
-
-              <!-- Cálculos -->
-              <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-600">Subtotal:</span>
-                  <span class="font-semibold text-gray-800">R$ {{ totalCarrinho | number:'1.2-2' }}</span>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-600">Frete:</span>
-                  <div class="flex items-center gap-2">
-                    <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full">GRÁTIS</span>
-                    <span class="text-green-600 font-semibold">R$ 0,00</span>
-                  </div>
-                </div>
-                <div class="flex justify-between items-center">
-                  <span class="text-gray-600">Desconto:</span>
-                  <span class="text-gray-400">- R$ 0,00</span>
-                </div>
+              <div *ngIf="cupomAplicado" class="desconto-aplicado">
+                <span>Desconto ({{ cupomAplicado.codigo }}):</span>
+                <span class="desconto-valor">- R$ {{ totalDesconto | number:'1.2-2' }}</span>
+                <button type="button" class="remover-cupom" (click)="removerCupom()" title="Remover cupom">
+                  ×
+                </button>
               </div>
+            </div>
 
-              <!-- Separador -->
-              <div class="border-t-2 border-gray-300"></div>
+            <hr>
 
-              <!-- Total -->
-              <div class="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl">
-                <span class="text-xl font-bold text-gray-800">Total Final:</span>
-                <span class="text-2xl font-bold text-blue-600">R$ {{ totalCarrinho | number:'1.2-2' }}</span>
-              </div>
+            <div class="order-summary__total">
+              <span>Total Final:</span>
+              <span>R$ {{ totalFinal | number:'1.2-2' }}</span>
+            </div>
 
-              <!-- Botão de Finalizar -->
-              <button 
-                class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-6 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 hover:from-green-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
-                (click)="finalizarCompra()">
-                <span class="text-xl">💳</span>
-                Finalizar Compra
-              </button>
+            <button 
+              type="button" 
+              class="order-summary__checkout-btn" 
+              (click)="iniciarCheckout()" 
+              [disabled]="itensCarrinho.length === 0">
+              <span>💳</span>
+              Finalizar Compra
+            </button>
 
-              <div class="flex items-center justify-center gap-2 text-sm text-gray-500">
-                <span class="text-green-500">🔒</span>
-                Pagamento 100% seguro e protegido
-              </div>
+            <div class="order-summary__secure-payment">
+              <span>🔒</span>
+              Pagamento 100% seguro e protegido
             </div>
           </div>
+        </div>
 
-          <!-- Cupom de Desconto -->
-          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div class="bg-gradient-to-r from-orange-400 to-pink-400 p-4 text-white">
-              <h4 class="font-bold flex items-center gap-2">
-                <span class="text-lg">🎫</span>
-                Cupom de Desconto
-              </h4>
-            </div>
-            <div class="p-6">
-              <div class="flex gap-2">
+        <div class="coupon-card">
+          <div class="coupon-card__header">
+            <h4>
+              <span>🎫</span>
+              Cupom de Desconto
+            </h4>
+          </div>
+          <div class="coupon-card__body">
+            <div *ngIf="!cupomAplicado">
+              <div class="coupon-row">
                 <input 
                   type="text" 
-                  placeholder="Digite seu cupom aqui" 
-                  class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
-                <button class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg">
+                  placeholder="Digite seu cupom aqui"
+                  [(ngModel)]="cupomCodigo"
+                  [class.input-error]="cupomError"
+                  maxlength="20">
+                <button 
+                  type="button" 
+                  (click)="aplicarCupom()"
+                  [disabled]="!cupomCodigo.trim()">
                   Aplicar
                 </button>
               </div>
-              <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
+              <div *ngIf="cupomError" class="cupom-error">
+                <span>⚠️</span>
+                <p>{{ cupomError }}</p>
+              </div>
+              <p class="cupom-help">
                 <span>💡</span>
                 Economize até 20% com cupons especiais
               </p>
+              <div class="cupons-exemplo">
+                <small>Experimente: DESCONTO10, PRIMEIRA15</small>
+              </div>
+            </div>
+            
+            <div *ngIf="cupomAplicado" class="cupom-aplicado">
+              <div class="cupom-aplicado__info">
+                <span class="cupom-aplicado__icon">🎉</span>
+                <div>
+                  <p class="cupom-aplicado__codigo">{{ cupomAplicado.codigo }}</p>
+                  <p class="cupom-aplicado__descricao">
+                    {{ cupomAplicado.tipo === 'percentual' ? cupomAplicado.desconto + '% de desconto' : 'R$ ' + cupomAplicado.desconto + ' de desconto' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="security-banner">
+          <div>
+            <div>
+              <span>🛡️</span>
+            </div>
+            <h4>Compra Protegida</h4>
+            <p>Seus dados estão seguros conosco. Garantia de entrega e suporte 24h.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Checkout Melhorado -->
+    <div *ngIf="showCheckoutForm" class="checkout-modal-overlay" (click)="cancelarCheckout()">
+      <div class="checkout-modal" (click)="$event.stopPropagation()">
+        <!-- Header do Modal -->
+        <div class="checkout-modal__header">
+          <h3>
+            <span>💳</span>
+            Dados para Pagamento
+          </h3>
+          <button type="button" class="checkout-modal__close-btn" (click)="cancelarCheckout()">
+            &times;
+          </button>
+        </div>
+
+        <div class="checkout-modal__body">
+          <div *ngIf="errorMessage" class="error-message">
+            <div>
+              <span>⚠️</span>
+              <p>{{ errorMessage }}</p>
             </div>
           </div>
 
-          <!-- Banner de Segurança -->
-          <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6 border border-green-100">
-            <div class="text-center">
-              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <span class="text-xl">🛡️</span>
+          <form (ngSubmit)="finalizarCompra()" #checkoutForm="ngForm" novalidate>
+            <div class="form-group">
+              <label for="nome">Nome *</label>
+              <input 
+                type="text" 
+                id="nome" 
+                name="nome" 
+                [(ngModel)]="compradorInfo.name" 
+                required 
+                placeholder="Seu nome"
+                [class.input-error]="!isFieldValid('name')"
+                autocomplete="given-name">
+              <div *ngIf="!isFieldValid('name')" class="field-error">
+                Nome é obrigatório
               </div>
-              <h4 class="font-bold text-green-800 mb-2">Compra Protegida</h4>
-              <p class="text-sm text-green-700 leading-relaxed">
-                Seus dados estão seguros conosco. Garantia de entrega e suporte 24h.
-              </p>
             </div>
-          </div>
+
+            <div class="form-group">
+              <label for="sobrenome">Sobrenome *</label>
+              <input 
+                type="text" 
+                id="sobrenome" 
+                name="sobrenome" 
+                [(ngModel)]="compradorInfo.surname" 
+                required 
+                placeholder="Seu sobrenome"
+                [class.input-error]="!isFieldValid('surname')"
+                autocomplete="family-name">
+              <div *ngIf="!isFieldValid('surname')" class="field-error">
+                Sobrenome é obrigatório
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email *</label>
+              <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                [(ngModel)]="compradorInfo.email" 
+                required 
+                placeholder="seu.email@exemplo.com"
+                [class.input-error]="!isFieldValid('email')"
+                autocomplete="email">
+              <div *ngIf="!isFieldValid('email')" class="field-error">
+                Email válido é obrigatório
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="ddd">DDD</label>
+                <input 
+                  type="text" 
+                  id="ddd" 
+                  name="ddd" 
+                  [(ngModel)]="compradorInfo.phone.area_code" 
+                  maxlength="2" 
+                  placeholder="11"
+                  autocomplete="tel-area-code">
+              </div>
+              <div class="form-group">
+                <label for="telefone">Telefone</label>
+                <input 
+                  type="text" 
+                  id="telefone" 
+                  name="telefone" 
+                  [(ngModel)]="compradorInfo.phone.number" 
+                  placeholder="999999999"
+                  autocomplete="tel-local">
+              </div>
+            </div>
+
+            <div class="order-summary-modal">
+              <h4>Resumo do Pedido</h4>
+              <div>
+                <div *ngFor="let item of itensCarrinho">
+                  <span>{{ item.nome }} ({{ item.quantidade }}x)</span>
+                  <span>R$ {{ (item.preco * item.quantidade) | number:'1.2-2' }}</span>
+                </div>
+                <div *ngIf="totalDesconto > 0" class="desconto-modal">
+                  <span>Desconto:</span>
+                  <span>- R$ {{ totalDesconto | number:'1.2-2' }}</span>
+                </div>
+                <div class="total-modal">
+                  <span>Total:</span>
+                  <span>R$ {{ totalFinal | number:'1.2-2' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="payment-info">
+              <div>
+                <img src="https://http2.mlstatic.com/frontend-assets/ui-navigation/5.21.22/mercadopago/logo_mp_@2x.png" alt="Mercado Pago">
+                <span>Pagamento via Mercado Pago</span>
+              </div>
+              <p>Você será redirecionado para o Mercado Pago para finalizar o pagamento de forma segura.</p>
+            </div>
+
+            <div class="checkout-modal__actions">
+              <button type="button" (click)="cancelarCheckout()" [disabled]="isProcessing">
+                Cancelar
+              </button>
+              
+              <button type="submit" [disabled]="isProcessing || checkoutForm.invalid">
+                <span *ngIf="isProcessing" class="spinner spinner--small"></span>
+                <span>{{ isProcessing ? 'Processando...' : 'Pagar com Mercado Pago' }}</span>
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

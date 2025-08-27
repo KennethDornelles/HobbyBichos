@@ -15,15 +15,15 @@ export class AddressService {
     return this.prisma.address.findMany();
   }
 
-  async findOne(id: string) {
+  async findOne(id: number) {
     return this.prisma.address.findUnique({ where: { id } });
   }
 
-  async update(id: string, data: UpdateAddressDto) {
+  async update(id: number, data: UpdateAddressDto) {
     return this.prisma.address.update({ where: { id }, data });
   }
 
-  async remove(id: string) {
+  async remove(id: number) {
     return this.prisma.address.delete({ where: { id } });
   }
 }

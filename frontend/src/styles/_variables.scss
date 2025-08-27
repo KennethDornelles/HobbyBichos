@@ -25,11 +25,19 @@ $gray-600: #718096;
 $medium-gray: #E2E8F0;
 $dark-gray: #718096;
 $gray-700: #4A5568;
+$gray-800: #1f2937; // Added from src/styles/_variables.scss
 $gray-900: #1A202C;
 $charcoal: #2D3748;
 $black: #1A202C;
 
 // SUCCESS, WARNING, ERROR COLORS
+$green-50: #F0FDF4;
+$green-100: #DCFCE7;
+$green-200: #BBF7D0;
+$green-500: #22C55E;
+$green-600: #16A34A;
+$green-700: #15803D;
+$green-800: #166534;
 $success: #48BB78;
 $warning: #ED8936;
 $error: #F56565;
@@ -94,8 +102,8 @@ $text-xl: 1.25rem;    // 20px
 $text-2xl: 1.5rem;    // 24px
 $text-3xl: 1.875rem;  // 30px
 $text-4xl: 2.25rem;   // 36px
-$text-5xl: 3rem;      // 48px
-$text-6xl: 3.75rem;   // 60px
+$text-5xl: 3rem;      // 48px;
+$text-6xl: 3.75rem;   // 60px;
 
 // Line heights
 $leading-tight: 1.25;
@@ -152,3 +160,24 @@ $pet-colors: (
   'rabbit-white': #F5F5F5,
   'hamster-gold': #DAA520
 );
+
+// TAILWIND COLORS (from src/styles/_variables.scss)
+$blue-50: #eff6ff;
+$blue-100: #dbeafe;
+$blue-200: #bfdbfe;
+$blue-700: #1d4ed8;
+$blue-800: #1e40af;
+$purple-50: #faf5ff;
+$purple-600: #9333ea;
+$yellow-400: #facc15;
+$orange-400: #fb923c;
+$orange-100: #ffedd5;
+$orange-700: #c2410c;
+$red-50: #fef2f2;
+$red-200: #fecaca;
+$red-400: #f87171;
+$red-500: #ef4444;
+$red-700: #b91c1c;
+$red-800: #991b1b;
+$orange-500: #f97316;
+$pink-400: #f472b6;

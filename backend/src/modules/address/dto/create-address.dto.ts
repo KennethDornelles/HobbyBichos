@@ -1,11 +1,32 @@
+import { IsString, IsOptional, IsBoolean, IsInt } from 'class-validator';
+
 export class CreateAddressDto {
-  street: string;
-  number: string;
+  @IsString()
+  street!: string;
+
+  @IsString()
+  number!: string;
+
+  @IsOptional()
+  @IsString()
   complement?: string;
-  neighborhood: string;
-  city: string;
-  state: string;
-  zipCode: string;
+
+  @IsString()
+  neighborhood!: string;
+
+  @IsString()
+  city!: string;
+
+  @IsString()
+  state!: string;
+
+  @IsString()
+  zipCode!: string;
+
+  @IsOptional()
+  @IsBoolean()
   isDefault?: boolean;
-  userId: string;
+
+  @IsInt()
+  userId!: number;
 }
