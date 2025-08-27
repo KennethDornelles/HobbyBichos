@@ -1,0 +1,248 @@
+<!-- Carrinho de Compras -->
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+  <!-- Header do Carrinho -->
+  <div class="bg-white shadow-lg border-b">
+    <div class="container max-w-7xl mx-auto px-4 py-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xl font-bold shadow-lg">
+            🛒
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-800">Meu Carrinho</h1>
+            <p class="text-gray-600">{{ itensCarrinho.length }} {{ itensCarrinho.length === 1 ? 'item' : 'itens' }} adicionado{{ itensCarrinho.length === 1 ? '' : 's' }}</p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-sm text-gray-500">Total</p>
+          <p class="text-3xl font-bold text-blue-600">R$ {{ totalCarrinho | number:'1.2-2' }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container max-w-7xl mx-auto px-4 py-8">
+    <!-- Layout Principal -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Lista de Itens do Carrinho -->
+      <div class="lg:col-span-2">
+        <div *ngIf="itensCarrinho.length > 0; else carrinhoVazio" class="space-y-4">
+          <!-- Header da Lista -->
+          <div class="bg-white rounded-2xl shadow-sm border p-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-2 flex items-center gap-2">
+              📦 Itens no Carrinho
+            </h2>
+            <p class="text-gray-600">Revise seus itens antes de finalizar a compra</p>
+          </div>
+
+          <!-- Itens do Carrinho -->
+          <div class="space-y-4">
+            <div *ngFor="let item of itensCarrinho" 
+                 class="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-gray-100 overflow-hidden">
+              <div class="p-6">
+                <div class="flex flex-col sm:flex-row gap-6">
+                  <!-- Imagem/Ícone do Produto -->
+                  <div class="flex-shrink-0">
+                    <div class="w-24 h-24 bg-gradient-to-br from-yellow-400 via-orange-400 to-red-400 rounded-2xl flex items-center justify-center text-4xl shadow-lg transform hover:scale-105 transition-transform duration-200">
+                      {{ item.imagem }}
+                    </div>
+                  </div>
+
+                  <!-- Informações do Produto -->
+                  <div class="flex-1 min-w-0">
+                    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                      <div class="flex-1">
+                        <h3 class="text-xl font-bold text-gray-800 mb-2">{{ item.nome }}</h3>
+                        <p class="text-gray-600 mb-3">{{ item.descricao }}</p>
+                        <div class="flex items-center gap-2">
+                          <span class="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
+                            Preço unitário
+                          </span>
+                          <span class="text-xl font-bold text-blue-600">R$ {{ item.preco | number:'1.2-2' }}</span>
+                        </div>
+                      </div>
+
+                      <!-- Controles e Preço -->
+                      <div class="flex flex-col items-end gap-4 min-w-fit">
+                        <!-- Controles de Quantidade -->
+                        <div class="flex items-center gap-3 bg-gray-50 rounded-2xl p-2 border">
+                          <button 
+                            class="w-10 h-10 rounded-full bg-white border-2 border-gray-300 hover:border-blue-500 hover:bg-blue-50 flex items-center justify-center font-bold text-gray-700 hover:text-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                            (click)="diminuirQuantidade(item.id)"
+                            [disabled]="item.quantidade <= 1">
+                            <span class="text-lg">−</span>
+                          </button>
+                          
+                          <div class="bg-white border-2 border-gray-200 rounded-lg px-4 py-2 min-w-16 text-center">
+                            <span class="text-lg font-bold text-gray-800">{{ item.quantidade }}</span>
+                          </div>
+                          
+                          <button 
+                            class="w-10 h-10 rounded-full bg-white border-2 border-gray-300 hover:border-blue-500 hover:bg-blue-50 flex items-center justify-center font-bold text-gray-700 hover:text-blue-600 transition-all duration-200"
+                            (click)="aumentarQuantidade(item.id)">
+                            <span class="text-lg">+</span>
+                          </button>
+                        </div>
+
+                        <!-- Subtotal -->
+                        <div class="text-right">
+                          <p class="text-sm text-gray-500 mb-1">Subtotal</p>
+                          <p class="text-2xl font-bold text-green-600">
+                            R$ {{ (item.preco * item.quantidade) | number:'1.2-2' }}
+                          </p>
+                        </div>
+
+                        <!-- Botão Remover -->
+                        <button 
+                          class="flex items-center gap-2 text-red-600 hover:text-red-800 hover:bg-red-50 px-4 py-2 rounded-lg transition-all duration-200 font-medium"
+                          (click)="removerItem(item.id)">
+                          <span class="text-lg">🗑️</span>
+                          Remover
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Carrinho Vazio -->
+        <ng-template #carrinhoVazio>
+          <div class="bg-white rounded-2xl shadow-sm p-12 text-center border">
+            <div class="w-32 h-32 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span class="text-6xl opacity-50">🛒</span>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Carrinho Vazio</h2>
+            <p class="text-lg text-gray-600 mb-8 max-w-md mx-auto leading-relaxed">
+              Que tal adicionar alguns produtos incríveis para seu pet? Eles vão adorar!
+            </p>
+            <a href="/" 
+               class="inline-flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-bold text-lg hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl">
+              <span class="text-xl">🐾</span>
+              Explorar Produtos
+            </a>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Resumo do Pedido -->
+      <div class="lg:col-span-1" *ngIf="itensCarrinho.length > 0">
+        <div class="sticky top-6 space-y-6">
+          <!-- Card do Resumo -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <!-- Header do Resumo -->
+            <div class="bg-gradient-to-r from-blue-600 to-purple-600 p-6 text-white">
+              <h3 class="text-xl font-bold flex items-center gap-2">
+                <span class="text-2xl">�</span>
+                Resumo do Pedido
+              </h3>
+            </div>
+            
+            <div class="p-6 space-y-6">
+              <!-- Lista de Itens no Resumo -->
+              <div class="space-y-3">
+                <h4 class="font-semibold text-gray-800 mb-3">Itens:</h4>
+                <div *ngFor="let item of itensCarrinho" class="flex justify-between items-center p-3 bg-gray-50 rounded-xl">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-lg flex items-center justify-center text-sm">
+                      {{ item.imagem }}
+                    </div>
+                    <div>
+                      <p class="font-medium text-gray-800 text-sm">{{ item.nome }}</p>
+                      <p class="text-xs text-gray-500">Qty: {{ item.quantidade }}</p>
+                    </div>
+                  </div>
+                  <span class="font-bold text-gray-800">R$ {{ (item.preco * item.quantidade) | number:'1.2-2' }}</span>
+                </div>
+              </div>
+
+              <!-- Separador -->
+              <div class="border-t border-gray-200"></div>
+
+              <!-- Cálculos -->
+              <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">Subtotal:</span>
+                  <span class="font-semibold text-gray-800">R$ {{ totalCarrinho | number:'1.2-2' }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">Frete:</span>
+                  <div class="flex items-center gap-2">
+                    <span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded-full">GRÁTIS</span>
+                    <span class="text-green-600 font-semibold">R$ 0,00</span>
+                  </div>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-gray-600">Desconto:</span>
+                  <span class="text-gray-400">- R$ 0,00</span>
+                </div>
+              </div>
+
+              <!-- Separador -->
+              <div class="border-t-2 border-gray-300"></div>
+
+              <!-- Total -->
+              <div class="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl">
+                <span class="text-xl font-bold text-gray-800">Total Final:</span>
+                <span class="text-2xl font-bold text-blue-600">R$ {{ totalCarrinho | number:'1.2-2' }}</span>
+              </div>
+
+              <!-- Botão de Finalizar -->
+              <button 
+                class="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 px-6 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 hover:from-green-600 hover:to-green-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
+                (click)="finalizarCompra()">
+                <span class="text-xl">💳</span>
+                Finalizar Compra
+              </button>
+
+              <div class="flex items-center justify-center gap-2 text-sm text-gray-500">
+                <span class="text-green-500">🔒</span>
+                Pagamento 100% seguro e protegido
+              </div>
+            </div>
+          </div>
+
+          <!-- Cupom de Desconto -->
+          <div class="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
+            <div class="bg-gradient-to-r from-orange-400 to-pink-400 p-4 text-white">
+              <h4 class="font-bold flex items-center gap-2">
+                <span class="text-lg">🎫</span>
+                Cupom de Desconto
+              </h4>
+            </div>
+            <div class="p-6">
+              <div class="flex gap-2">
+                <input 
+                  type="text" 
+                  placeholder="Digite seu cupom aqui" 
+                  class="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200">
+                <button class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-purple-700 transition-all duration-200 shadow-md hover:shadow-lg">
+                  Aplicar
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                <span>💡</span>
+                Economize até 20% com cupons especiais
+              </p>
+            </div>
+          </div>
+
+          <!-- Banner de Segurança -->
+          <div class="bg-gradient-to-r from-green-50 to-blue-50 rounded-2xl p-6 border border-green-100">
+            <div class="text-center">
+              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <span class="text-xl">🛡️</span>
+              </div>
+              <h4 class="font-bold text-green-800 mb-2">Compra Protegida</h4>
+              <p class="text-sm text-green-700 leading-relaxed">
+                Seus dados estão seguros conosco. Garantia de entrega e suporte 24h.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
