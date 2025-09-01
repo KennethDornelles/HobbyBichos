@@ -26,6 +26,9 @@ export class PaymentService {
 
   async createPreference(orderData: CreateOrderDto): Promise<MercadoPagoPreferenceResponse> {
     try {
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:4200';
+      const backendUrl = process.env.BACKEND_URL || 'http://localhost:3000';
+      
       const preference = {
         items: orderData.items.map((item: PaymentItem) => ({
           id: item.id.toString(),
@@ -52,17 +55,16 @@ export class PaymentService {
           }
         },
         back_urls: {
-          success: `${process.env.FRONTEND_URL || 'http://localhost:4200'}/pagamento/sucesso`,
-          failure: `${process.env.FRONTEND_URL || 'http://localhost:4200'}/pagamento/erro`,
-          pending: `${process.env.FRONTEND_URL || 'http://localhost:4200'}/pagamento/pendente`
+          success: `${frontendUrl}/carrinho/sucesso`,
+          failure: `${frontendUrl}/carrinho/erro`,
+          pending: `${frontendUrl}/carrinho/pendente`
         },
-        auto_return: 'approved' as const,
         payment_methods: {
           excluded_payment_methods: [],
           excluded_payment_types: [],
           installments: 12
         },
-        notification_url: `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/payments/webhook`,
+        notification_url: `${backendUrl}/payment/webhook`,
         statement_descriptor: 'HobbyBichos',
         external_reference: orderData.external_reference || `order_${Date.now()}`,
         expires: true,

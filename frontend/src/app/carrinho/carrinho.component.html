@@ -1,29 +1,29 @@
 <!-- Carrinho de Compras -->
 <div class="carrinho-page">
-  <!-- Header do Carrinho -->
-  <div class="carrinho-header">
-    <div class="carrinho-header__container">
-      <div class="carrinho-header__title-group">
-        <div class="carrinho-header__icon">
-          🛒
-        </div>
-        <div>
-          <h1 class="carrinho-header__title">Meu Carrinho</h1>
-          <p class="carrinho-header__subtitle">{{ itensCarrinho.length }} {{ itensCarrinho.length === 1 ? 'item' : 'itens' }} adicionado{{ itensCarrinho.length === 1 ? '' : 's' }}</p>
-        </div>
-      </div>
-      <div class="carrinho-header__total">
-        <p class="carrinho-header__total-label">Total</p>
-        <p class="carrinho-header__total-value">R$ {{ totalFinal | number:'1.2-2' }}</p>
-        <p *ngIf="totalDesconto > 0" class="carrinho-header__discount">
-          Economia: R$ {{ totalDesconto | number:'1.2-2' }}
-        </p>
-      </div>
-    </div>
-  </div>
-
   <!-- Mensagens de Sucesso/Erro Globais -->
   <div class="carrinho-content">
+    <!-- Header do Carrinho -->
+    <div class="carrinho-header">
+      <div class="carrinho-header__container">
+        <div class="carrinho-header__title-group">
+          <div class="carrinho-header__icon">
+            🛒
+          </div>
+          <div>
+            <h1 class="carrinho-header__title">Meu Carrinho</h1>
+            <p class="carrinho-header__subtitle">{{ itensCarrinho.length }} {{ itensCarrinho.length === 1 ? 'item' : 'itens' }} adicionado{{ itensCarrinho.length === 1 ? '' : 's' }}</p>
+          </div>
+        </div>
+        <div class="carrinho-header__total">
+          <p class="carrinho-header__total-label">Total</p>
+          <p class="carrinho-header__total-value">R$ {{ totalFinal | number:'1.2-2' }}</p>
+          <p *ngIf="totalDesconto > 0" class="carrinho-header__discount">
+            Economia: R$ {{ totalDesconto | number:'1.2-2' }}
+          </p>
+        </div>
+      </div>
+    </div>
+
     <div *ngIf="successMessage" class="alert alert--success">
       <span>✅</span>
       <div class="content">
@@ -65,8 +65,8 @@
               </div>
               <div class="carrinho-item__actions">
                 <div class="quantity-control">
-                  <button 
-                    (click)="diminuirQuantidade(item.id)" 
+                  <button
+                    (click)="diminuirQuantidade(item.id)"
                     [disabled]="item.quantidade <= 1 || loadingItems.has(item.id)">
                     <span *ngIf="!loadingItems.has(item.id)">−</span>
                     <span *ngIf="loadingItems.has(item.id)" class="spinner spinner--small"></span>
@@ -74,8 +74,8 @@
                   <div>
                     <span>{{ item.quantidade }}</span>
                   </div>
-                  <button 
-                    (click)="aumentarQuantidade(item.id)" 
+                  <button
+                    (click)="aumentarQuantidade(item.id)"
                     [disabled]="item.quantidade >= item.estoque || loadingItems.has(item.id)">
                     <span *ngIf="!loadingItems.has(item.id)">+</span>
                     <span *ngIf="loadingItems.has(item.id)" class="spinner spinner--small"></span>
@@ -163,10 +163,10 @@
               <span>R$ {{ totalFinal | number:'1.2-2' }}</span>
             </div>
 
-            <button 
-              type="button" 
-              class="order-summary__checkout-btn" 
-              (click)="iniciarCheckout()" 
+            <button
+              type="button"
+              class="order-summary__checkout-btn"
+              (click)="iniciarCheckout()"
               [disabled]="itensCarrinho.length === 0">
               <span>💳</span>
               Finalizar Compra
@@ -189,14 +189,14 @@
           <div class="coupon-card__body">
             <div *ngIf="!cupomAplicado">
               <div class="coupon-row">
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Digite seu cupom aqui"
                   [(ngModel)]="cupomCodigo"
                   [class.input-error]="cupomError"
                   maxlength="20">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   (click)="aplicarCupom()"
                   [disabled]="!cupomCodigo.trim()">
                   Aplicar
@@ -214,7 +214,7 @@
                 <small>Experimente: DESCONTO10, PRIMEIRA15</small>
               </div>
             </div>
-            
+
             <div *ngIf="cupomAplicado" class="cupom-aplicado">
               <div class="cupom-aplicado__info">
                 <span class="cupom-aplicado__icon">🎉</span>
@@ -266,12 +266,12 @@
           <form (ngSubmit)="finalizarCompra()" #checkoutForm="ngForm" novalidate>
             <div class="form-group">
               <label for="nome">Nome *</label>
-              <input 
-                type="text" 
-                id="nome" 
-                name="nome" 
-                [(ngModel)]="compradorInfo.name" 
-                required 
+              <input
+                type="text"
+                id="nome"
+                name="nome"
+                [(ngModel)]="compradorInfo.name"
+                required
                 placeholder="Seu nome"
                 [class.input-error]="!isFieldValid('name')"
                 autocomplete="given-name">
@@ -282,12 +282,12 @@
 
             <div class="form-group">
               <label for="sobrenome">Sobrenome *</label>
-              <input 
-                type="text" 
-                id="sobrenome" 
-                name="sobrenome" 
-                [(ngModel)]="compradorInfo.surname" 
-                required 
+              <input
+                type="text"
+                id="sobrenome"
+                name="sobrenome"
+                [(ngModel)]="compradorInfo.surname"
+                required
                 placeholder="Seu sobrenome"
                 [class.input-error]="!isFieldValid('surname')"
                 autocomplete="family-name">
@@ -298,12 +298,12 @@
 
             <div class="form-group">
               <label for="email">Email *</label>
-              <input 
-                type="email" 
-                id="email" 
-                name="email" 
-                [(ngModel)]="compradorInfo.email" 
-                required 
+              <input
+                type="email"
+                id="email"
+                name="email"
+                [(ngModel)]="compradorInfo.email"
+                required
                 placeholder="seu.email@exemplo.com"
                 [class.input-error]="!isFieldValid('email')"
                 autocomplete="email">
@@ -315,22 +315,22 @@
             <div class="form-grid">
               <div class="form-group">
                 <label for="ddd">DDD</label>
-                <input 
-                  type="text" 
-                  id="ddd" 
-                  name="ddd" 
-                  [(ngModel)]="compradorInfo.phone.area_code" 
-                  maxlength="2" 
+                <input
+                  type="text"
+                  id="ddd"
+                  name="ddd"
+                  [(ngModel)]="compradorInfo.phone.area_code"
+                  maxlength="2"
                   placeholder="11"
                   autocomplete="tel-area-code">
               </div>
               <div class="form-group">
                 <label for="telefone">Telefone</label>
-                <input 
-                  type="text" 
-                  id="telefone" 
-                  name="telefone" 
-                  [(ngModel)]="compradorInfo.phone.number" 
+                <input
+                  type="text"
+                  id="telefone"
+                  name="telefone"
+                  [(ngModel)]="compradorInfo.phone.number"
                   placeholder="999999999"
                   autocomplete="tel-local">
               </div>
@@ -366,7 +366,7 @@
               <button type="button" (click)="cancelarCheckout()" [disabled]="isProcessing">
                 Cancelar
               </button>
-              
+
               <button type="submit" [disabled]="isProcessing || checkoutForm.invalid">
                 <span *ngIf="isProcessing" class="spinner spinner--small"></span>
                 <span>{{ isProcessing ? 'Processando...' : 'Pagar com Mercado Pago' }}</span>

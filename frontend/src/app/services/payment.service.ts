@@ -6,9 +6,9 @@ import { environment } from '../../environments/environment';
 
 export interface PaymentItem {
   id: string;
-  title: string;
+  name: string;
   quantity: number;
-  unit_price: number;
+  price: number;
   currency_id?: string;
 }
 
@@ -70,12 +70,12 @@ export class PaymentService {
    */
   processCartPayment(cartItems: any[], payerInfo: Payer): Observable<PaymentPreferenceResponse> {
     console.log('processCartPayment chamado com:', { cartItems, payerInfo });
-    
+
     const items: PaymentItem[] = cartItems.map(item => ({
       id: item.id.toString(),
-      title: item.nome,
+      name: item.nome,
       quantity: Number(item.quantidade),
-      unit_price: Number(item.preco),
+      price: Number(item.preco),
       currency_id: 'BRL'
     }));
 

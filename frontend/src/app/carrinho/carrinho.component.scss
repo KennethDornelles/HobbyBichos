@@ -45,20 +45,18 @@
 }
 
 // Container principal do carrinho
-
 .carrinho-page {
   display: flex;
   justify-content: center;
   width: 100%;
   min-height: 100vh;
   background: $light-gray;
-  padding: $space-2xl 0;
+  padding: $space-2xl;
 }
 
 .carrinho-content {
   width: 100%;
-  max-width: 1100px;
-  margin: 0 auto;
+  max-width: 1200px;
 }
 
 // Header do carrinho
@@ -71,10 +69,9 @@
 }
 
 // Grid principal do carrinho
-
 .carrinho-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: $space-2xl;
   align-items: flex-start;
 }

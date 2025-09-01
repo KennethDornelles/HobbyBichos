@@ -12,7 +12,7 @@ import {
 import { PaymentService } from './payment.service';
 import { CreateOrderDto, WebhookNotification } from './payment.interfaces';
 
-@Controller('api/payments')
+@Controller('payment')
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
