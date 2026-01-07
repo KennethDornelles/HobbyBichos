@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: hobbybichos_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/hobbybichos_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Instalar dependências
+        run: npm ci
+        working-directory: ./api
+      - name: Gerar Prisma Client
+        run: npx prisma generate
+        working-directory: ./api
+      - name: Rodar migrations
+        run: npx prisma migrate deploy
+        working-directory: ./api
+      - name: Rodar testes e2e/unitários
+        run: npm run test:cov
+        working-directory: ./api
+      - name: Salvar cobertura como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ./api/coverage
