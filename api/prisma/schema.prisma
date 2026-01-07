@@ -1,0 +1,249 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  SUPER_ADMIN
+  OWNER
+  MANAGER
+  EMPLOYEE
+  CLIENT
+}
+
+model Store {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  phone     String?
+  whatsappNumber String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employees     User[]              @relation("StoreEmployees")
+  appointments  Appointment[]
+  orders        Order[]
+  productStocks ProductStock[]
+  services      Service[]
+  reviews       Review[]
+  businessHours StoreBusinessHour[]
+  exclusions    StoreExclusion[]
+  pets          Pet[]
+
+  @@map("stores")
+}
+
+model StoreBusinessHour {
+  id        String @id @default(uuid())
+  storeId   String
+  weekday   Int    // 0=Domingo, 6=Sábado
+  openTime  String // formato 'HH:mm'
+  closeTime String // formato 'HH:mm'
+  store     Store  @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+  @@map("store_business_hours")
+}
+
+model StoreExclusion {
+  id      String   @id @default(uuid())
+  storeId String
+  date    DateTime
+  reason  String?
+  store   Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([storeId])
+  @@index([date])
+  @@map("store_exclusions")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  phone     String   @unique
+  role      Role     @default(CLIENT)
+  storeId   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store                    Store?          @relation("StoreEmployees", fields: [storeId], references: [id])
+  pets                     Pet[]
+  orders                   Order[]
+  professionalAppointments Appointment[]   @relation("ProfessionalAppointments")
+  clientAppointments       Appointment[]   @relation("ClientAppointments")
+  recoveryCodes            RecoveryCode[]
+  reviews                  Review[]        @relation("ReviewUser")
+  reviewsAsEmployee        Review[]        @relation("ReviewEmployee")
+
+  @@map("users")
+}
+
+model RecoveryCode {
+  id        String   @id @default(uuid())
+  userId    String
+  code      String
+  used      Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([code])
+  @@map("recovery_codes")
+}
+
+model Pet {
+  id        String   @id @default(uuid())
+  name      String
+  species   String
+  breed     String?
+  ownerId   String
+  storeId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner        User          @relation(fields: [ownerId], references: [id])
+  store        Store         @relation(fields: [storeId], references: [id])
+  appointments Appointment[]
+
+  @@map("pets")
+}
+
+model Product {
+  id        String   @id @default(uuid())
+  name      String
+  barcode   String?  @unique
+  basePrice Decimal  @db.Decimal(10, 2)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stocks     ProductStock[]
+  orderItems OrderItem[]
+
+  @@map("products")
+}
+
+model ProductStock {
+  id        String   @id @default(uuid())
+  productId String
+  storeId   String
+  quantity  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  store   Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, storeId])
+  @@map("product_stocks")
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  storeId     String
+  name        String
+  price       Decimal  @db.Decimal(10, 2)
+  durationMin Int      @default(30)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  store        Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+  orderItems   OrderItem[]
+
+  @@map("services")
+}
+
+model Appointment {
+  id             String   @id @default(uuid())
+  storeId        String
+  startsAt       DateTime
+  professionalId String?
+  userId         String
+  petId          String
+  serviceId      String
+  status         String   @default("SCHEDULED") // SCHEDULED, COMPLETED, CANCELLED
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  store        Store   @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  professional User?   @relation("ProfessionalAppointments", fields: [professionalId], references: [id])
+  user         User    @relation("ClientAppointments", fields: [userId], references: [id])
+  pet          Pet     @relation(fields: [petId], references: [id])
+  service      Service @relation(fields: [serviceId], references: [id])
+  review       Review?
+
+  @@index([storeId])
+  @@index([userId])
+  @@index([professionalId])
+  @@index([startsAt])
+  @@map("appointments")
+}
+
+model Order {
+  id        String   @id @default(uuid())
+  storeId   String
+  userId    String
+  total     Decimal  @db.Decimal(10, 2)
+  status    String   @default("PENDING") // PENDING, PAID, CANCELLED
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  store      Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id])
+  orderItems OrderItem[]
+
+  @@index([storeId])
+  @@index([userId])
+  @@map("orders")
+}
+
+model Review {
+  id            String   @id @default(uuid())
+  stars         Int
+  comment       String?
+  userId        String
+  storeId       String
+  employeeId    String
+  appointmentId String   @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user        User        @relation("ReviewUser", fields: [userId], references: [id])
+  store       Store       @relation(fields: [storeId], references: [id])
+  employee    User        @relation("ReviewEmployee", fields: [employeeId], references: [id])
+  appointment Appointment @relation(fields: [appointmentId], references: [id])
+
+  @@map("reviews")
+}
+
+model OrderItem {
+  id        String   @id @default(uuid())
+  orderId   String
+  productId String?
+  serviceId String?
+  quantity  Int
+  price     Decimal  @db.Decimal(10, 2)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  order   Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id])
+  service Service? @relation(fields: [serviceId], references: [id])
+
+  @@map("order_items")
+}

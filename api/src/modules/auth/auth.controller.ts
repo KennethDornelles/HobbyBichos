@@ -1,0 +1,157 @@
+import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { PasswordForgotService } from './password-forgot.service';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
+import { PasswordForgotDto } from './dto/password-forgot.dto';
+import { PasswordResetDto } from './dto/password-reset.dto';
+import { Public } from '../../decorators/public.decorator';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { CurrentUser } from '../../decorators/current-user.decorator';
+import type { UserFromJwt } from './models/UserFromJwt';
+import { ThrottleStrict } from '../../decorators/throttle.decorator';
+
+@ApiTags('auth')
+@Controller('auth')
+export class AuthController {
+  constructor(
+    private readonly authService: AuthService,
+    private readonly passwordForgotService: PasswordForgotService,
+  ) {}
+
+  /**
+   * POST /api/auth/forgot-password
+   * Envia código de 6 dígitos por email
+   */
+  @Public()
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Solicitar código de recuperação de senha' })
+  @ApiResponse({
+    status: 200,
+    description: 'Código enviado para o email (se existir)',
+  })
+  async forgotPassword(@Body() dto: PasswordForgotDto) {
+    return this.passwordForgotService.requestPasswordReset(dto);
+  }
+
+  /**
+   * POST /api/auth/reset-password
+   * Redefine a senha usando código de 6 dígitos
+   */
+  @Public()
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Redefinir senha com código de 6 dígitos' })
+  @ApiResponse({ status: 200, description: 'Senha redefinida com sucesso' })
+  async resetPassword(@Body() dto: PasswordResetDto) {
+    return this.passwordForgotService.resetPassword(dto);
+  }
+
+  @Public()
+  @ThrottleStrict()
+  @Post('register')
+  @ApiOperation({ summary: 'Registro de novo usuário' })
+  @ApiResponse({
+    status: 201,
+    description: 'Usuário registrado com sucesso',
+    schema: {
+      type: 'object',
+      properties: {
+        access_token: {
+          type: 'string',
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        },
+        user: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+            email: { type: 'string' },
+            phone: { type: 'string' },
+            role: {
+              type: 'string',
+              enum: ['SUPER_ADMIN', 'OWNER', 'MANAGER', 'EMPLOYEE', 'CLIENT'],
+            },
+            createdAt: { type: 'string', format: 'date-time' },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 409, description: 'Email já está em uso' })
+  async register(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
+  }
+
+  @Public()
+  @ThrottleStrict()
+  @Post('login')
+  @ApiOperation({ summary: 'Login e geração de token JWT' })
+  @ApiResponse({
+    status: 200,
+    description: 'Login realizado com sucesso',
+    schema: {
+      type: 'object',
+      properties: {
+        access_token: {
+          type: 'string',
+          example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        },
+        user: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+            email: { type: 'string' },
+            phone: { type: 'string' },
+            role: {
+              type: 'string',
+              enum: ['SUPER_ADMIN', 'OWNER', 'MANAGER', 'EMPLOYEE', 'CLIENT'],
+            },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Email ou senha inválidos' })
+  async login(@Body() loginDto: LoginDto) {
+    console.log('[LOGIN] Dados recebidos do front:', {
+      email: loginDto.email,
+      password: loginDto.password,
+    });
+    return this.authService.login(loginDto.email, loginDto.password);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('me')
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Obter perfil do usuário autenticado' })
+  @ApiResponse({
+    status: 200,
+    description: 'Perfil do usuário retornado com sucesso',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        email: { type: 'string' },
+        phone: { type: 'string' },
+        role: {
+          type: 'string',
+          enum: ['SUPER_ADMIN', 'OWNER', 'MANAGER', 'EMPLOYEE', 'CLIENT'],
+        },
+        createdAt: { type: 'string', format: 'date-time' },
+        updatedAt: { type: 'string', format: 'date-time' },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Não autenticado' })
+  async getProfile(@CurrentUser() user: UserFromJwt) {
+    return this.authService.getProfile(user.id);
+  }
+}
