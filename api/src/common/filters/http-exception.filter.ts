@@ -48,21 +48,26 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
       }
     }
 
-    // Em produção, não exponha o stack trace
+
+    // Loga todos os erros, independente do status e ambiente
+    logger.error('Erro HTTP capturado', {
+      status,
+      url: request.url,
+      exception:
+        exception instanceof Error
+          ? {
+              name: exception.name,
+              message: exception.message,
+              stack: exception.stack,
+            }
+          : exception,
+    });
+
+    // Em produção, não exponha o stack trace para erro 500
     if (
       status === HttpStatus.INTERNAL_SERVER_ERROR &&
       process.env.NODE_ENV === 'production'
     ) {
-      logger.error('Erro 500', {
-        exception:
-          exception instanceof Error
-            ? {
-                name: exception.name,
-                message: exception.message,
-                stack: exception.stack,
-              }
-            : exception,
-      });
       message = 'Erro interno do servidor';
     }
 
