@@ -10,12 +10,29 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#007AFF",
-        secondary: "#5856D6",
-        success: "#34C759",
-        danger: "#FF3B30",
-        warning: "#FF9500",
-        background: "#F2F2F7",
+        brand: {
+          primary: '#FFD600', // Amarelo vibrante
+          secondary: '#4B6FFF', // Azul institucional
+        },
+        background: {
+          dark: '#1A1B2E',
+          light: '#F9FAFB',
+        },
+        status: {
+          success: '#22C55E', // Verde
+          error: '#EF4444',   // Vermelho
+          alert: '#F59E42',   // Laranja
+        },
+      },
+      borderRadius: {
+        xl: '24px',
+        '2xl': '32px',
+      },
+      boxShadow: {
+        glass: '0 4px 32px 0 rgba(31, 41, 55, 0.15)',
+      },
+      backdropBlur: {
+        glass: '8px',
       },
     },
   },

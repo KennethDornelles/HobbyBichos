@@ -7,6 +7,8 @@ import * as SplashScreen from "expo-splash-screen";
 
 SplashScreen.preventAutoHideAsync();
 
+import { AuthProvider } from '../src/context/AuthContext';
+
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
@@ -25,7 +27,7 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <AuthProvider>
       <StatusBar style="auto" />
       <Stack
         screenOptions={{
@@ -33,6 +35,6 @@ export default function RootLayout() {
           contentStyle: { backgroundColor: "#F2F2F7" },
         }}
       />
-    </>
+    </AuthProvider>
   );
 }
