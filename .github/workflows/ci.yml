@@ -27,7 +27,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - name: Cache node modules
+        id: cache-nodemodules
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: api/node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('api/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
       - name: Instalar dependências
+        if: steps.cache-nodemodules.outputs.cache-hit != 'true'
         run: npm ci
         working-directory: ./api
       - name: Gerar Prisma Client
@@ -44,3 +57,30 @@ jobs:
         with:
           name: coverage-report
           path: ./api/coverage
+
+  build-and-test-mobile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Cache node modules
+        id: cache-nodemodules-mobile
+        uses: actions/cache@v4
+        env:
+          cache-name: cache-node-modules-mobile
+        with:
+          path: mobile/node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('mobile/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - name: Instalar dependências
+        if: steps.cache-nodemodules-mobile.outputs.cache-hit != 'true'
+        run: npm ci
+        working-directory: ./mobile
+      - name: Rodar testes
+        run: npm test
+        working-directory: ./mobile
