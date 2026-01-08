@@ -1,0 +1,27 @@
+{
+  "conventionalCommits.scopes": [
+    "backend",
+    "mobile",
+    "project",
+    "ci/cd"
+  ],
+
+  // --- MATA TODOS OS SONS DE ACESSIBILIDADE ---
+  "editor.accessibilitySupport": "off",
+  "accessibility.signals.volume": 0,
+
+  // --- CONFIGURAÇÃO ESPECÍFICA (Objeto) ---
+  "accessibility.signals.lineHasError": {
+    "sound": "off",
+    "announcement": "off"
+  },
+  "accessibility.signals.lineHasWarning": {
+    "sound": "off",
+    "announcement": "off"
+  },
+  "accessibility.signals.taskCompleted": {
+    "sound": "off",
+    "announcement": "off"
+  },
+  "accessibility.signalOptions.volume": 0
+}
