@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useRouter, Link } from 'expo-router';
 import {
     View,
     Text,
@@ -8,18 +8,16 @@ import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    useColorScheme,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import CustomInput from '../../components/CustomInput';
 import { LoginFormData } from '../../types';
+import { useTheme } from '../../context/ThemeContext';
 
 const LoginScreen: React.FC = () => {
-    const systemColorScheme = useColorScheme();
-    const [theme, setTheme] = useState<'light' | 'dark'>(systemColorScheme === 'dark' ? 'dark' : 'light');
-    const isDark = theme === 'dark';
+    const { isDark, toggleTheme } = useTheme();
 
     const [formData, setFormData] = useState<LoginFormData>({
         email: '',
@@ -36,7 +34,7 @@ const LoginScreen: React.FC = () => {
             // Aqui você chamaria seu backend
             setTimeout(() => {
                 setLoading(false);
-                router.push('/home');
+                router.push('home');
             }, 800);
         } catch (error) {
             console.error('Login error:', error);
@@ -54,7 +52,7 @@ const LoginScreen: React.FC = () => {
             {/* Botão de alternância de tema */}
             <View style={{ position: 'absolute', top: 48, right: 32, zIndex: 10 }}>
                 <TouchableOpacity
-                    onPress={() => setTheme(isDark ? 'light' : 'dark')}
+                    onPress={toggleTheme}
                     style={{ backgroundColor: isDark ? '#23243A' : '#FFD600', borderRadius: 20, padding: 8, elevation: 2 }}
                 >
                     <Ionicons name={isDark ? 'sunny-outline' : 'moon-outline'} size={24} color={isDark ? '#FFD600' : '#23243A'} />
@@ -104,7 +102,17 @@ const LoginScreen: React.FC = () => {
                             />
                         </View>
                         {/* Link Esqueci Senha */}
-                        <TouchableOpacity style={styles.forgotButton} activeOpacity={0.7}>
+                        <TouchableOpacity
+                            style={styles.forgotButton}
+                            activeOpacity={0.7}
+                            onPress={() => {
+                                try {
+                                    router.push('forgot-password');
+                                } catch (error) {
+                                    console.error('Erro ao navegar:', error);
+                                }
+                            }}
+                        >
                             <Text style={[styles.forgotText, { color: isDark ? '#9CA3AF' : '#6B7280' }]}>Esqueceu a senha?</Text>
                         </TouchableOpacity>
                         {/* Botão Login */}
@@ -155,7 +163,17 @@ const LoginScreen: React.FC = () => {
                             </TouchableOpacity>
                         </View>
                         {/* Link Criar Conta */}
-                        <TouchableOpacity style={styles.signupContainer} activeOpacity={0.7}>
+                        <TouchableOpacity
+                            style={styles.signupContainer}
+                            activeOpacity={0.7}
+                            onPress={() => {
+                                try {
+                                    router.push('signup');
+                                } catch (error) {
+                                    console.error('Erro ao navegar:', error);
+                                }
+                            }}
+                        >
                             <Text style={[styles.signupText, { color: isDark ? '#D1D5DB' : '#6B7280' }]}>Não tem conta?{' '}
                                 <Text style={styles.signupBold}>Criar Conta</Text>
                             </Text>

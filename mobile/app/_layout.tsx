@@ -8,6 +8,7 @@ import * as SplashScreen from "expo-splash-screen";
 SplashScreen.preventAutoHideAsync();
 
 import { AuthProvider } from '../src/context/AuthContext';
+import { ThemeProvider } from '../src/context/ThemeContext';
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -27,14 +28,16 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <StatusBar style="auto" />
-      <Stack
-        screenOptions={{
-          headerShown: false,
-          contentStyle: { backgroundColor: "#F2F2F7" },
-        }}
-      />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <StatusBar style="auto" />
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: "#F2F2F7" },
+          }}
+        />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

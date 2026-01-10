@@ -14,28 +14,33 @@ import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import CustomInput from '../../components/CustomInput';
+// Removido SignupFormData para definir localmente os campos necessários
 import { useTheme } from '../../context/ThemeContext';
 import { ThemeToggle } from '../../components/ThemeToggle';
 
-const ForgotPasswordScreen: React.FC = () => {
+const SignupScreen: React.FC = () => {
     const { isDark } = useTheme();
-    const [email, setEmail] = useState('');
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        password: '',
+        phone: '',
+    });
     const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const handleResetPassword = async () => {
+    const handleSignup = async () => {
         setLoading(true);
         try {
             // Simulação de chamada API
-            console.log('Reset password attempt:', email);
+            console.log('Signup attempt:', formData);
             // Aqui você chamaria seu backend
             setTimeout(() => {
                 setLoading(false);
-                // Aqui você poderia navegar para uma tela de sucesso
-                router.back();
+                router.push('home');
             }, 800);
         } catch (error) {
-            console.error('Reset password error:', error);
+            console.error('Signup error:', error);
             setLoading(false);
         }
     };
@@ -78,70 +83,77 @@ const ForgotPasswordScreen: React.FC = () => {
                         </View>
 
                         {/* Título da tela */}
-                        <Text style={[styles.screenTitle, { color: isDark ? '#FFFFFF' : '#111827' }]}>Password Recovery</Text>
-
-                        {/* Texto descritivo */}
-                        <Text style={[styles.description, { color: isDark ? '#9CA3AF' : '#6B7280' }]}>
-                            Digite seu e-mail para receber as instruções de recuperação de senha.
-                        </Text>
+                        <Text style={[styles.screenTitle, { color: isDark ? '#FFFFFF' : '#111827' }]}>Create Account</Text>
 
                         {/* Formulário */}
                         <View style={styles.formContainer}>
                             <CustomInput
                                 icon={Ionicons}
-                                placeholder="Email"
-                                value={email}
-                                onChangeText={setEmail}
+                                placeholder="Nome completo"
+                                value={formData.name}
+                                onChangeText={(text) => setFormData({ ...formData, name: text })}
+                                autoCapitalize="words"
+                                isDark={isDark}
+                                iconName="person-outline"
+                            />
+                            <CustomInput
+                                icon={Ionicons}
+                                placeholder="E-mail"
+                                value={formData.email}
+                                onChangeText={(text) => setFormData({ ...formData, email: text })}
                                 keyboardType="email-address"
                                 autoCapitalize="none"
                                 isDark={isDark}
                                 iconName="mail-outline"
                             />
+                            <CustomInput
+                                icon={Ionicons}
+                                placeholder="Senha"
+                                value={formData.password}
+                                onChangeText={(text) => setFormData({ ...formData, password: text })}
+                                secureTextEntry
+                                isDark={isDark}
+                                iconName="lock-closed-outline"
+                            />
+                            <CustomInput
+                                icon={Ionicons}
+                                placeholder="Telefone"
+                                value={formData.phone}
+                                onChangeText={(text) => setFormData({ ...formData, phone: text })}
+                                keyboardType="phone-pad"
+                                isDark={isDark}
+                                iconName="call-outline"
+                            />
                         </View>
 
-                        {/* Seção de informações */}
-                        <View style={styles.infoContainer}>
-                            <View style={[
-                                styles.infoBox,
-                                {
-                                    backgroundColor: isDark ? '#2E3047' : '#F3F4F6',
-                                    borderColor: isDark ? '#3F4156' : '#E5E7EB',
-                                }
-                            ]}>
-                                <View style={styles.infoIconCircle}>
-                                    <Ionicons name="information" size={18} color="#111827" />
-                                </View>
-                                <Text style={[styles.infoText, { color: isDark ? '#D1D5DB' : '#374151' }]}>
-                                    Instruções serão enviadas para o e-mail cadastrado
-                                </Text>
-                            </View>
-                        </View>
-
-                        {/* Botão Reset password */}
+                        {/* Botão Sign up */}
                         <TouchableOpacity
-                            onPress={handleResetPassword}
+                            onPress={handleSignup}
                             disabled={loading}
                             activeOpacity={0.8}
-                            style={styles.resetButton}
+                            style={styles.signupButton}
                         >
                             <LinearGradient
                                 colors={['#FFD600', '#FFAE00']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
-                                style={styles.resetButtonGradient}
+                                style={styles.signupButtonGradient}
                             >
-                                <Text style={styles.resetButtonText}>
-                                    {loading ? 'Enviando...' : 'Reset password'}
+                                <Text style={styles.signupButtonText}>
+                                    {loading ? 'Criando...' : 'Sign up'}
                                 </Text>
                             </LinearGradient>
                         </TouchableOpacity>
 
                         {/* Imagem do cachorro */}
                         <View style={styles.dogContainer}>
+                            {/* Formas amarelas curvas */}
+                            <View style={styles.yellowShapeLeft} />
+                            <View style={styles.yellowShapeRight} />
                             <Image
-                                source={{ uri: 'https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=400&h=400&q=80' }}
+                                source={{ uri: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=facearea&w=400&h=400&facepad=2&q=80' }}
                                 style={styles.dogImage}
-                                resizeMode="contain"
+                                resizeMode="cover"
                             />
                         </View>
                     </ScrollView>
@@ -158,8 +170,8 @@ const styles = StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
         paddingHorizontal: 24,
-        paddingTop: 60,
-        paddingBottom: 40,
+        paddingTop: 50,
+        paddingBottom: 20,
     },
     header: {
         flexDirection: 'row',
@@ -174,7 +186,7 @@ const styles = StyleSheet.create({
     },
     logoContainer: {
         alignItems: 'center',
-        marginBottom: 24,
+        marginBottom: 16,
     },
     title: {
         fontSize: 36,
@@ -188,47 +200,16 @@ const styles = StyleSheet.create({
     screenTitle: {
         fontSize: 32,
         fontWeight: '700',
-        marginBottom: 16,
+        marginBottom: 40,
         textAlign: 'center',
-    },
-    description: {
-        fontSize: 16,
-        textAlign: 'center',
-        marginBottom: 32,
-        lineHeight: 24,
     },
     formContainer: {
         gap: 16,
-        marginBottom: 24,
-    },
-    infoContainer: {
-        marginBottom: 32,
-    },
-    infoBox: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderRadius: 16,
-        padding: 16,
-        borderWidth: 1,
-    },
-    infoIconCircle: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: '#FFD600',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 12,
-    },
-    infoText: {
-        flex: 1,
-        fontSize: 14,
-        color: '#D1D5DB',
-        lineHeight: 20,
-    },
-    resetButton: {
-        width: '100%',
         marginBottom: 40,
+    },
+    signupButton: {
+        width: '100%',
+        marginBottom: 32,
         borderRadius: 9999,
         overflow: 'hidden',
         shadowColor: '#FFD600',
@@ -237,25 +218,48 @@ const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 6,
     },
-    resetButtonGradient: {
+    signupButtonGradient: {
         paddingVertical: 16,
         alignItems: 'center',
     },
-    resetButtonText: {
+    signupButtonText: {
         fontSize: 18,
         fontWeight: '700',
         color: '#111827',
     },
     dogContainer: {
+        position: 'relative',
         alignItems: 'center',
         justifyContent: 'flex-end',
-        height: 200,
-        marginTop: 'auto',
+        height: 300,
+        marginTop: 20,
+        overflow: 'hidden',
     },
-    dogImage: {
+    yellowShapeLeft: {
+        position: 'absolute',
+        bottom: -50,
+        left: -80,
         width: 200,
         height: 200,
+        backgroundColor: '#FFD600',
+        borderRadius: 200,
+        opacity: 0.4,
+    },
+    yellowShapeRight: {
+        position: 'absolute',
+        bottom: -50,
+        right: -80,
+        width: 200,
+        height: 200,
+        backgroundColor: '#FFD600',
+        borderRadius: 200,
+        opacity: 0.4,
+    },
+    dogImage: {
+        width: 320,
+        height: 320,
+        zIndex: 1,
     },
 });
 
-export default ForgotPasswordScreen;
+export default SignupScreen;
