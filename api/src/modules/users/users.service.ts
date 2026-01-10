@@ -13,13 +13,21 @@ import * as bcrypt from 'bcrypt';
 export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(dto: CreateUserDto) {
-    if (
-      (dto.role === Role.EMPLOYEE || dto.role === Role.MANAGER) &&
-      !dto.storeId
-    ) {
+  async create(dto: CreateUserDto, creatorRole?: Role) {
+    // Se for criar EMPLOYEE ou MANAGER, precisa de storeId
+    if ((dto.role === Role.EMPLOYEE || dto.role === Role.MANAGER) && !dto.storeId) {
       throw new BadRequestException('Funcionários precisam de storeId');
     }
+
+    // Se for criar SUPER_ADMIN, só OWNER pode criar
+    if (dto.role === Role.SUPER_ADMIN) {
+      if (creatorRole !== Role.OWNER) {
+        throw new BadRequestException('Apenas OWNER pode criar SUPER_ADMIN');
+      }
+      // Todo SUPER_ADMIN também é OWNER
+      dto.role = Role.OWNER;
+    }
+
     const hashedPassword: string = await bcrypt.hash(dto.password, 10);
     try {
       return await this.prisma.user.create({

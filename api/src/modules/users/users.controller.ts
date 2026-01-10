@@ -50,8 +50,10 @@ export class UsersController {
   @ApiOperation({ summary: 'Cria um novo usuário' })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso.' })
   @ApiResponse({ status: 400, description: 'Dados inválidos.' })
-  async create(@Body() dto: CreateUserDto) {
-    return this.usersService.create(dto);
+  async create(@Body() dto: CreateUserDto, @Request() req: { user?: { role: Role } }) {
+    // Se não estiver autenticado, creatorRole será undefined (ex: cadastro público)
+    const creatorRole = req.user?.role;
+    return this.usersService.create(dto, creatorRole);
   }
 
   @Get('me')

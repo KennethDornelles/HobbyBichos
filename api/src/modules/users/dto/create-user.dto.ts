@@ -30,11 +30,11 @@ export class CreateUserDto {
   @ApiProperty({
     example: '(11) 99999-9999',
     description: 'Telefone do usuário',
-    required: false,
+    required: true,
   })
   @IsPhoneNumber('BR')
-  @IsOptional()
-  phone?: string;
+  @IsNotEmpty()
+  phone: string;
 
   @ApiProperty({
     example: 'admin',
