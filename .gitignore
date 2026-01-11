@@ -139,3 +139,14 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 
+# Expo and React Native mobile app
+mobile/.expo
+mobile/android/
+mobile/ios/
+mobile/.env.local
+mobile/generate-icons.js
+
+# IDE specific files
+.vscode/settings.json
+.idea/
+
