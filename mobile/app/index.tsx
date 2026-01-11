@@ -1,10 +1,16 @@
 import { useEffect } from "react";
 import { useRouter } from "expo-router";
+import HomeScreen from "./home";
 
 export default function IndexRedirect() {
     const router = useRouter();
+
+    // Se não autenticado, redirecionar para login
+    // Por enquanto, exibindo a home como tela inicial
     useEffect(() => {
-        router.replace("/login");
+        // Descomentar linha abaixo para forçar login
+        // router.replace("/login");
     }, []);
-    return null;
+
+    return <HomeScreen />;
 }

@@ -171,9 +171,14 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                 <ScrollView style={styles.menuList} showsVerticalScrollIndicator={false}>
                     {menuItems.map((item) => {
                         const handlePress = () => {
+                            if (item.label === "Início") {
+                                onClose();
+                                router.push('/home');
+                                return;
+                            }
                             if (item.label === "Agendamentos") {
                                 onClose();
-                                router.push('/home'); // Ajuste a rota se necessário
+                                router.push('/appointments');
                                 return;
                             }
                             if (user?.role === "CLIENT" && item.label === "Meus Gastos") {

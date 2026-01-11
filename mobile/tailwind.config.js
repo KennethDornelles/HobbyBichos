@@ -10,18 +10,30 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        primary: {
+          dark: '#2B2D42',
+          yellow: '#FDB813',
+        },
+        card: {
+          bg: '#363849',
+          input: '#3D4054',
+        },
+        text: {
+          primary: '#FFFFFF',
+          secondary: '#9CA3AF',
+        },
         brand: {
-          primary: '#FFD600', // Amarelo vibrante
-          secondary: '#4B6FFF', // Azul institucional
+          primary: '#FFD600',
+          secondary: '#4B6FFF',
         },
         background: {
           dark: '#1A1B2E',
           light: '#F9FAFB',
         },
         status: {
-          success: '#22C55E', // Verde
-          error: '#EF4444',   // Vermelho
-          alert: '#F59E42',   // Laranja
+          success: '#22C55E',
+          error: '#EF4444',
+          alert: '#F59E42',
         },
       },
       borderRadius: {
@@ -33,6 +45,11 @@ module.exports = {
       },
       backdropBlur: {
         glass: '8px',
+      },
+      fontFamily: {
+        sans: ['Poppins_400Regular'],
+        semibold: ['Poppins_600SemiBold'],
+        bold: ['Poppins_700Bold'],
       },
     },
   },
