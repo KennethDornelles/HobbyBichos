@@ -16,7 +16,7 @@ export const HomeHeader = React.memo(({ onSearchChange, onCameraPress, onCartPre
             <TouchableOpacity onPress={onMenuPress} activeOpacity={0.7}>
                 <Menu size={28} color="#FFFFFF" strokeWidth={2} />
             </TouchableOpacity>
-            
+
             {/* Campo de Busca */}
             <View className="flex-1 flex-row items-center bg-card-input rounded-lg px-4 py-3">
                 <Search size={20} color="#9CA3AF" />
@@ -30,7 +30,7 @@ export const HomeHeader = React.memo(({ onSearchChange, onCameraPress, onCartPre
                     <Camera size={24} color="#FDB813" />
                 </TouchableOpacity>
             </View>
-            
+
             {/* Botão Carrinho */}
             <TouchableOpacity onPress={onCartPress} activeOpacity={0.7}>
                 <ShoppingCart size={28} color="#FFFFFF" strokeWidth={2} />
