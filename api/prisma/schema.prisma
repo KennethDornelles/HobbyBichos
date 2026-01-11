@@ -83,6 +83,7 @@ model User {
   recoveryCodes            RecoveryCode[]
   reviews                  Review[]        @relation("ReviewUser")
   reviewsAsEmployee        Review[]        @relation("ReviewEmployee")
+  cart                     Cart?
 
   @@map("users")
 }
@@ -131,6 +132,9 @@ model Product {
 
   stocks     ProductStock[]
   orderItems OrderItem[]
+  cartItems  CartItem[]
+  images     String[] @default([])
+  sku        String?
 
   @@map("products")
 }
@@ -246,4 +250,31 @@ model OrderItem {
   service Service? @relation(fields: [serviceId], references: [id])
 
   @@map("order_items")
+}
+
+model Cart {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+
+  @@map("carts")
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId], name: "cartId_productId")
+  @@map("cart_items")
 }
