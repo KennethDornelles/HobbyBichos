@@ -9,8 +9,10 @@ SplashScreen.preventAutoHideAsync();
 
 import { AuthProvider } from '../src/context/AuthContext';
 import { ThemeProvider } from '../src/context/ThemeContext';
+import { useCartAutoSync } from '../src/hooks/useCartAutoSync';
 
 export default function RootLayout() {
+  useCartAutoSync();
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_600SemiBold,
