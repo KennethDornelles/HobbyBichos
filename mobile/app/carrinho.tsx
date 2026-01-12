@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert, ScrollView, SafeAreaView } from 'react-native';
 import { useCartStore } from '../src/store/cartStore';
 import { useRouter } from 'expo-router';
+import { X, Plus, Minus } from 'lucide-react-native';
 
 export default function CarrinhoScreen() {
     const router = useRouter();
@@ -18,48 +19,127 @@ export default function CarrinhoScreen() {
     };
 
     return (
-        <View className="flex-1 p-4">
-            <Text className="text-2xl font-semibold mb-4">Seu carrinho</Text>
-
-            {items.length === 0 ? (
-                <Text>Seu carrinho está vazio.</Text>
-            ) : (
-                items.map((item) => (
-                    <View key={item.productId} className="flex-row items-center bg-white rounded-xl p-3 mb-3">
-                        {item.image ? (
-                            <Image source={{ uri: item.image }} className="w-16 h-16 rounded-lg mr-3" />
-                        ) : (
-                            <View className="w-16 h-16 rounded-lg mr-3 bg-gray-200" />
-                        )}
-                        <View className="flex-1">
-                            <Text className="font-semibold">{item.name}</Text>
-                            <Text className="text-gray-500">R$ {(item.price).toFixed(2)}</Text>
-                            <View className="flex-row items-center mt-2">
-                                <TouchableOpacity onPress={() => updateQuantity(item.productId, Math.max(0, item.quantity - 1))} className="px-3 py-1 bg-gray-100 rounded-lg mr-2">
-                                    <Text>-</Text>
-                                </TouchableOpacity>
-                                <Text className="mx-2">{item.quantity}</Text>
-                                <TouchableOpacity onPress={() => updateQuantity(item.productId, Math.min(item.maxStock, item.quantity + 1))} className="px-3 py-1 bg-gray-100 rounded-lg ml-2">
-                                    <Text>+</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                        <TouchableOpacity onPress={() => confirmRemove(item.productId, item.name)}>
-                            <Text className="text-red-500 font-semibold">Remover</Text>
-                        </TouchableOpacity>
+        <SafeAreaView className="flex-1" style={{ backgroundColor: '#1A1B2E' }}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+                <View className="flex-1 px-5 pt-6">
+                    {/* Header */}
+                    <View className="mb-6">
+                        <Text className="text-3xl font-bold text-white">Seu carrinho</Text>
                     </View>
-                ))
-            )}
 
-            <View className="mt-auto bg-white rounded-xl p-4">
-                <View className="flex-row justify-between mb-3">
-                    <Text className="text-lg">Subtotal</Text>
-                    <Text className="text-lg font-semibold">R$ {subtotal.toFixed(2)}</Text>
+                    {/* Items */}
+                    {items.length === 0 ? (
+                        <View className="flex-1 justify-center items-center">
+                            <Text className="text-gray-400 text-lg">Seu carrinho está vazio.</Text>
+                        </View>
+                    ) : (
+                        <View className="mb-6">
+                            {items.map((item) => (
+                                <View
+                                    key={item.productId}
+                                    className="flex-row items-center rounded-2xl p-4 mb-3"
+                                    style={{ backgroundColor: '#2D2E3F' }}
+                                >
+                                    {/* Imagem */}
+                                    {item.image ? (
+                                        <Image
+                                            source={{ uri: item.image }}
+                                            className="w-20 h-20 rounded-xl mr-4"
+                                        />
+                                    ) : (
+                                        <View className="w-20 h-20 rounded-xl mr-4 bg-gray-600" />
+                                    )}
+
+                                    {/* Info do Produto */}
+                                    <View className="flex-1">
+                                        <Text className="text-white font-semibold text-base mb-1">
+                                            {item.name}
+                                        </Text>
+                                        <Text className="text-yellow-400 font-bold text-lg mb-3">
+                                            R$ {item.price.toFixed(2)}
+                                        </Text>
+
+                                        {/* Controles de quantidade */}
+                                        <View className="flex-row items-center gap-3">
+                                            <TouchableOpacity
+                                                onPress={() =>
+                                                    updateQuantity(item.productId, Math.max(1, item.quantity - 1))
+                                                }
+                                                className="w-8 h-8 rounded-lg items-center justify-center"
+                                                style={{ backgroundColor: '#3D3E4F' }}
+                                            >
+                                                <Minus size={16} color="#FFB800" />
+                                            </TouchableOpacity>
+
+                                            <Text className="text-white font-semibold text-base w-8 text-center">
+                                                {item.quantity}
+                                            </Text>
+
+                                            <TouchableOpacity
+                                                onPress={() =>
+                                                    updateQuantity(
+                                                        item.productId,
+                                                        Math.min(item.maxStock, item.quantity + 1)
+                                                    )
+                                                }
+                                                className="w-8 h-8 rounded-lg items-center justify-center"
+                                                style={{ backgroundColor: '#3D3E4F' }}
+                                            >
+                                                <Plus size={16} color="#FFB800" />
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+
+                                    {/* Botão Remover */}
+                                    <TouchableOpacity
+                                        onPress={() => confirmRemove(item.productId, item.name)}
+                                        className="w-10 h-10 rounded-lg items-center justify-center ml-2"
+                                        style={{ backgroundColor: '#3D3E4F' }}
+                                    >
+                                        <X size={20} color="#FF6B6B" />
+                                    </TouchableOpacity>
+                                </View>
+                            ))}
+                        </View>
+                    )}
                 </View>
-                <TouchableOpacity onPress={() => router.push('/checkout')} className="bg-black rounded-xl p-3">
-                    <Text className="text-white text-center font-semibold">Prosseguir para checkout</Text>
-                </TouchableOpacity>
-            </View>
-        </View>
+            </ScrollView>
+
+            {/* Footer com Total */}
+            {items.length > 0 && (
+                <View className="px-5 pb-6" style={{ backgroundColor: '#1A1B2E' }}>
+                    {/* Subtotal */}
+                    <View className="mb-4 pb-4 border-b" style={{ borderColor: '#3D3E4F' }}>
+                        <View className="flex-row justify-between items-center">
+                            <Text className="text-gray-400 font-semibold text-base">Subtotal</Text>
+                            <Text className="text-yellow-400 font-bold text-base">
+                                R$ {subtotal.toFixed(2)}
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* Total destacado */}
+                    <View
+                        className="rounded-2xl p-5 mb-5 items-center"
+                        style={{ backgroundColor: '#FFB800' }}
+                    >
+                        <Text className="text-gray-800 text-sm font-semibold mb-1">Total</Text>
+                        <Text className="text-gray-900 text-3xl font-bold">
+                            R$ {subtotal.toFixed(2)}
+                        </Text>
+                        <View className="w-16 h-1 rounded-full mt-3" style={{ backgroundColor: '#FFA500' }} />
+                    </View>
+
+                    {/* Botão Prosseguir */}
+                    <TouchableOpacity
+                        onPress={() => router.push('/checkout')}
+                        className="p-4 rounded-2xl items-center"
+                        style={{ backgroundColor: '#FFB800' }}
+                    >
+                        <Text className="text-gray-900 text-center font-bold text-lg">Proceed to Checkout</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+        </SafeAreaView>
     );
 }

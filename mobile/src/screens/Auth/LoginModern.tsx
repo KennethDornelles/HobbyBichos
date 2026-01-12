@@ -8,6 +8,8 @@ import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
+    Alert,
+    ActivityIndicator,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,6 +17,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import CustomInput from '../../components/CustomInput';
 import { LoginFormData } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
+import api from '../../services/api';
+import * as SecureStore from 'expo-secure-store';
 
 const LoginScreen: React.FC = () => {
     const { isDark, toggleTheme } = useTheme();
@@ -27,23 +31,62 @@ const LoginScreen: React.FC = () => {
     const router = useRouter();
 
     const handleLogin = async () => {
+        // Validação básica
+        if (!formData.email.trim() || !formData.password.trim()) {
+            Alert.alert('Erro', 'Por favor, preencha email e senha');
+            return;
+        }
+
         setLoading(true);
         try {
-            // Simulação de chamada API
-            console.log('Login attempt:', formData);
-            // Aqui você chamaria seu backend
-            setTimeout(() => {
-                setLoading(false);
-                router.push('home');
-            }, 800);
-        } catch (error) {
-            console.error('Login error:', error);
+            console.log('🔓 Tentando login com:', formData.email);
+
+            const response = await api.post<{ access_token: string }>('/auth/login', {
+                email: formData.email,
+                password: formData.password,
+            });
+
+            const token = response.data.access_token;
+            if (!token || typeof token !== 'string') {
+                throw new Error('Token inválido recebido do servidor');
+            }
+
+            console.log('✅ Login bem-sucedido');
+
+            // Salvar token em SecureStore
+            await SecureStore.setItemAsync('authToken', token);
+            console.log('✅ Token salvo em SecureStore');
+
+            // Navegar para home
+            router.replace('/home');
+        } catch (error: any) {
+            console.error('❌ Erro ao fazer login:', {
+                message: error.message,
+                status: error?.response?.status,
+                data: error?.response?.data,
+            });
+
+            // Mensagens de erro mais amigáveis
+            let errorMsg = 'Email ou senha inválidos';
+
+            if (error?.response?.status === 401) {
+                errorMsg = 'Email ou senha incorretos. Verifique seus dados e tente novamente.';
+            } else if (error?.response?.status === 400) {
+                errorMsg = 'Dados inválidos. Verifique o formato do email.';
+            } else if (!error?.response) {
+                errorMsg = 'Erro de conexão. Verifique sua internet e tente novamente.';
+            } else if (error?.response?.data?.message) {
+                errorMsg = error.response.data.message;
+            }
+
+            Alert.alert('Erro de Login', errorMsg);
             setLoading(false);
         }
     };
 
     const handleSocialLogin = (provider: 'google' | 'apple') => {
         console.log(`${provider} login`);
+        Alert.alert('Em breve', `Login com ${provider} em desenvolvimento`);
     };
 
     return (
@@ -128,7 +171,11 @@ const LoginScreen: React.FC = () => {
                                 end={{ x: 1, y: 0 }}
                                 style={styles.loginButtonGradient}
                             >
-                                <Text style={styles.loginButtonText}>{loading ? 'Entrando...' : 'Login'}</Text>
+                                {loading ? (
+                                    <ActivityIndicator color="#111827" />
+                                ) : (
+                                    <Text style={styles.loginButtonText}>Login</Text>
+                                )}
                             </LinearGradient>
                         </TouchableOpacity>
                         {/* Botões Sociais */}

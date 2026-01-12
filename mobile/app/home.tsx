@@ -10,6 +10,7 @@ import {
     ShoppingCart,
     Package,
     Heart,
+    LucideIcon,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { HomeHeader } from '../src/components/HomeHeader';
@@ -21,7 +22,7 @@ import { useUserStore } from '../src/store/userStore';
 
 interface QuickActionItem {
     id: string;
-    icon: React.ComponentType<{ size: number; color: string }>;
+    icon: LucideIcon;
     label: string;
 }
 
@@ -29,7 +30,7 @@ interface ActionCardItem {
     id: string;
     title: string;
     subtitle: string;
-    icon: React.ComponentType<{ size: number; color: string }>;
+    icon: LucideIcon;
     route?: string;
 }
 
@@ -67,15 +68,13 @@ const mainActions: ActionCardItem[] = [
 
 export default function HomeScreen() {
     const router = useRouter();
-    const { name, points, setUser } = useUserStore();
+    const { name, points, loadUserProfile, loading } = useUserStore();
     const [menuVisible, setMenuVisible] = useState(false);
 
-    // Inicializar com dados de exemplo se não existirem
+    // Carregar perfil do usuário autenticado ao montar
     useEffect(() => {
-        if (name === 'Visitante') {
-            setUser('Amanda', 372);
-        }
-    }, [name, setUser]);
+        void loadUserProfile();
+    }, [loadUserProfile]);
 
     const handleQuickAction = (id: string) => {
         // Implementar navegação para cada ação

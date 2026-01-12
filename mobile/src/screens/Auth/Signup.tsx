@@ -9,14 +9,17 @@ import {
     Platform,
     ScrollView,
     Image,
+    Alert,
+    ActivityIndicator,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import CustomInput from '../../components/CustomInput';
-// Removido SignupFormData para definir localmente os campos necessários
 import { useTheme } from '../../context/ThemeContext';
 import { ThemeToggle } from '../../components/ThemeToggle';
+import api from '../../services/api';
+import * as SecureStore from 'expo-secure-store';
 
 const SignupScreen: React.FC = () => {
     const { isDark } = useTheme();
@@ -30,17 +33,74 @@ const SignupScreen: React.FC = () => {
     const router = useRouter();
 
     const handleSignup = async () => {
+        // Validação básica
+        if (!formData.name.trim() || !formData.email.trim() || !formData.password.trim() || !formData.phone.trim()) {
+            Alert.alert('Erro', 'Por favor, preencha todos os campos');
+            return;
+        }
+
         setLoading(true);
         try {
-            // Simulação de chamada API
-            console.log('Signup attempt:', formData);
-            // Aqui você chamaria seu backend
-            setTimeout(() => {
-                setLoading(false);
-                router.push('home');
-            }, 800);
-        } catch (error) {
-            console.error('Signup error:', error);
+            console.log('📝 Criando conta com:', { name: formData.name, email: formData.email, phone: formData.phone });
+
+            // 1. Criar usuário
+            const signupRes = await api.post<{ user: { id: string; email: string } }>('/auth/register', {
+                name: formData.name,
+                email: formData.email,
+                password: formData.password,
+                phone: formData.phone,
+            });
+
+            console.log('✅ Usuário criado:', signupRes.data.user.email);
+
+            // 2. Fazer login automático
+            const loginRes = await api.post<{ access_token: string }>('/auth/login', {
+                email: formData.email,
+                password: formData.password,
+            });
+
+            console.log('📦 Resposta do login:', JSON.stringify(loginRes.data, null, 2));
+
+            const token = loginRes.data.access_token;
+            console.log('🔑 Token recebido:', typeof token, token ? 'presente' : 'ausente');
+
+            if (!token || typeof token !== 'string') {
+                console.error('❌ Token inválido:', { token, type: typeof token, data: loginRes.data });
+                throw new Error('Token inválido recebido do servidor');
+            }
+
+            console.log('✅ Login automático realizado');
+
+            // 3. Salvar token
+            await SecureStore.setItemAsync('authToken', token);
+            console.log('✅ Token salvo em SecureStore');
+
+            // 4. Navegar para home
+            Alert.alert('Sucesso', 'Conta criada com sucesso!');
+            router.replace('/home');
+        } catch (error: any) {
+            console.error('❌ Erro ao criar conta:', {
+                message: error.message,
+                status: error?.response?.status,
+                data: error?.response?.data,
+            });
+
+            // Mensagens de erro mais amigáveis
+            let errorMsg = 'Erro ao criar conta. Tente novamente.';
+
+            if (error?.response?.status === 409) {
+                errorMsg = 'Este email já está em uso. Tente fazer login ou use outro email.';
+            } else if (error?.response?.status === 400) {
+                errorMsg = error?.response?.data?.message || 'Dados inválidos. Verifique os campos e tente novamente.';
+            } else if (error?.response?.status === 401) {
+                errorMsg = 'Não foi possível fazer login após criar a conta. Tente fazer login manualmente.';
+            } else if (!error?.response) {
+                errorMsg = 'Erro de conexão. Verifique sua internet e tente novamente.';
+            } else if (error?.response?.data?.message) {
+                errorMsg = error.response.data.message;
+            }
+
+            Alert.alert('Erro', errorMsg);
             setLoading(false);
         }
     };
@@ -139,9 +199,11 @@ const SignupScreen: React.FC = () => {
                                 end={{ x: 1, y: 0 }}
                                 style={styles.signupButtonGradient}
                             >
-                                <Text style={styles.signupButtonText}>
-                                    {loading ? 'Criando...' : 'Sign up'}
-                                </Text>
+                                {loading ? (
+                                    <ActivityIndicator color="#111827" />
+                                ) : (
+                                    <Text style={styles.signupButtonText}>Sign up</Text>
+                                )}
                             </LinearGradient>
                         </TouchableOpacity>
 
