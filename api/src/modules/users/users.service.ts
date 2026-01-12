@@ -61,6 +61,21 @@ export class UsersService {
     });
   }
 
+  async findEmployeesByStore(storeId: string) {
+    return this.prisma.user.findMany({
+      where: {
+        storeId,
+        role: { in: ['EMPLOYEE', 'MANAGER', 'OWNER'] },
+      },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        email: true,
+      },
+    });
+  }
+
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({
       where: { email },

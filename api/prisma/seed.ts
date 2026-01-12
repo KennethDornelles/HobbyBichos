@@ -4,6 +4,7 @@ import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 import { config } from 'dotenv';
 import { seedLoyaltyRewards } from './seeds/loyalty-rewards.seed';
+import { seedServices } from './seeds/services.seed';
 
 // Carrega as variáveis do .env imediatamente
 config();
@@ -22,14 +23,15 @@ async function main(): Promise<void> {
   try {
     console.log('🚀 Iniciando seed do ecossistema Hobby Bichos...');
 
-    // Limpeza de dados
+    // Limpeza de dados (mantém usuários existentes)
+    console.log('⚠️  Limpando dados de teste (usuários serão preservados)...');
     await prisma.appointment.deleteMany({});
     await prisma.order.deleteMany({});
     await prisma.productStock.deleteMany({});
     await prisma.service.deleteMany({});
     await prisma.product.deleteMany({});
     await prisma.pet.deleteMany({});
-    await prisma.user.deleteMany({});
+    // REMOVIDO: await prisma.user.deleteMany({});
     await prisma.store.deleteMany({});
 
     // 1. Criação das Lojas
@@ -55,22 +57,44 @@ async function main(): Promise<void> {
       stores.push(store);
     }
 
-    // 1b. Criação de expediente padrão para store1 (segunda a sexta, 08:00-18:00)
-    for (let weekday = 1; weekday <= 5; weekday++) {
+    // 1b. Criação de expediente padrão para todas as lojas
+    // Segunda a Sexta: 07:00-19:00
+    // Sábado: 07:00-17:00
+    // Domingo: Fechado
+    for (const store of stores) {
+      // Segunda a sexta (weekday 1-5)
+      for (let weekday = 1; weekday <= 5; weekday++) {
+        await prisma.storeBusinessHour.create({
+          data: {
+            storeId: store.id,
+            weekday,
+            openTime: '07:00',
+            closeTime: '19:00',
+          },
+        });
+      }
+
+      // Sábado (weekday 6)
       await prisma.storeBusinessHour.create({
         data: {
-          storeId: 'store1',
-          weekday,
-          openTime: '08:00',
-          closeTime: '18:00',
+          storeId: store.id,
+          weekday: 6,
+          openTime: '07:00',
+          closeTime: '17:00',
         },
       });
+
+      // Domingo (weekday 0) - não cria registro, loja fechada
     }
 
     // 2. Usuários
     const passwordHash = await bcrypt.hash('123456', 10);
-    await prisma.user.create({
-      data: {
+    console.log('👤 Criando usuários do sistema...');
+
+    await prisma.user.upsert({
+      where: { email: 'admin@hobbybichos.com' },
+      update: {},
+      create: {
         name: 'Super Admin Hobby',
         email: 'admin@hobbybichos.com',
         password: passwordHash,
@@ -80,8 +104,10 @@ async function main(): Promise<void> {
     });
 
     for (const store of stores) {
-      await prisma.user.create({
-        data: {
+      await prisma.user.upsert({
+        where: { email: `owner.${store.slug}@hobbybichos.com` },
+        update: {},
+        create: {
           name: `Dono ${store.name}`,
           email: `owner.${store.slug}@hobbybichos.com`,
           password: passwordHash,
@@ -114,8 +140,10 @@ async function main(): Promise<void> {
     });
 
     // Usuário de teste E2E
-    await prisma.user.create({
-      data: {
+    await prisma.user.upsert({
+      where: { email: 'test@qa.com' },
+      update: {},
+      create: {
         name: 'QA',
         email: 'test@qa.com',
         password: passwordHash,
@@ -126,8 +154,10 @@ async function main(): Promise<void> {
     });
 
     // Usuário CLIENT padrão para E2E
-    await prisma.user.create({
-      data: {
+    await prisma.user.upsert({
+      where: { email: 'client@qa.com' },
+      update: {},
+      create: {
         name: 'Cliente QA',
         email: 'client@qa.com',
         password: await bcrypt.hash('Senha123!', 10),
@@ -137,16 +167,10 @@ async function main(): Promise<void> {
       },
     });
 
-    // Serviço para a loja store1 com id fixo
-    await prisma.service.create({
-      data: {
-        id: 's1',
-        storeId: 'store1',
-        name: 'Banho',
-        price: 50.0,
-        durationMin: 30,
-      },
-    });
+    // Criação de serviços para todas as lojas
+    console.log('🐾 Criando serviços...');
+    const storeIds = stores.map((store) => store.id);
+    await seedServices(prisma, storeIds);
 
     console.log('✨ Seed finalizado com sucesso!');
 

@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { ServicesService } from './services.service';
 import { CreateServiceDto } from './dto/create-service.dto';
@@ -28,8 +29,10 @@ export class ServicesController {
   }
 
   @Get()
-  async findAll(@Request() req) {
-    return this.servicesService.findAll(req.user.storeId);
+  async findAll(@Request() req, @Query('storeId') storeId?: string) {
+    // Se storeId foi passado na query, usa ele; senão usa o storeId do usuário
+    const targetStoreId = storeId || req.user.storeId;
+    return this.servicesService.findAll(targetStoreId);
   }
 
   @Get(':id')

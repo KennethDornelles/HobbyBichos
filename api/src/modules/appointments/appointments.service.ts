@@ -1,4 +1,8 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { FilterAppointmentsDto } from './dto/filter-appointments.dto';
@@ -23,7 +27,7 @@ export class AppointmentsService {
 
   async create(
     createDto: CreateAppointmentDto,
-    user: { storeId: string; userId?: string; id?: string },
+    user: { storeId?: string; userId?: string; id?: string },
   ) {
     // CORREÇÃO: user pode ter 'id' ou 'userId' dependendo do contexto
     const userId = user.userId || user.id;
@@ -32,20 +36,20 @@ export class AppointmentsService {
       throw new ConflictException('Usuário não identificado');
     }
 
-    // O método findOne espera dois argumentos: id e storeId
-    const service = await this.servicesService.findOne(
-      createDto.serviceId,
-      user.storeId,
-    );
+    // Busca o serviço diretamente para obter seu storeId
+    const service = await this.prisma.service.findUnique({
+      where: { id: createDto.serviceId },
+    });
     if (!service) throw new ConflictException('Serviço não encontrado');
 
+    const storeId = service.storeId;
     const startsAt = new Date(createDto.startsAt);
     const endsAt = new Date(startsAt.getTime() + service.durationMin * 60000);
 
     // 1. Verifica se é data de exclusão
     const exclusion = await this.prisma.storeExclusion.findFirst({
       where: {
-        storeId: user.storeId,
+        storeId: storeId,
         date: {
           gte: new Date(startsAt.toDateString()),
           lt: new Date(
@@ -62,7 +66,7 @@ export class AppointmentsService {
     const weekday = startsAt.getDay();
     const businessHour = await this.prisma.storeBusinessHour.findFirst({
       where: {
-        storeId: user.storeId,
+        storeId: storeId,
         weekday,
       },
     });
@@ -104,7 +108,7 @@ export class AppointmentsService {
         professionalId: createDto.employeeId,
         serviceId: createDto.serviceId,
         startsAt,
-        storeId: user.storeId,
+        storeId: storeId, // Usar storeId do serviço
         userId: userId, // CORRIGIDO: usar a variável extraída
         status: AppointmentStatus.SCHEDULED,
       },
@@ -114,16 +118,21 @@ export class AppointmentsService {
       },
     });
 
-    // Envia e-mail de confirmação para o cliente
+    // Envia e-mail de confirmação para o cliente (não-bloqueante)
     if (appointment.user?.email && appointment.store?.name) {
-      await this.mailService.sendAppointmentConfirmation(
-        appointment.user.email,
-        appointment.store.name,
-        {
-          clientName: appointment.user.name,
-          date: appointment.startsAt.toLocaleString('pt-BR'),
-        },
-      );
+      try {
+        await this.mailService.sendAppointmentConfirmation(
+          appointment.user.email,
+          appointment.store.name,
+          {
+            clientName: appointment.user.name,
+            date: appointment.startsAt.toLocaleString('pt-BR'),
+          },
+        );
+      } catch (emailError) {
+        console.error('Erro ao enviar email de confirmação:', emailError);
+        // Não lança exceção - o agendamento já foi criado com sucesso
+      }
     }
 
     return appointment;
@@ -131,16 +140,120 @@ export class AppointmentsService {
 
   async findAllByStore(
     filter: FilterAppointmentsDto,
-    user: { storeId: string },
+    user: { storeId: string; userId?: string; id?: string; role?: string },
   ) {
-    const storeId = filter.storeId || user.storeId;
-    const where: any = { storeId };
+    const userId = user.userId || user.id;
+
+    // Se o usuário for CLIENT, busca os appointments dele
+    // Se for STORE/ADMIN, busca os appointments da loja
+    const where: {
+      userId?: string;
+      storeId?: string;
+      startsAt?: { gte: Date; lt: Date };
+    } = {};
+
+    if (user.role === 'CLIENT') {
+      // Cliente vê apenas seus próprios agendamentos
+      where.userId = userId;
+    } else if (user.storeId) {
+      // Store/Admin vê os agendamentos da loja
+      const storeId = filter.storeId || user.storeId;
+      where.storeId = storeId;
+    } else {
+      // Se não tem role CLIENT nem storeId, retorna vazio
+      return [];
+    }
+
     if (filter.date) {
       const date = new Date(filter.date);
       const nextDay = new Date(date);
       nextDay.setDate(date.getDate() + 1);
       where.startsAt = { gte: date, lt: nextDay };
     }
-    return this.prisma.appointment.findMany({ where });
+
+    return this.prisma.appointment.findMany({
+      where,
+      include: {
+        store: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        pet: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        service: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+          },
+        },
+        professional: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: {
+        startsAt: 'desc',
+      },
+    });
+  }
+
+  async findOne(
+    id: string,
+    user: { storeId?: string; userId?: string; id?: string; role?: string },
+  ) {
+    const userId = user.userId || user.id;
+
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id },
+      include: {
+        store: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        pet: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        service: {
+          select: {
+            id: true,
+            name: true,
+            price: true,
+          },
+        },
+        professional: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (!appointment) {
+      throw new NotFoundException('Agendamento não encontrado');
+    }
+
+    // Verifica permissões: CLIENT vê apenas seus próprios, STORE/ADMIN vê os da loja
+    if (user.role === 'CLIENT' && appointment.userId !== userId) {
+      throw new NotFoundException('Agendamento não encontrado');
+    } else if (user.storeId && appointment.storeId !== user.storeId) {
+      throw new NotFoundException('Agendamento não encontrado');
+    }
+
+    return appointment;
   }
 }

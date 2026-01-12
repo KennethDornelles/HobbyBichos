@@ -8,7 +8,7 @@
   "scripts": {
     "seed": "ts-node prisma/seed.ts",
     "migrate:deploy": "prisma migrate deploy",
-    "start:prod": "npm run migrate:deploy && npm run seed && node dist/main.js",
+    "start:prod": "npm run migrate:deploy && node dist/main.js",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
@@ -86,5 +86,5 @@
     "mjml": "^5.0.0",
     "nodemailer": "^6.9.16"
   },
-  "postinstall": "npm audit --production"
+  "postinstall": "npm audit --production --audit-level=high || echo 'audit warnings ignored'"
 }

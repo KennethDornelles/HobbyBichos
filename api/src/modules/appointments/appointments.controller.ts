@@ -6,6 +6,7 @@ import {
   Request,
   Get,
   Query,
+  Param,
 } from '@nestjs/common';
 import { AppointmentsService } from './appointments.service';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
@@ -28,6 +29,11 @@ export class AppointmentsController {
   @Get()
   async findAllByStore(@Query() filter: FilterAppointmentsDto, @Request() req) {
     return this.appointmentsService.findAllByStore(filter, req.user);
+  }
+
+  @Get(':id')
+  async findOne(@Param('id') id: string, @Request() req) {
+    return this.appointmentsService.findOne(id, req.user);
   }
 
   // Outros endpoints CRUD podem ser implementados conforme necessário

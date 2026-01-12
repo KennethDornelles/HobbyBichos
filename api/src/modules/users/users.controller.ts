@@ -46,6 +46,20 @@ export class UsersController {
     return this.usersService.findAllByStore(storeId);
   }
 
+  @Get('store/:storeId/employees')
+  @ApiOperation({
+    summary:
+      'Lista funcionários disponíveis de uma loja (público para agendamentos)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Funcionários retornados com sucesso.',
+  })
+  @ApiResponse({ status: 401, description: 'Não autorizado.' })
+  async findEmployeesByStore(@Param('storeId') storeId: string) {
+    return this.usersService.findEmployeesByStore(storeId);
+  }
+
   @Post()
   @ApiOperation({ summary: 'Cria um novo usuário' })
   @ApiResponse({ status: 201, description: 'Usuário criado com sucesso.' })

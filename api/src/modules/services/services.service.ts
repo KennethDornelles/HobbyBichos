@@ -23,8 +23,24 @@ export class ServicesService {
     });
   }
 
-  async findAll(storeId: string) {
-    return this.prisma.service.findMany({ where: { storeId } });
+  async findAll(storeId?: string) {
+    // Se não tem storeId (cliente sem loja), retorna todos os serviços ativos
+    // Se tem storeId (funcionário/loja), retorna apenas os serviços dessa loja
+    const where: any = { isActive: true };
+    if (storeId) {
+      where.storeId = storeId;
+    }
+    return this.prisma.service.findMany({
+      where,
+      include: {
+        store: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
   }
 
   async findOne(id: string, storeId: string) {
