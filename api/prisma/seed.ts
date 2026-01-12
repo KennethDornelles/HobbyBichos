@@ -152,7 +152,7 @@ async function main(): Promise<void> {
 
     // Seed loyalty rewards
     console.log('🎁 Seeding loyalty system...');
-    await seedLoyaltyRewards();
+    await seedLoyaltyRewards(prisma);
   } catch (error: unknown) {
     console.error('❌ Erro durante o seed:', error);
     throw error;

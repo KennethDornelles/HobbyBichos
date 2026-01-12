@@ -1,8 +1,6 @@
 import { Prisma, PrismaClient, RewardType } from '@prisma/client';
 
-const prisma = new PrismaClient();
-
-async function seedLoyaltyRewards() {
+async function seedLoyaltyRewards(prisma: PrismaClient) {
   const rewards = [
     {
       name: 'Desconto 5%',
