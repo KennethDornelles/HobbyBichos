@@ -5,10 +5,10 @@ import {
     TouchableOpacity,
     Alert,
     ScrollView,
-    SafeAreaView,
     ActivityIndicator,
     TextInput,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCartStore } from '../src/store/cartStore';
 import api from '../src/services/api';
 import { useRouter } from 'expo-router';
@@ -54,18 +54,19 @@ export default function CheckoutScreen() {
                 price: item.price,
             }));
 
-            console.log('Criando pedido com:', { storeId: STORE_ID, items: orderItems, paymentMethod });
+            console.log('Criando pedido com:', { storeId: STORE_ID, items: orderItems });
 
+            // Backend apenas aceita: storeId, items, petId, appointmentId
             const response = await api.post<CreateOrderResponse>('/orders', {
                 storeId: STORE_ID,
                 items: orderItems,
-                shippingAddress,
-                paymentMethod,
             });
 
             const { order, paymentAction } = response.data;
 
             console.log('Pedido criado:', order.id);
+            console.log('WhatsApp Link recebido:', paymentAction.whatsappLink);
+            console.log('Decodificado:', decodeURIComponent(paymentAction.whatsappLink));
 
             clear();
 
@@ -90,7 +91,7 @@ export default function CheckoutScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="flex-1 px-5 py-6">
                     {/* Header */}
@@ -128,14 +129,14 @@ export default function CheckoutScreen() {
                                     key={method}
                                     onPress={() => setPaymentMethod(method)}
                                     className={`px-4 py-3 rounded-xl flex-1 items-center border-2 ${paymentMethod === method
-                                            ? 'border-yellow-400 bg-yellow-50'
-                                            : 'border-gray-200 bg-gray-50'
+                                        ? 'border-yellow-400 bg-yellow-50'
+                                        : 'border-gray-200 bg-gray-50'
                                         }`}
                                 >
                                     <Text
                                         className={`font-semibold text-sm ${paymentMethod === method
-                                                ? 'text-yellow-600'
-                                                : 'text-gray-600'
+                                            ? 'text-yellow-600'
+                                            : 'text-gray-600'
                                             }`}
                                     >
                                         {PAYMENT_LABELS[method]}
@@ -222,8 +223,8 @@ export default function CheckoutScreen() {
                         disabled={creating || items.length === 0 || !shippingAddress.trim()}
                         onPress={handleCreateOrder}
                         className={`p-4 rounded-2xl flex-row items-center justify-center mb-6 ${creating || items.length === 0 || !shippingAddress.trim()
-                                ? 'bg-gray-300'
-                                : 'bg-yellow-400'
+                            ? 'bg-gray-300'
+                            : 'bg-yellow-400'
                             }`}
                     >
                         {creating && <ActivityIndicator color="#1A1B2E" style={{ marginRight: 8 }} />}
@@ -238,8 +239,8 @@ export default function CheckoutScreen() {
                         />
                         <Text
                             className={`font-bold text-center text-lg ${creating || items.length === 0 || !shippingAddress.trim()
-                                    ? 'text-gray-600'
-                                    : 'text-gray-900'
+                                ? 'text-gray-600'
+                                : 'text-gray-900'
                                 }`}
                         >
                             {creating ? 'Processando...' : 'Confirm order'}

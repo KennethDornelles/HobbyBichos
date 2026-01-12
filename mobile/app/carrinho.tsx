@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, Image, TouchableOpacity, Alert, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCartStore } from '../src/store/cartStore';
 import { useRouter } from 'expo-router';
 import { X, Plus, Minus } from 'lucide-react-native';
@@ -19,7 +20,7 @@ export default function CarrinhoScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1" style={{ backgroundColor: '#1A1B2E' }}>
+        <SafeAreaView className="flex-1" style={{ backgroundColor: '#1A1B2E' }} edges={['top', 'bottom']}>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="flex-1 px-5 pt-6">
                     {/* Header */}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, TextInput } from 'react-native';
+import { View, TouchableOpacity, TextInput, Text } from 'react-native';
 import { Search, Camera, ShoppingCart, Menu } from 'lucide-react-native';
 
 interface HeaderProps {
@@ -7,9 +7,10 @@ interface HeaderProps {
     onCameraPress?: () => void;
     onCartPress?: () => void;
     onMenuPress?: () => void;
+    cartItemsCount?: number;
 }
 
-export const HomeHeader = React.memo(({ onSearchChange, onCameraPress, onCartPress, onMenuPress }: HeaderProps) => (
+export const HomeHeader = React.memo(({ onSearchChange, onCameraPress, onCartPress, onMenuPress, cartItemsCount = 0 }: HeaderProps) => (
     <View className="bg-primary-dark px-4 pt-2 pb-4">
         <View className="flex-row items-center gap-3">
             {/* Botão Menu */}
@@ -31,10 +32,19 @@ export const HomeHeader = React.memo(({ onSearchChange, onCameraPress, onCartPre
                 </TouchableOpacity>
             </View>
 
-            {/* Botão Carrinho */}
-            <TouchableOpacity onPress={onCartPress} activeOpacity={0.7}>
-                <ShoppingCart size={28} color="#FFFFFF" strokeWidth={2} />
-            </TouchableOpacity>
+            {/* Botão Carrinho com Badge */}
+            <View>
+                <TouchableOpacity onPress={onCartPress} activeOpacity={0.7}>
+                    <ShoppingCart size={28} color="#FFFFFF" strokeWidth={2} />
+                </TouchableOpacity>
+                {cartItemsCount > 0 && (
+                    <View className="absolute -top-1 -right-1 bg-red-500 rounded-full min-w-[20px] h-5 items-center justify-center px-1">
+                        <Text className="text-white text-xs font-bold">
+                            {cartItemsCount > 99 ? '99+' : cartItemsCount}
+                        </Text>
+                    </View>
+                )}
+            </View>
         </View>
     </View>
 ));

@@ -44,6 +44,10 @@ export default function OrderCreatedScreen() {
             Alert.alert('Erro', 'Link do WhatsApp não disponível');
             return;
         }
+
+        console.log('🔗 Abrindo WhatsApp com link:', whatsappLink);
+        console.log('📝 Mensagem decodificada:', decodeURIComponent(whatsappLink));
+
         try {
             const supported = await Linking.canOpenURL(whatsappLink);
             if (supported) {
@@ -82,11 +86,23 @@ export default function OrderCreatedScreen() {
                         Seu pedido foi criado com sucesso
                     </Text>
 
-                    {/* Número do pedido */}
-                    <View className="bg-white rounded-xl p-4 w-full mb-6 border border-gray-100">
-                        <Text className="text-gray-600 text-sm font-semibold mb-2">Número do Pedido</Text>
-                        <Text className="text-2xl font-bold text-gray-800">{shortOrderId}</Text>
-                        <Text className="text-xs text-gray-500 mt-1">ID completo: {orderId}</Text>
+                    {/* Número do pedido - Destaque para Delivery */}
+                    <View className="bg-white rounded-xl p-5 w-full mb-6 border-2 border-[#FFD25D] shadow-md">
+                        <View className="flex-row items-center justify-between mb-3">
+                            <Text className="text-gray-700 text-base font-bold">🚚 Rastreamento</Text>
+                            <TouchableOpacity
+                                onPress={async () => {
+                                    await Clipboard.setStringAsync(orderId || '');
+                                    Alert.alert('Copiado!', 'Número do pedido copiado');
+                                }}
+                                className="bg-gray-100 rounded-lg px-3 py-1 flex-row items-center"
+                            >
+                                <Copy size={14} color="#6b7280" style={{ marginRight: 4 }} />
+                                <Text className="text-gray-600 text-xs font-semibold">Copiar</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <Text className="text-[#1A1B2E] text-3xl font-bold tracking-wider">#{shortOrderId}</Text>
+                        <Text className="text-xs text-gray-500 mt-2">Use este número para acompanhar seu pedido</Text>
                     </View>
 
                     {/* Total destacado */}

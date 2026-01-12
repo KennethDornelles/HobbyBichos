@@ -4,15 +4,15 @@ import {
     Text,
     TouchableOpacity,
     FlatList,
-    SafeAreaView,
     ActivityIndicator,
     RefreshControl,
     Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
-import { ShoppingBag, AlertCircle } from 'lucide-react-native';
+import { ShoppingBag, Package } from 'lucide-react-native';
 import api from '../src/services/api';
-import type { OrderListResponse, OrderListItem } from '../src/types/order.types';
+import type { OrderListItem } from '../src/types/order.types';
 
 export default function OrdersListScreen() {
     const router = useRouter();
@@ -21,28 +21,36 @@ export default function OrdersListScreen() {
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Mapear status para cores
-    const getStatusColor = (status: string): string => {
-        const colors: Record<string, string> = {
-            WAITING_PAYMENT: 'bg-yellow-100 text-yellow-800',
-            PAID: 'bg-green-100 text-green-800',
-            PROCESSING: 'bg-blue-100 text-blue-800',
-            DELIVERED: 'bg-emerald-100 text-emerald-800',
-            CANCELLED: 'bg-red-100 text-red-800',
-        };
-        return colors[status] || 'bg-gray-100 text-gray-800';
+    // Mapear status para botão de ação
+    const getActionButton = (status: string) => {
+        switch (status) {
+            case 'WAITING_PAYMENT':
+                return { text: 'Pagar', color: 'bg-[#1A1B2E]' };
+            case 'PAID':
+                return { text: 'Rastrear', color: 'bg-[#1A1B2E]' };
+            case 'PROCESSING':
+                return { text: 'Acompanhar', color: 'bg-[#1A1B2E]' };
+            case 'DELIVERED':
+                return { text: 'Recebido', color: 'bg-green-600' };
+            default:
+                return { text: 'Ver', color: 'bg-gray-600' };
+        }
     };
 
-    // Mapear status para texto legível
-    const getStatusText = (status: string): string => {
-        const texts: Record<string, string> = {
-            WAITING_PAYMENT: 'Aguardando Pagamento',
-            PAID: 'Pago',
-            PROCESSING: 'Processando',
-            DELIVERED: 'Entregue',
-            CANCELLED: 'Cancelado',
-        };
-        return texts[status] || status;
+    // Mapear status para texto do card
+    const getStatusInfo = (status: string) => {
+        switch (status) {
+            case 'WAITING_PAYMENT':
+                return { title: 'Aguardando Pagamento', subtitle: 'Confirme o pagamento' };
+            case 'PAID':
+                return { title: 'Pedido Pago', subtitle: 'Em preparação' };
+            case 'PROCESSING':
+                return { title: 'Em Processamento', subtitle: 'Preparando pedido' };
+            case 'DELIVERED':
+                return { title: 'Entregue', subtitle: 'Pedido concluído' };
+            default:
+                return { title: 'Pedido', subtitle: 'Status: ' + status };
+        }
     };
 
     // Formatar valor monetário em BRL
@@ -65,9 +73,9 @@ export default function OrdersListScreen() {
         try {
             setError(null);
             console.log('Buscando pedidos...');
-            const response = await api.get<OrderListResponse>('/orders');
-            setOrders(response.data.orders);
-            console.log('Pedidos carregados:', response.data.orders.length);
+            const response = await api.get<OrderListItem[]>('/orders');
+            setOrders(response.data);
+            console.log('Pedidos carregados:', response.data.length);
         } catch (err: any) {
             console.error('Erro ao carregar pedidos:', err);
             const errorMsg = err?.response?.data?.message || 'Não foi possível carregar os pedidos';
@@ -96,85 +104,112 @@ export default function OrdersListScreen() {
         await loadOrders();
     };
 
+    // Cancelar pedido
+    const handleCancelOrder = async (orderId: string, shortId: string) => {
+        Alert.alert(
+            'Cancelar Pedido',
+            `Tem certeza que deseja cancelar o pedido ${shortId}?`,
+            [
+                { text: 'Não', style: 'cancel' },
+                {
+                    text: 'Sim, cancelar',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await api.patch(`/orders/${orderId}/cancel`);
+                            Alert.alert('Sucesso', 'Pedido cancelado com sucesso');
+                            await loadOrders();
+                        } catch (err: any) {
+                            console.error('Erro ao cancelar pedido:', err);
+                            const errorMsg = err?.response?.data?.message || 'Não foi possível cancelar o pedido';
+                            Alert.alert('Erro', errorMsg);
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
     // Render item do pedido
     const renderOrderItem = ({ item }: { item: OrderListItem }) => {
         const shortId = item.id.substring(0, 8).toUpperCase();
+        const statusInfo = getStatusInfo(item.status);
+        const actionButton = getActionButton(item.status);
+        const canCancel = item.status !== 'CANCELLED' && item.status !== 'DELIVERED';
 
         return (
-            <TouchableOpacity
-                onPress={() => router.push(`/pedidos/${item.id}`)}
-                className="bg-white rounded-xl p-4 mb-3 border border-gray-100 active:opacity-70"
-            >
-                <View className="flex-row justify-between items-start mb-3">
-                    <View className="flex-1">
-                        <Text className="text-lg font-bold text-gray-800">Pedido {shortId}</Text>
-                        <Text className="text-xs text-gray-500 mt-1">{item.id}</Text>
+            <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
+                <View className="flex-row items-center justify-between">
+                    {/* Ícone e Info */}
+                    <View className="flex-row items-center flex-1">
+                        <View className="w-12 h-12 rounded-xl bg-orange-100 items-center justify-center mr-3">
+                            <Package size={24} color="#f97316" />
+                        </View>
+                        <View className="flex-1">
+                            <Text className="text-base font-bold text-gray-900">{statusInfo.title}</Text>
+                            <Text className="text-sm text-gray-500 mt-0.5">Pedido #{shortId}</Text>
+                        </View>
                     </View>
-                    <View className={`rounded-full px-3 py-1 ${getStatusColor(item.status)}`}>
-                        <Text className="text-xs font-semibold">{getStatusText(item.status)}</Text>
-                    </View>
+
+                    {/* Botão de Ação */}
+                    <TouchableOpacity
+                        onPress={() => router.push(`/pedidos/${item.id}`)}
+                        className={`${actionButton.color} rounded-full px-5 py-2.5 active:opacity-80`}
+                    >
+                        <Text className="text-white text-sm font-semibold">{actionButton.text}</Text>
+                    </TouchableOpacity>
                 </View>
 
-                <View className="flex-row justify-between items-center border-t border-gray-100 pt-3">
-                    <Text className="text-gray-600 text-sm">{formatDate(item.createdAt)}</Text>
-                    <View className="bg-yellow-50 rounded-lg px-3 py-2">
-                        <Text className="text-yellow-800 font-bold text-base">
-                            {formatCurrency(item.total)}
-                        </Text>
-                    </View>
-                </View>
-            </TouchableOpacity>
+                {/* Botão de cancelar (se aplicável) */}
+                {canCancel && (
+                    <TouchableOpacity
+                        onPress={() => handleCancelOrder(item.id, shortId)}
+                        className="mt-3 border border-red-300 rounded-full py-2 active:opacity-70"
+                    >
+                        <Text className="text-red-600 font-semibold text-center text-sm">Cancelar</Text>
+                    </TouchableOpacity>
+                )}
+            </View>
         );
     };
 
     // Empty state
     const renderEmptyState = () => (
-        <View className="flex-1 items-center justify-center p-6">
-            <ShoppingBag size={64} color="#d1d5db" />
-            <Text className="text-xl font-bold text-gray-800 mt-4 text-center">
+        <View className="flex-1 items-center justify-center p-8">
+            <ShoppingBag size={72} color="#d1d5db" />
+            <Text className="text-xl font-bold text-gray-900 mt-6 text-center">
                 Você ainda não fez nenhum pedido
             </Text>
-            <Text className="text-gray-600 text-center mt-2 mb-6">
+            <Text className="text-gray-500 text-center mt-2 mb-8 leading-5">
                 Explore nossos produtos e faça seu primeiro pedido!
             </Text>
             <TouchableOpacity
-                onPress={() => router.push('/produtos')}
-                className="bg-blue-500 rounded-xl p-4 px-8"
+                onPress={() => router.push('/loja')}
+                className="bg-[#1A1B2E] rounded-full py-3.5 px-10 active:opacity-80"
             >
-                <Text className="text-white font-bold text-center">Ir para Produtos</Text>
+                <Text className="text-white font-bold text-base">Ir para Produtos</Text>
             </TouchableOpacity>
         </View>
     );
 
     if (loading && !refreshing) {
         return (
-            <SafeAreaView className="flex-1 bg-gray-50 items-center justify-center">
-                <ActivityIndicator size="large" color="#3b82f6" />
-                <Text className="text-gray-600 mt-4">Carregando seus pedidos...</Text>
+            <SafeAreaView className="flex-1 bg-gray-50 items-center justify-center" edges={['top', 'bottom']}>
+                <ActivityIndicator size="large" color="#1A1B2E" />
+                <Text className="text-gray-600 mt-4 font-medium">Carregando seus pedidos...</Text>
             </SafeAreaView>
         );
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
+        <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'bottom']}>
             {/* Header */}
-            <View className="bg-white border-b border-gray-100 p-4">
-                <Text className="text-3xl font-bold text-gray-800">Meus Pedidos</Text>
-                <Text className="text-gray-600 text-sm mt-1">
+            <View className="bg-white px-5 pt-6 pb-4">
+                <Text className="text-2xl font-bold text-gray-900">Meus Pedidos</Text>
+                <Text className="text-gray-500 text-sm mt-1">
                     {orders.length} pedido{orders.length !== 1 ? 's' : ''}
                 </Text>
             </View>
-
-            {/* Erro */}
-            {error && !refreshing && (
-                <View className="bg-red-50 border-l-4 border-red-400 p-4 m-4 rounded-lg flex-row">
-                    <AlertCircle size={20} color="#dc2626" style={{ marginRight: 12 }} />
-                    <View className="flex-1">
-                        <Text className="text-red-800 font-semibold">Erro</Text>
-                        <Text className="text-red-700 text-sm mt-1">{error}</Text>
-                    </View>
-                </View>
-            )}
 
             {/* Lista de pedidos */}
             {orders.length > 0 ? (
@@ -188,7 +223,7 @@ export default function OrdersListScreen() {
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            colors={['#3b82f6']}
+                            colors={['#1A1B2E']}
                         />
                     }
                 />
@@ -201,7 +236,7 @@ export default function OrdersListScreen() {
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            colors={['#3b82f6']}
+                            colors={['#1A1B2E']}
                         />
                     }
                 />

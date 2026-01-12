@@ -19,6 +19,7 @@ import { QuickAction } from '../../components/QuickAction';
 import { ActionCard } from '../../components/ActionCard';
 import { SideMenu } from '../../components/SideMenu';
 import { useUserStore } from '../../store/userStore';
+import { useCartStore } from '../../store/cartStore';
 
 interface QuickActionItem {
     id: string;
@@ -69,6 +70,7 @@ const mainActions: ActionCardItem[] = [
 export default function HomeScreen() {
     const router = useRouter();
     const { name, points, loadUserProfile, loading } = useUserStore();
+    const { totalItems } = useCartStore();
     const [menuVisible, setMenuVisible] = useState(false);
 
     // Carregar perfil do usuário autenticado ao montar
@@ -105,6 +107,7 @@ export default function HomeScreen() {
                     onMenuPress={() => setMenuVisible(true)}
                     onCameraPress={() => console.log('Camera pressed')}
                     onCartPress={() => router.push('/carrinho')}
+                    cartItemsCount={totalItems()}
                 />
             </SafeAreaView>
 
