@@ -9,7 +9,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { Order, Store, Prisma } from '@prisma/client';
 
 // Interface para o usuário autenticado
-interface AuthUser {
+export interface AuthUser {
   id: string;
   storeId: string;
   role?: string;
@@ -50,9 +50,23 @@ export class OrdersService {
       const { BadRequestException } = await import('@nestjs/common');
       throw new BadRequestException('Pedido deve conter ao menos um item');
     }
-    // Validação de acesso à loja
-    if (createOrderDto.storeId !== user.storeId) {
-      throw new ForbiddenException('Acesso negado à loja');
+
+    // Validação de acesso à loja: apenas OWNER/MANAGER precisam ter storeId
+    // Clientes (CLIENT role) podem comprar de qualquer loja
+    if (user.role && !['CLIENT'].includes(user.role)) {
+      // Se for OWNER/MANAGER, valida se está tentando acessar a loja correta
+      if (createOrderDto.storeId !== user.storeId) {
+        throw new ForbiddenException('Acesso negado à loja');
+      }
+    }
+
+    // Validar que a loja existe
+    const store = await this.prisma.store.findUnique({
+      where: { id: createOrderDto.storeId },
+    });
+
+    if (!store) {
+      throw new NotFoundException('Loja não encontrada');
     }
 
     // Calcule o total do pedido
@@ -89,27 +103,27 @@ export class OrdersService {
     })) as OrderWithRelations;
 
     // Busca dados da loja (whatsappNumber, pixKey)
-    const store: StoreWithPayment =
+    const storeData: StoreWithPayment =
       order.store ||
       ((await this.prisma.store.findUnique({
         where: { id: order.storeId },
       })) as StoreWithPayment);
 
     // Validação do WhatsApp da loja
-    if (!store?.whatsappNumber) {
+    if (!storeData?.whatsappNumber) {
       throw new PreconditionFailedException(
         'A loja precisa configurar o número do WhatsApp para pagamentos.',
       );
     }
 
     // Gera o link do WhatsApp
-    const whatsappLink = this.generateWhatsAppLink(order, store);
+    const whatsappLink = this.generateWhatsAppLink(order, storeData);
 
     return {
       order,
       paymentAction: {
         whatsappLink,
-        pixKey: store.pixKey,
+        pixKey: storeData.pixKey,
         orderTotal: total,
       },
     };
@@ -124,10 +138,29 @@ export class OrdersService {
       style: 'currency',
       currency: 'BRL',
     });
-    const text = encodeURIComponent(
-      `Olá! Fiz o pedido #${order.id} na Hobby Bichos. Total: ${totalFormatted}. Segue meu pedido para pagamento via PIX.`,
-    );
-    return `https://wa.me/${store.whatsappNumber}?text=${text}`;
+
+    // Gerar ID curto de 8 caracteres para rastreamento
+    const shortOrderId = order.id.substring(0, 8).toUpperCase();
+
+    console.log('🆔 Order ID completo:', order.id);
+    console.log('📦 Short Order ID:', shortOrderId);
+    console.log('💰 Total formatado:', totalFormatted);
+
+    const message =
+      `🛒 *PEDIDO HOBBY BICHOS*\n\n` +
+      `📦 Número de Rastreamento: #${shortOrderId}\n` +
+      `💰 Total: ${totalFormatted}\n\n` +
+      `Olá! Fiz meu pedido e gostaria de finalizar o pagamento via PIX.\n\n` +
+      `ID Completo: ${order.id}`;
+
+    console.log('📝 Mensagem antes do encode:', message);
+
+    const text = encodeURIComponent(message);
+
+    const whatsappLink = `https://wa.me/${store.whatsappNumber}?text=${text}`;
+    console.log('📱 WhatsApp Link gerado:', whatsappLink);
+
+    return whatsappLink;
   }
 
   async finishOrder(orderId: string, user: AuthUser) {
@@ -142,19 +175,19 @@ export class OrdersService {
       throw new NotFoundException('Pedido não encontrado');
     }
 
+    // Apenas OWNER/MANAGER podem finalizar pedidos
+    if (user.role && !['OWNER', 'MANAGER'].includes(user.role)) {
+      throw new ForbiddenException(
+        'Apenas administradores podem finalizar o pagamento.',
+      );
+    }
+
     if (order.storeId !== user.storeId) {
       throw new ForbiddenException('Acesso negado à loja');
     }
 
     if (order.status === 'PAID') {
       throw new ForbiddenException('Pedido já finalizado');
-    }
-
-    // Permissão: apenas OWNER ou MANAGER podem finalizar
-    if (user.role && !['OWNER', 'MANAGER'].includes(user.role)) {
-      throw new ForbiddenException(
-        'Apenas administradores podem finalizar o pagamento.',
-      );
     }
 
     // Atualiza estoque dos produtos
@@ -197,9 +230,93 @@ export class OrdersService {
     });
   }
 
-  async findAll(userStoreId: string) {
+  async findAll(user: AuthUser) {
+    // CLIENT vê apenas seus próprios pedidos (exceto cancelados)
+    if (!user.role || user.role === 'CLIENT') {
+      return this.prisma.order.findMany({
+        where: {
+          userId: user.id,
+          status: { not: 'CANCELLED' },
+        },
+        include: {
+          orderItems: {
+            include: {
+              product: true,
+              service: true,
+            },
+          },
+          store: {
+            select: {
+              id: true,
+              name: true,
+              slug: true,
+              whatsappNumber: true,
+            },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+      });
+    }
+
+    // OWNER/MANAGER veem pedidos da sua loja (exceto cancelados)
     return this.prisma.order.findMany({
-      where: { storeId: userStoreId },
+      where: {
+        storeId: user.storeId,
+        status: { not: 'CANCELLED' },
+      },
+      include: {
+        orderItems: {
+          include: {
+            product: true,
+            service: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async cancelOrder(orderId: string, user: AuthUser) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Pedido não encontrado');
+    }
+
+    // CLIENT pode cancelar seus próprios pedidos
+    if (!user.role || user.role === 'CLIENT') {
+      if (order.userId !== user.id) {
+        throw new ForbiddenException('Você não pode cancelar este pedido');
+      }
+    } else {
+      // OWNER/MANAGER podem cancelar pedidos da sua loja
+      if (order.storeId !== user.storeId) {
+        throw new ForbiddenException('Acesso negado à loja');
+      }
+    }
+
+    if (order.status === 'CANCELLED') {
+      throw new ForbiddenException('Pedido já está cancelado');
+    }
+
+    if (order.status === 'DELIVERED') {
+      throw new ForbiddenException(
+        'Não é possível cancelar um pedido já entregue',
+      );
+    }
+
+    return this.prisma.order.update({
+      where: { id: orderId },
+      data: { status: 'CANCELLED' },
       include: {
         orderItems: true,
       },

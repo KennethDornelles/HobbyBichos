@@ -12,6 +12,12 @@ import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
+import type { Request as ExpressRequest } from 'express';
+import type { AuthUser } from './orders.service';
+
+interface AuthenticatedRequest extends ExpressRequest {
+  user?: AuthUser;
+}
 
 @ApiBearerAuth()
 @ApiTags('orders')
@@ -22,26 +28,40 @@ export class OrdersController {
 
   @Post()
   @ApiOperation({ summary: 'Criar novo pedido' })
-  async create(@Body() dto: CreateOrderDto, @Request() req) {
-    const result = await this.ordersService.create(dto, req.user);
+  async create(
+    @Body() dto: CreateOrderDto,
+    @Request() req: AuthenticatedRequest,
+  ) {
+    const user = req.user as AuthUser;
+    const result = await this.ordersService.create(dto, user);
     return result;
   }
 
   @Get()
-  @ApiOperation({ summary: 'Listar pedidos da loja' })
-  findAll(@Request() req) {
-    return this.ordersService.findAll(req.user.storeId);
+  @ApiOperation({ summary: 'Listar pedidos' })
+  findAll(@Request() req: AuthenticatedRequest) {
+    const user = req.user as AuthUser;
+    return this.ordersService.findAll(user);
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Buscar pedido por ID' })
-  findOne(@Param('id') id: string, @Request() req) {
-    return this.ordersService.findOne(id, req.user.storeId);
+  findOne(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+    const user = req.user as AuthUser;
+    return this.ordersService.findOne(id, user.storeId);
   }
 
   @Patch(':id/finish')
   @ApiOperation({ summary: 'Finalizar pedido e atualizar estoque' })
-  finishOrder(@Param('id') id: string, @Request() req) {
-    return this.ordersService.finishOrder(id, req.user);
+  finishOrder(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+    const user = req.user as AuthUser;
+    return this.ordersService.finishOrder(id, user);
+  }
+
+  @Patch(':id/cancel')
+  @ApiOperation({ summary: 'Cancelar pedido' })
+  cancelOrder(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
+    const user = req.user as AuthUser;
+    return this.ordersService.cancelOrder(id, user);
   }
 }
