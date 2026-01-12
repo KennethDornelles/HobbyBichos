@@ -8,11 +8,12 @@ import * as SplashScreen from "expo-splash-screen";
 SplashScreen.preventAutoHideAsync();
 
 import { AuthProvider } from '../src/context/AuthContext';
-import { ThemeProvider } from '../src/context/ThemeContext';
+import { ThemeProvider, useTheme } from '../src/context/ThemeContext';
 import { useCartAutoSync } from '../src/hooks/useCartAutoSync';
 
-export default function RootLayout() {
+function RootLayoutContent() {
   useCartAutoSync();
+  const { isDark } = useTheme();
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_600SemiBold,
@@ -30,15 +31,25 @@ export default function RootLayout() {
   }
 
   return (
+    <>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: {
+            backgroundColor: isDark ? "#10142D" : "#F4F4F6"
+          },
+        }}
+      />
+    </>
+  );
+}
+
+export default function RootLayout() {
+  return (
     <ThemeProvider>
       <AuthProvider>
-        <StatusBar style="auto" />
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: "#F2F2F7" },
-          }}
-        />
+        <RootLayoutContent />
       </AuthProvider>
     </ThemeProvider>
   );

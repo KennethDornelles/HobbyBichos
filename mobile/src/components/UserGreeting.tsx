@@ -18,10 +18,10 @@ export const UserGreeting = React.memo(({ name, points, onPress }: UserGreetingP
                 activeOpacity={0.7}
             >
                 <View>
-                    <Text className="text-xs text-text-secondary text-right">Saldo Hobby Club</Text>
-                    <Text className="text-lg font-bold text-primary-yellow">{points} Pontos</Text>
+                    <Text className="text-xs text-gray-300 text-right">Saldo Hobby Club</Text>
+                    <Text className="text-lg font-bold text-hobby-yellow">{points} Pontos</Text>
                 </View>
-                <ChevronRight size={20} color="#9CA3AF" />
+                <ChevronRight size={20} color="#D1D5DB" />
             </TouchableOpacity>
         </View>
     </View>

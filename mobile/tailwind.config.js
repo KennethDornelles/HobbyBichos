@@ -35,13 +35,28 @@ module.exports = {
           error: '#EF4444',
           alert: '#F59E42',
         },
+        'hobby-dark': '#10142D',
+        'hobby-yellow': '#FFD600',
+        'hobby-ice': '#F4F4F6',
+        
+        // NOVAS CORES para melhor UX:
+        'hobby-yellow-soft': '#F5C400', // Amarelo menos vibrante
+        'hobby-ice-dark': '#E8EAED',    // Fundo com mais contraste
+        'hobby-card-light': '#FFFFFF',  // Cards em light mode
+        'hobby-border-light': '#E5E7EB', // Bordas sutis
+        'hobby-text-light': '#1F2937',   // Texto principal light
+        'hobby-text-secondary': '#6B7280', // Texto secundário light
+        'hobby-accent-light': '#D97706',  // Accent laranja para light mode (melhor contraste)
       },
       borderRadius: {
         xl: '24px',
         '2xl': '32px',
+        'hobby': '30px',
       },
       boxShadow: {
         glass: '0 4px 32px 0 rgba(31, 41, 55, 0.15)',
+        'card-light': '0 2px 8px rgba(0, 0, 0, 0.08)',
+        'card-light-hover': '0 4px 12px rgba(0, 0, 0, 0.12)',
       },
       backdropBlur: {
         glass: '8px',

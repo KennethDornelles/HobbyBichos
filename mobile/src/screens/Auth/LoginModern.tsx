@@ -21,7 +21,7 @@ import api from '../../services/api';
 import * as SecureStore from 'expo-secure-store';
 
 const LoginScreen: React.FC = () => {
-    const { isDark, toggleTheme } = useTheme();
+    const { isDark } = useTheme();
 
     const [formData, setFormData] = useState<LoginFormData>({
         email: '',
@@ -92,15 +92,6 @@ const LoginScreen: React.FC = () => {
     return (
         <View style={styles.container}>
             <StatusBar style={isDark ? 'light' : 'dark'} />
-            {/* Botão de alternância de tema */}
-            <View style={{ position: 'absolute', top: 48, right: 32, zIndex: 10 }}>
-                <TouchableOpacity
-                    onPress={toggleTheme}
-                    style={{ backgroundColor: isDark ? '#23243A' : '#FFD600', borderRadius: 20, padding: 8, elevation: 2 }}
-                >
-                    <Ionicons name={isDark ? 'sunny-outline' : 'moon-outline'} size={24} color={isDark ? '#FFD600' : '#23243A'} />
-                </TouchableOpacity>
-            </View>
             <LinearGradient
                 colors={
                     isDark

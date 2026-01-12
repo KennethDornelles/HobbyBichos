@@ -72,7 +72,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     const menuItems = useMemo(() => {
         const items: MenuItem[] = [
             { icon: "grid-view", label: "Início" },
-            { icon: "content-cut", label: "Agendamentos" }, // Novo botão
+            { icon: "content-cut", label: "Agendamentos" },
+            { icon: "settings", label: "Configurações" },
         ];
         if (user) {
             if (user.role === "CLIENT") {
@@ -133,7 +134,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
 
     const handleProfilePress = () => {
         onClose();
-        navigation.navigate("Profile");
+        router.push('/profile/edit');
     };
 
     const handleLogout = () => {
@@ -179,6 +180,11 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                             if (item.label === "Agendamentos") {
                                 onClose();
                                 router.push('/appointments');
+                                return;
+                            }
+                            if (item.label === "Configurações") {
+                                onClose();
+                                router.push('/settings');
                                 return;
                             }
                             if (user?.role === "CLIENT" && item.label === "Meus Gastos") {

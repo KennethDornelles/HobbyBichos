@@ -15,7 +15,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import CustomInput from '../../components/CustomInput';
 import { useTheme } from '../../context/ThemeContext';
-import { ThemeToggle } from '../../components/ThemeToggle';
 
 const ForgotPasswordScreen: React.FC = () => {
     const { isDark } = useTheme();
@@ -43,7 +42,6 @@ const ForgotPasswordScreen: React.FC = () => {
     return (
         <View style={styles.container}>
             <StatusBar style={isDark ? 'light' : 'dark'} />
-            <ThemeToggle />
             <LinearGradient
                 colors={
                     isDark

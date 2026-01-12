@@ -20,6 +20,7 @@ import { ActionCard } from '../../components/ActionCard';
 import { SideMenu } from '../../components/SideMenu';
 import { useUserStore } from '../../store/userStore';
 import { useCartStore } from '../../store/cartStore';
+import { useThemeColors } from '../../hooks/useThemeColors';
 
 interface QuickActionItem {
     id: string;
@@ -38,7 +39,6 @@ interface ActionCardItem {
 const quickActions: QuickActionItem[] = [
     { id: '1', icon: Clock, label: 'Delivery Rápido' },
     { id: '2', icon: Tag, label: 'Promoções' },
-    { id: '3', icon: CreditCard, label: 'Cartão Fidelidade' },
     { id: '4', icon: Star, label: 'Clube Hobby' },
     { id: '5', icon: Scissors, label: 'Serviços Pet' },
 ];
@@ -56,7 +56,7 @@ const mainActions: ActionCardItem[] = [
         title: 'Agendar Serviço',
         subtitle: 'Banho, tosa e mais',
         icon: Scissors,
-        route: '/servicos',
+        route: '/appointments/create',
     },
     {
         id: '3',
@@ -69,6 +69,7 @@ const mainActions: ActionCardItem[] = [
 
 export default function HomeScreen() {
     const router = useRouter();
+    const colors = useThemeColors();
     const { name, points, loadUserProfile, loading } = useUserStore();
     const { totalItems } = useCartStore();
     const [menuVisible, setMenuVisible] = useState(false);
@@ -100,9 +101,9 @@ export default function HomeScreen() {
     };
 
     return (
-        <View className="flex-1 bg-primary-dark">
+        <View className="flex-1" style={{ backgroundColor: colors.bgMain }}>
             {/* Header com busca integrado ao SafeAreaView */}
-            <SafeAreaView edges={['top']} className="bg-primary-dark">
+            <SafeAreaView edges={['top']} style={{ backgroundColor: colors.bgMain }}>
                 <HomeHeader
                     onMenuPress={() => setMenuVisible(true)}
                     onCameraPress={() => console.log('Camera pressed')}
@@ -122,12 +123,13 @@ export default function HomeScreen() {
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 className="flex-1"
+                style={{ backgroundColor: colors.bgMain }}
             >
                 {/* Saudação com Saldo Hobby Club */}
                 <UserGreeting name={name} points={points} onPress={handleRewards} />
 
                 {/* Ações Rápidas */}
-                <View className="bg-card-bg py-6 mb-2">
+                <View style={{ backgroundColor: colors.bgCard }} className="py-6 mb-2">
                     <FlatList
                         horizontal
                         data={quickActions}
@@ -156,22 +158,14 @@ export default function HomeScreen() {
                             onPress={() => handleCardAction(action.route)}
                         />
                     ))}
-
-                    {/* Card Premium */}
-                    <ActionCard
-                        title="Hobby Premium"
-                        subtitle="Acesso a benefícios exclusivos"
-                        icon={Heart}
-                        onPress={() => router.push('/premium')}
-                    />
                 </View>
 
                 {/* Seção Lojas */}
                 <View className="px-4 py-4 mb-6">
                     <View className="flex-row items-center justify-between mb-4">
-                        <Text className="text-xl font-bold text-white">Lojas</Text>
+                        <Text style={{ color: colors.textMain }} className="text-xl font-bold">Lojas</Text>
                         <TouchableOpacity onPress={() => router.push('/lojas')} activeOpacity={0.7}>
-                            <Text className="text-sm text-primary-yellow font-semibold">Mais lojas</Text>
+                            <Text className="text-sm font-semibold text-hobby-yellow dark:text-hobby-accent-light">Mais lojas</Text>
                         </TouchableOpacity>
                     </View>
                     {/* Aqui você pode adicionar um FlatList horizontal com cards de lojas */}
