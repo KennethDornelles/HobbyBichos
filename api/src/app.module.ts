@@ -19,6 +19,7 @@ import { MailModule } from './modules/mail/mail.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { OrdersModule } from './modules/orders/orders.module'; // ← ADICIONE ESTA LINHA
 import { CartModule } from './modules/cart/cart.module';
+import { LoyaltyModule } from './modules/loyalty/loyalty.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { CartModule } from './modules/cart/cart.module';
     ReviewsModule,
     OrdersModule, // ← ADICIONE ESTA LINHA
     CartModule,
+    LoyaltyModule,
   ],
   controllers: [AppController],
   providers: [AppService],

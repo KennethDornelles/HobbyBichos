@@ -48,7 +48,6 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
       }
     }
 
-
     // Loga todos os erros, independente do status e ambiente
     logger.error('Erro HTTP capturado', {
       status,

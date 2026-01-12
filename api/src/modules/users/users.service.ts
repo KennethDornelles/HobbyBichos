@@ -15,7 +15,10 @@ export class UsersService {
 
   async create(dto: CreateUserDto, creatorRole?: Role) {
     // Se for criar EMPLOYEE ou MANAGER, precisa de storeId
-    if ((dto.role === Role.EMPLOYEE || dto.role === Role.MANAGER) && !dto.storeId) {
+    if (
+      (dto.role === Role.EMPLOYEE || dto.role === Role.MANAGER) &&
+      !dto.storeId
+    ) {
       throw new BadRequestException('Funcionários precisam de storeId');
     }
 
@@ -67,6 +70,7 @@ export class UsersService {
   async findById(id: string) {
     return this.prisma.user.findUnique({
       where: { id },
+      include: { loyaltyAccount: true },
     });
   }
 

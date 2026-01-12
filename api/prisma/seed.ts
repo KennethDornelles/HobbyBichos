@@ -3,6 +3,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 import { config } from 'dotenv';
+import { seedLoyaltyRewards } from './seeds/loyalty-rewards.seed';
 
 // Carrega as variáveis do .env imediatamente
 config();
@@ -148,6 +149,10 @@ async function main(): Promise<void> {
     });
 
     console.log('✨ Seed finalizado com sucesso!');
+
+    // Seed loyalty rewards
+    console.log('🎁 Seeding loyalty system...');
+    await seedLoyaltyRewards();
   } catch (error: unknown) {
     console.error('❌ Erro durante o seed:', error);
     throw error;

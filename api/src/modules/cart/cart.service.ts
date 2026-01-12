@@ -154,10 +154,11 @@ export class CartService {
     quantity: number,
   ): Promise<CartResponse> {
     // Validate product
-    const product: ProductWithStocks | null = await this.prisma.product.findUnique({
-      where: { id: productId },
-      include: { stocks: true },
-    });
+    const product: ProductWithStocks | null =
+      await this.prisma.product.findUnique({
+        where: { id: productId },
+        include: { stocks: true },
+      });
 
     if (!product || !product.isActive) {
       throw new NotFoundException('Produto não encontrado ou inativo');
@@ -186,14 +187,16 @@ export class CartService {
     }
 
     // Check if item already exists
-    const existingItem: CartItem | null = await this.prisma.cartItem.findUnique({
-      where: {
-        cartId_productId: {
-          cartId: cart.id,
-          productId,
+    const existingItem: CartItem | null = await this.prisma.cartItem.findUnique(
+      {
+        where: {
+          cartId_productId: {
+            cartId: cart.id,
+            productId,
+          },
         },
       },
-    });
+    );
 
     if (existingItem) {
       const newQuantity = existingItem.quantity + quantity;
@@ -248,10 +251,11 @@ export class CartService {
     }
 
     // Validate stock
-    const product: ProductWithStocks | null = await this.prisma.product.findUnique({
-      where: { id: productId },
-      include: { stocks: true },
-    });
+    const product: ProductWithStocks | null =
+      await this.prisma.product.findUnique({
+        where: { id: productId },
+        include: { stocks: true },
+      });
 
     if (!product) {
       throw new NotFoundException('Produto não encontrado');
@@ -362,10 +366,11 @@ export class CartService {
 
     // Validate and add new items
     for (const item of items) {
-      const product: ProductWithStocks | null = await this.prisma.product.findUnique({
-        where: { id: item.productId },
-        include: { stocks: true },
-      });
+      const product: ProductWithStocks | null =
+        await this.prisma.product.findUnique({
+          where: { id: item.productId },
+          include: { stocks: true },
+        });
 
       // Skip inactive or unavailable products
       if (!product || !product.isActive) {
@@ -516,10 +521,11 @@ export class CartService {
       });
     }
 
-    const cart: Cart & { items: CartItem[] } | null = await this.prisma.cart.findUnique({
-      where: { userId },
-      include: { items: true },
-    });
+    const cart: (Cart & { items: CartItem[] }) | null =
+      await this.prisma.cart.findUnique({
+        where: { userId },
+        include: { items: true },
+      });
 
     if (!cart) {
       throw new NotFoundException('Carrinho não encontrado');
@@ -527,10 +533,11 @@ export class CartService {
 
     // Reserve stock by decrementing quantities
     for (const item of cart.items) {
-      const product: Product & { stocks: ProductStock[] } | null = await this.prisma.product.findUnique({
-        where: { id: item.productId },
-        include: { stocks: true },
-      });
+      const product: (Product & { stocks: ProductStock[] }) | null =
+        await this.prisma.product.findUnique({
+          where: { id: item.productId },
+          include: { stocks: true },
+        });
 
       if (!product) continue;
 

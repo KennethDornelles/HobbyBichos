@@ -72,17 +72,21 @@ model User {
   phone     String   @unique
   role      Role     @default(CLIENT)
   storeId   String?
+  birthDate DateTime?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  store                    Store?          @relation("StoreEmployees", fields: [storeId], references: [id])
+  store                    Store?                    @relation("StoreEmployees", fields: [storeId], references: [id])
   pets                     Pet[]
   orders                   Order[]
-  professionalAppointments Appointment[]   @relation("ProfessionalAppointments")
-  clientAppointments       Appointment[]   @relation("ClientAppointments")
+  professionalAppointments Appointment[]             @relation("ProfessionalAppointments")
+  clientAppointments       Appointment[]             @relation("ClientAppointments")
   recoveryCodes            RecoveryCode[]
-  reviews                  Review[]        @relation("ReviewUser")
-  reviewsAsEmployee        Review[]        @relation("ReviewEmployee")
+  reviews                  Review[]                  @relation("ReviewUser")
+  reviewsAsEmployee        Review[]                  @relation("ReviewEmployee")
+  loyaltyAccount           LoyaltyAccount?
+  referralsReceived        Referral[]                @relation("ReferralReferee")
+  birthdayAwards           LoyaltyBirthdayAward[]
   cart                     Cart?
 
   @@map("users")
@@ -133,6 +137,7 @@ model Product {
   stocks     ProductStock[]
   orderItems OrderItem[]
   cartItems  CartItem[]
+  loyaltyRewards LoyaltyReward[]
   images     String[] @default([])
   sku        String?
 
@@ -167,6 +172,7 @@ model Service {
   store        Store         @relation(fields: [storeId], references: [id], onDelete: Cascade)
   appointments Appointment[]
   orderItems   OrderItem[]
+  loyaltyRewards LoyaltyReward[]
 
   @@map("services")
 }
@@ -210,6 +216,8 @@ model Order {
   store      Store       @relation(fields: [storeId], references: [id], onDelete: Cascade)
   user       User        @relation(fields: [userId], references: [id])
   orderItems OrderItem[]
+  loyaltyTransactions LoyaltyTransaction[]
+  redemptions LoyaltyRedemption[]
 
   @@index([storeId])
   @@index([userId])
@@ -277,4 +285,186 @@ model CartItem {
 
   @@unique([cartId, productId], name: "cartId_productId")
   @@map("cart_items")
+}
+
+enum LoyaltyTier {
+  BRONZE
+  SILVER
+  GOLD
+  DIAMOND
+}
+
+enum TransactionType {
+  PURCHASE
+  WELCOME_BONUS
+  BIRTHDAY
+  REFERRAL
+  REVIEW
+  CHECK_IN
+  SHARE
+  ADMIN_ADJUSTMENT
+  REDEMPTION
+  EXPIRATION
+}
+
+enum RewardType {
+  DISCOUNT_PERCENT
+  DISCOUNT_FIXED
+  FREE_SHIPPING
+  FREE_PRODUCT
+  FREE_SERVICE
+  VOUCHER
+}
+
+enum RedemptionStatus {
+  PENDING
+  USED
+  EXPIRED
+  CANCELLED
+}
+
+enum ReferralStatus {
+  PENDING
+  COMPLETED
+  EXPIRED
+}
+
+model LoyaltyAccount {
+  id             String              @id @default(uuid())
+  userId         String              @unique
+  currentPoints  Int                 @default(0)
+  lifetimePoints Int                 @default(0)
+  tier           LoyaltyTier         @default(BRONZE)
+  tierExpiresAt  DateTime?
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  user         User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions LoyaltyTransaction[]
+  redemptions  LoyaltyRedemption[]
+  referrals    Referral[]           @relation("AccountReferrals")
+
+  @@index([userId])
+  @@index([tier])
+  @@map("loyalty_accounts")
+}
+
+model LoyaltyTransaction {
+  id          String           @id @default(uuid())
+  accountId   String
+  points      Int
+  type        TransactionType
+  description String
+  orderId     String?
+  referenceId String?
+  expiresAt   DateTime?
+  expired     Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  account LoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  order   Order?          @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([accountId])
+  @@index([orderId])
+  @@index([createdAt(sort: Desc)])
+  @@index([expiresAt])
+  @@map("loyalty_transactions")
+}
+
+model LoyaltyReward {
+  id         String     @id @default(uuid())
+  name       String
+  description String
+  pointsCost Int
+  rewardType RewardType
+  value      Decimal    @db.Decimal(10, 2)
+  productId  String?
+  serviceId  String?
+  imageUrl   String?
+  isActive   Boolean    @default(true)
+  stockLimit Int?
+  usedCount  Int        @default(0)
+  validUntil DateTime?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  service Service? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  redemptions LoyaltyRedemption[]
+
+  @@index([isActive])
+  @@index([pointsCost])
+  @@map("loyalty_rewards")
+}
+
+model LoyaltyRedemption {
+  id         String            @id @default(uuid())
+  accountId  String
+  rewardId   String
+  pointsUsed Int
+  code       String            @unique
+  status     RedemptionStatus  @default(PENDING)
+  usedAt     DateTime?
+  expiresAt  DateTime
+  orderId    String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  account LoyaltyAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  reward  LoyaltyReward  @relation(fields: [rewardId], references: [id], onDelete: Cascade)
+  order   Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([accountId])
+  @@index([code])
+  @@index([status])
+  @@index([expiresAt])
+  @@map("loyalty_redemptions")
+}
+
+model Referral {
+  id           String          @id @default(uuid())
+  referrerId   String
+  refereeId    String?
+  code         String          @unique
+  status       ReferralStatus  @default(PENDING)
+  pointsEarned Int             @default(0)
+  completedAt  DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  referrer LoyaltyAccount @relation("AccountReferrals", fields: [referrerId], references: [id], onDelete: Cascade)
+  referee  User?           @relation("ReferralReferee", fields: [refereeId], references: [id], onDelete: SetNull)
+
+  @@index([referrerId])
+  @@index([refereeId])
+  @@index([code])
+  @@map("referrals")
+}
+
+model LoyaltyRule {
+  id         String          @id @default(uuid())
+  name       String          @unique
+  actionType TransactionType
+  pointsValue Int
+  multiplier Decimal         @db.Decimal(5, 2) @default("1.00")
+  maxPerDay  Int?
+  isActive   Boolean         @default(true)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@map("loyalty_rules")
+}
+
+model LoyaltyBirthdayAward {
+  id        String   @id @default(cuid())
+  userId    String
+  year      Int
+  points    Int
+  awardedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, year])
+  @@index([userId])
+  @@map("loyalty_birthday_awards")
 }
