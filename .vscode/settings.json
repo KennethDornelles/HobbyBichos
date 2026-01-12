@@ -23,5 +23,14 @@
     "sound": "off",
     "announcement": "off"
   },
-  "accessibility.signalOptions.volume": 0
+  "accessibility.signalOptions.volume": 0,
+
+  // --- DESABILITAR RED HAT DEPENDENCY ANALYTICS ---
+  "redhat.telemetry.enabled": false,
+  "redhat.dependencyAnalytics.enableSnykAnalysis": false,
+  "redhat.dependencyAnalytics.autoRun": false,
+  // Reduzir severidade exibida para apenas HIGH/CRITICAL
+  "redhat.dependencyAnalytics.severityThreshold": "high",
+  // Desabilitar diagnósticos em Problems
+  "redhat.dependencyAnalytics.showDiagnostics": false
 }
