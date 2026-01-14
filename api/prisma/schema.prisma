@@ -18,14 +18,19 @@ enum Role {
 }
 
 model Store {
-  id        String   @id @default(uuid())
-  name      String
-  slug      String   @unique
-  phone     String?
-  whatsappNumber String?
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String   @id @default(uuid())
+  name             String
+  slug             String   @unique
+  phone            String?
+  whatsappNumber   String?
+  address          String?
+  city             String?
+  state            String?
+  latitude         Float?
+  longitude        Float?
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
   employees     User[]              @relation("StoreEmployees")
   appointments  Appointment[]
@@ -130,6 +135,7 @@ model Product {
   name      String
   barcode   String?  @unique
   basePrice Decimal  @db.Decimal(10, 2)
+  category  String   @default("Todos")
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

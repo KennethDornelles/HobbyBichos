@@ -123,4 +123,80 @@ export class StoresService {
       where: { isActive: true },
     });
   }
+
+  /**
+   * Calcula a distância entre dois pontos geográficos usando a fórmula de Haversine
+   * Retorna a distância em quilômetros
+   */
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
+    const R = 6371; // Raio da Terra em km
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  /**
+   * Busca lojas próximas a uma localização
+   * @param latitude Latitude do usuário
+   * @param longitude Longitude do usuário
+   * @param radiusKm Raio de busca em quilômetros (padrão: 5km)
+   * @param limit Número máximo de lojas a retornar (padrão: 3)
+   */
+  async findNearby(
+    latitude: number,
+    longitude: number,
+    radiusKm: number = 5,
+    limit: number = 3,
+  ): Promise<
+    (Store & {
+      distance: number;
+      distanceText: string;
+      durationMinutes?: number;
+    })[]
+  > {
+    // Busca todas as lojas ativas
+    const stores = await this.prisma.store.findMany({
+      where: { isActive: true },
+    });
+
+    // Calcula a distância para cada loja
+    const storesWithDistance = stores
+      .map((store) => {
+        const distance = this.calculateDistance(
+          latitude,
+          longitude,
+          store.latitude || 0,
+          store.longitude || 0,
+        );
+        const distanceText =
+          distance < 1
+            ? `${(distance * 1000).toFixed(0)}m`
+            : `${distance.toFixed(1)}km`;
+        const durationMinutes = Math.round(distance * 3); // Estimativa: 3 minutos por km
+
+        return {
+          ...store,
+          distance,
+          distanceText,
+          durationMinutes,
+        };
+      })
+      .filter((store) => store.distance <= radiusKm)
+      .sort((a, b) => a.distance - b.distance)
+      .slice(0, limit);
+
+    return storesWithDistance;
+  }
 }

@@ -323,9 +323,20 @@ export class OrdersService {
     });
   }
 
-  async findOne(id: string, userStoreId: string) {
+  async findOne(id: string, user: AuthUser) {
+    // Construir filtro baseado no tipo de usuário
+    const where: any = { id };
+    
+    // Se o usuário for funcionário de loja, filtrar por storeId
+    if (user.storeId) {
+      where.storeId = user.storeId;
+    } else {
+      // Se for cliente, filtrar por userId
+      where.userId = user.id;
+    }
+
     const order = await this.prisma.order.findFirst({
-      where: { id, storeId: userStoreId },
+      where,
       include: {
         orderItems: true,
         store: {
@@ -366,5 +377,32 @@ export class OrdersService {
         orderTotal: Number(order.total),
       },
     };
+  }
+
+  async testUpdateStatus(id: string, newStatus: string, user: AuthUser) {
+    // Verificar se o pedido existe
+    const order = await this.prisma.order.findUnique({ where: { id } });
+    if (!order) {
+      throw new NotFoundException('Pedido não encontrado');
+    }
+
+    // Permitir apenas para store employees ou se for proprietário
+    if (user.storeId && order.storeId !== user.storeId && order.userId !== user.id) {
+      throw new ForbiddenException('Sem permissão para atualizar este pedido');
+    }
+
+    // Validar status
+    const validStatuses = ['WAITING_PAYMENT', 'PAID', 'PROCESSING', 'DELIVERED', 'CANCELLED'];
+    if (!validStatuses.includes(newStatus)) {
+      throw new PreconditionFailedException(`Status inválido. Válidos: ${validStatuses.join(', ')}`);
+    }
+
+    // Atualizar status
+    const updated = await this.prisma.order.update({
+      where: { id },
+      data: { status: newStatus },
+    });
+
+    return updated;
   }
 }

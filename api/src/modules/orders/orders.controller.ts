@@ -48,7 +48,7 @@ export class OrdersController {
   @ApiOperation({ summary: 'Buscar pedido por ID' })
   findOne(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     const user = req.user as AuthUser;
-    return this.ordersService.findOne(id, user.storeId);
+    return this.ordersService.findOne(id, user);
   }
 
   @Patch(':id/finish')
@@ -63,5 +63,12 @@ export class OrdersController {
   cancelOrder(@Param('id') id: string, @Request() req: AuthenticatedRequest) {
     const user = req.user as AuthUser;
     return this.ordersService.cancelOrder(id, user);
+  }
+
+  @Patch(':id/test-status')
+  @ApiOperation({ summary: 'Atualizar status do pedido para testes (dev only)' })
+  testUpdateStatus(@Param('id') id: string, @Body() body: { status: string }, @Request() req: AuthenticatedRequest) {
+    const user = req.user as AuthUser;
+    return this.ordersService.testUpdateStatus(id, body.status, user);
   }
 }

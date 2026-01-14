@@ -1,3 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+
 import { PrismaClient, Role, Store, Product } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
@@ -34,21 +40,80 @@ async function main(): Promise<void> {
     // REMOVIDO: await prisma.user.deleteMany({});
     await prisma.store.deleteMany({});
 
-    // 1. Criação das Lojas
+    // 1. Criação das Lojas - Hobby Bichos com coordenadas reais
     const storeData = [
       {
-        id: 'store1',
-        name: 'Loja Teste E2E',
-        slug: 'store1',
-        phone: '(83) 99999-9999',
-        whatsappNumber: '5583999999999',
+        id: 'hobby_geisel',
+        name: 'Hobby Bichos Geisel',
+        slug: 'hobby-geisel',
+        phone: '(51) 99764-7760',
+        whatsappNumber: '5551997647760',
+        latitude: -7.1825,
+        longitude: -34.8663,
+        address: 'R. Abelardo Targino da Fonseca, 670',
+        city: 'João Pessoa',
+        state: 'PB',
       },
-      { name: 'Bessa', slug: 'bessa', phone: '(83) 99999-0001' },
-      { name: 'Manaíra', slug: 'manaira', phone: '(83) 99999-0002' },
-      { name: 'Cabo Branco', slug: 'cabo-branco', phone: '(83) 99999-0003' },
-      { name: 'Altiplano', slug: 'altiplano', phone: '(83) 99999-0004' },
-      { name: 'Intermares', slug: 'intermares', phone: '(83) 99999-0005' },
-      { name: 'Bancários', slug: 'bancarios', phone: '(83) 99999-0006' },
+      {
+        id: 'hobby_altiplano',
+        name: 'Hobby Altiplano',
+        slug: 'hobby-altiplano',
+        phone: '(51) 99764-7760',
+        whatsappNumber: '5551997647760',
+        latitude: -7.1304,
+        longitude: -34.8259,
+        address: 'R. Poe. Targino Teixeira, 251',
+        city: 'João Pessoa',
+        state: 'PB',
+      },
+      {
+        id: 'minha_cria',
+        name: 'Minha Cria 24h',
+        slug: 'minha-cria-24h',
+        phone: '(51) 99764-7760',
+        whatsappNumber: '5551997647760',
+        latitude: -7.124,
+        longitude: -34.826,
+        address: 'R. Dr. Frutuoso Dantas, 63',
+        city: 'João Pessoa',
+        state: 'PB',
+      },
+      {
+        id: 'hobby_epitacio',
+        name: 'Hobby Epitácio',
+        slug: 'hobby-epitacio',
+        phone: '(51) 99764-7760',
+        whatsappNumber: '5551997647760',
+        latitude: -7.1193,
+        longitude: -34.8331,
+        address: 'Av. Pres. Epitácio Pessoa, 4129',
+        city: 'João Pessoa',
+        state: 'PB',
+      },
+      {
+        id: 'hobby_manaira',
+        name: 'Hobby Manaíra',
+        slug: 'hobby-manaira',
+        phone: '(51) 99764-7760',
+        whatsappNumber: '5551997647760',
+        latitude: -7.1041,
+        longitude: -34.8359,
+        address: 'Av. Monteiro da Franca, 1149',
+        city: 'João Pessoa',
+        state: 'PB',
+      },
+      {
+        id: 'hobby_bessa',
+        name: 'Hobby Bessa',
+        slug: 'hobby-bessa',
+        phone: '(51) 99764-7760',
+        whatsappNumber: '5551997647760',
+        latitude: -7.0966,
+        longitude: -34.8354,
+        address: 'Av. Fernando Luiz Henriques dos Santos, 70',
+        city: 'João Pessoa',
+        state: 'PB',
+      },
     ];
 
     const stores: Store[] = [];
@@ -118,10 +183,137 @@ async function main(): Promise<void> {
       });
     }
 
-    // 3. Produtos
+    // 3. Produtos - Uma variedade de cada categoria
     const productData = [
-      { id: 'p1', name: 'Ração Adulto', barcode: '7890001', basePrice: 189.9 },
-      { name: 'Coleira', barcode: '7890002', basePrice: 45.0 },
+      // Ração
+      {
+        name: 'Ração Golden Adulto - 15kg',
+        barcode: '7890001',
+        basePrice: 189.9,
+        category: 'Ração',
+      },
+      {
+        name: 'Ração Royal Canin Small - 7.5kg',
+        barcode: '7890002',
+        basePrice: 245.5,
+        category: 'Ração',
+      },
+      {
+        name: 'Ração Premium Plus - 15kg',
+        barcode: '7890003',
+        basePrice: 156.8,
+        category: 'Ração',
+      },
+      {
+        name: 'Ração Úmida Pedigree - 400g',
+        barcode: '7890004',
+        basePrice: 22.5,
+        category: 'Ração',
+      },
+
+      // Higiene
+      {
+        name: 'Shampoo Neutro - 500ml',
+        barcode: '7890005',
+        basePrice: 45.0,
+        category: 'Higiene',
+      },
+      {
+        name: 'Condicionador Pet - 250ml',
+        barcode: '7890006',
+        basePrice: 38.9,
+        category: 'Higiene',
+      },
+      {
+        name: 'Toalha Banho Pet - Microfibra',
+        barcode: '7890007',
+        basePrice: 65.5,
+        category: 'Higiene',
+      },
+      {
+        name: 'Escova Desembarante - Aço',
+        barcode: '7890008',
+        basePrice: 32.0,
+        category: 'Higiene',
+      },
+
+      // Brinquedos
+      {
+        name: 'Brinquedo Bola com Guizo',
+        barcode: '7890009',
+        basePrice: 15.9,
+        category: 'Brinquedos',
+      },
+      {
+        name: 'Kong Borracha Resistente - P',
+        barcode: '7890010',
+        basePrice: 42.0,
+        category: 'Brinquedos',
+      },
+      {
+        name: 'Corda Trançada - Rope Toy',
+        barcode: '7890011',
+        basePrice: 28.5,
+        category: 'Brinquedos',
+      },
+      {
+        name: 'Frisbee Pet - Plástico',
+        barcode: '7890012',
+        basePrice: 24.9,
+        category: 'Brinquedos',
+      },
+
+      // Acessórios
+      {
+        name: 'Coleira Ajustável - Nylon',
+        barcode: '7890013',
+        basePrice: 35.0,
+        category: 'Acessórios',
+      },
+      {
+        name: 'Coleira Premium - Couro',
+        barcode: '7890014',
+        basePrice: 89.9,
+        category: 'Acessórios',
+      },
+      {
+        name: 'Guia de Passeio - 1.5m',
+        barcode: '7890015',
+        basePrice: 42.5,
+        category: 'Acessórios',
+      },
+      {
+        name: 'Peitoral Confortável - P',
+        barcode: '7890016',
+        basePrice: 58.0,
+        category: 'Acessórios',
+      },
+
+      // Medicamentos
+      {
+        name: 'Vermifugo Broad Spectrum - 10ml',
+        barcode: '7890017',
+        basePrice: 35.8,
+        category: 'Medicamentos',
+      },
+      {
+        name: 'Antipulgas Simparic - 5mg',
+        barcode: '7890018',
+        basePrice: 125.9,
+        category: 'Medicamentos',
+      },
+      {
+        name: 'Protetor Articular - 60 comprimidos',
+        barcode: '7890019',
+        basePrice: 95.5,
+        category: 'Medicamentos',
+      },
+      {
+        name: 'Suplemento Ômega 3 - 60 cápsulas',
+        barcode: '7890020',
+        basePrice: 52.0,
+        category: 'Medicamentos',
+      },
     ];
 
     const products: Product[] = [];
@@ -130,14 +322,28 @@ async function main(): Promise<void> {
       products.push(product);
     }
 
-    // 4. Estoque para produto p1 na loja store1
-    await prisma.productStock.create({
-      data: {
-        productId: 'p1',
-        storeId: 'store1',
-        quantity: 100,
-      },
-    });
+    // 4. Estoque - Distribuir todos os produtos em todas as lojas
+    console.log('📦 Criando estoque de produtos...');
+    for (const product of products) {
+      for (const store of stores) {
+        await prisma.productStock.upsert({
+          where: {
+            productId_storeId: {
+              productId: product.id,
+              storeId: store.id,
+            },
+          },
+          update: {
+            quantity: Math.floor(Math.random() * 150) + 10,
+          },
+          create: {
+            productId: product.id,
+            storeId: store.id,
+            quantity: Math.floor(Math.random() * 150) + 10,
+          },
+        });
+      }
+    }
 
     // Usuário de teste E2E
     await prisma.user.upsert({

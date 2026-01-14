@@ -18,6 +18,7 @@ import {
   ApiOperation,
   ApiResponse,
 } from '@nestjs/swagger';
+import { Public } from '../../decorators/public.decorator';
 
 @ApiTags('stores')
 @ApiBearerAuth('JWT-auth')
@@ -66,5 +67,74 @@ export class StoresController {
   @ApiResponse({ status: 200, description: 'Lojas retornadas com sucesso.' })
   findAll() {
     return this.storesService.findAll();
+  }
+
+  @Get('nearby/search')
+  @Public()
+  @ApiOperation({ summary: 'Busca lojas próximas a uma localização' })
+  @ApiQuery({
+    name: 'latitude',
+    required: true,
+    type: Number,
+    description: 'Latitude da posição do usuário',
+    example: -7.1664,
+  })
+  @ApiQuery({
+    name: 'longitude',
+    required: true,
+    type: Number,
+    description: 'Longitude da posição do usuário',
+    example: -34.8475,
+  })
+  @ApiQuery({
+    name: 'radius',
+    required: false,
+    type: Number,
+    description: 'Raio de busca em quilômetros (padrão: 5)',
+    example: 5,
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    description: 'Número máximo de lojas a retornar (padrão: 3)',
+    example: 3,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lojas próximas encontradas com sucesso.',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          distance: { type: 'number', description: 'Distância em km' },
+          distanceText: { type: 'string', description: 'Distância formatada' },
+          durationMinutes: {
+            type: 'number',
+            description: 'Tempo estimado em minutos',
+          },
+          latitude: { type: 'number' },
+          longitude: { type: 'number' },
+          address: { type: 'string' },
+          phone: { type: 'string' },
+        },
+      },
+    },
+  })
+  findNearby(
+    @Query('latitude') latitude: string,
+    @Query('longitude') longitude: string,
+    @Query('radius') radius?: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.storesService.findNearby(
+      parseFloat(latitude),
+      parseFloat(longitude),
+      radius ? parseFloat(radius) : 5,
+      limit ? parseInt(limit) : 3,
+    );
   }
 }
