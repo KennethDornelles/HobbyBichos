@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { appointmentService, Appointment } from '../../services/appointmentService';
-import { useTheme } from '../../context/ThemeContext';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { HomeHeader } from '../../components/HomeHeader';
 import { SideMenu } from '../../components/SideMenu';
 import { useCartStore } from '../../store/cartStore';
@@ -12,7 +12,7 @@ import { useCartStore } from '../../store/cartStore';
 const AppointmentDetail = () => {
     const { id } = useLocalSearchParams();
     const router = useRouter();
-    const { isDark } = useTheme();
+    const colors = useThemeColors();
     const [appointment, setAppointment] = useState<Appointment | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -62,7 +62,7 @@ const AppointmentDetail = () => {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-primary-dark dark:bg-gray-50" edges={['top']}>
+        <SafeAreaView className="flex-1" style={{ backgroundColor: colors.bgMain }} edges={['top']}>
             <HomeHeader
                 onMenuPress={() => setMenuVisible(true)}
                 onCameraPress={() => console.log('Camera pressed')}
@@ -72,24 +72,25 @@ const AppointmentDetail = () => {
 
             {loading ? (
                 <View className="flex-1 items-center justify-center">
-                    <ActivityIndicator size="large" color={isDark ? '#D97706' : '#FFD600'} />
-                    <Text className="text-white dark:text-hobby-text-secondary mt-4">Carregando detalhes...</Text>
+                    <ActivityIndicator size="large" color={colors.accentYellow} />
+                    <Text className="mt-4" style={{ color: colors.textSecondary }}>Carregando detalhes...</Text>
                 </View>
             ) : error ? (
                 <View className="flex-1 items-center justify-center px-6">
-                    <Ionicons name="alert-circle-outline" size={48} color={isDark ? '#EF4444' : '#DC2626'} />
-                    <Text className="text-white dark:text-hobby-text-light text-center mt-4 text-lg">{error}</Text>
+                    <Ionicons name="alert-circle-outline" size={48} color={colors.accentRed} />
+                    <Text className="text-center mt-4 text-lg" style={{ color: colors.textMain }}>{error}</Text>
                     <Pressable
-                        className="bg-hobby-yellow rounded-2xl px-6 py-3 mt-6"
+                        className="rounded-2xl px-6 py-3 mt-6"
+                        style={{ backgroundColor: colors.accentYellow }}
                         onPress={loadAppointment}
                     >
-                        <Text className="text-primary-dark font-bold">Tentar Novamente</Text>
+                        <Text className="font-bold" style={{ color: colors.bgMain }}>Tentar Novamente</Text>
                     </Pressable>
                     <Pressable
                         className="mt-4"
                         onPress={() => router.back()}
                     >
-                        <Text className="text-hobby-yellow dark:text-hobby-accent-light">Voltar</Text>
+                        <Text style={{ color: colors.accentYellow }}>Voltar</Text>
                     </Pressable>
                 </View>
             ) : appointment ? (
@@ -97,10 +98,10 @@ const AppointmentDetail = () => {
                     {/* Header com status */}
                     <View className="flex-row items-center justify-between mb-6">
                         <Pressable onPress={() => router.back()} className="mr-4">
-                            <Ionicons name="arrow-back" size={28} color={isDark ? '#1F2937' : '#FFFFFF'} />
+                            <Ionicons name="arrow-back" size={28} color={colors.textMain} />
                         </Pressable>
                         <View className="flex-1">
-                            <Text className="text-white dark:text-hobby-text-light text-2xl font-bold">Detalhes do Agendamento</Text>
+                            <Text className="text-2xl font-bold" style={{ color: colors.textMain }}>Detalhes do Agendamento</Text>
                         </View>
                         <View className={`${getStatusColor(appointment.status)} rounded-2xl px-3 py-2`}>
                             <Text className="text-white text-xs font-bold">{getStatusText(appointment.status)}</Text>
@@ -109,13 +110,13 @@ const AppointmentDetail = () => {
 
                     {/* Card da Loja */}
                     {appointment.store && (
-                        <View className="bg-[#2E3047] dark:bg-white dark:border dark:border-hobby-border-light rounded-3xl p-4 mb-4">
-                            <Text className="text-[#A1A1AA] dark:text-hobby-text-secondary text-xs uppercase mb-2">Loja</Text>
+                        <View className="rounded-3xl p-4 mb-4" style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.borderColor }}>
+                            <Text className="text-xs uppercase mb-2" style={{ color: colors.textSecondary }}>Loja</Text>
                             <View className="flex-row items-center">
-                                <View className="w-12 h-12 rounded-full mr-3 bg-hobby-yellow/20 items-center justify-center">
-                                    <Ionicons name="storefront" size={20} color={isDark ? '#D97706' : '#FFD600'} />
+                                <View className="w-12 h-12 rounded-full mr-3 items-center justify-center" style={{ backgroundColor: colors.accentYellow + '33' }}>
+                                    <Ionicons name="storefront" size={20} color={colors.accentYellow} />
                                 </View>
-                                <Text className="text-white dark:text-hobby-text-light text-lg font-bold flex-1">
+                                <Text className="text-lg font-bold flex-1" style={{ color: colors.textMain }}>
                                     {appointment.store.name}
                                 </Text>
                             </View>
@@ -124,13 +125,13 @@ const AppointmentDetail = () => {
 
                     {/* Card do Pet */}
                     {appointment.pet && (
-                        <View className="bg-[#2E3047] dark:bg-white dark:border dark:border-hobby-border-light rounded-3xl p-4 mb-4">
-                            <Text className="text-[#A1A1AA] dark:text-hobby-text-secondary text-xs uppercase mb-2">Pet</Text>
+                        <View className="rounded-3xl p-4 mb-4" style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.borderColor }}>
+                            <Text className="text-xs uppercase mb-2" style={{ color: colors.textSecondary }}>Pet</Text>
                             <View className="flex-row items-center">
-                                <View className="w-12 h-12 rounded-full mr-3 bg-hobby-yellow/20 items-center justify-center">
-                                    <Ionicons name="paw" size={20} color={isDark ? '#D97706' : '#FFD600'} />
+                                <View className="w-12 h-12 rounded-full mr-3 items-center justify-center" style={{ backgroundColor: colors.accentYellow + '33' }}>
+                                    <Ionicons name="paw" size={20} color={colors.accentYellow} />
                                 </View>
-                                <Text className="text-hobby-yellow dark:text-hobby-accent-light text-lg font-bold">
+                                <Text className="text-lg font-bold" style={{ color: colors.accentYellow }}>
                                     {appointment.pet.name}
                                 </Text>
                             </View>
@@ -139,13 +140,13 @@ const AppointmentDetail = () => {
 
                     {/* Card do Serviço */}
                     {appointment.service && (
-                        <View className="bg-[#2E3047] dark:bg-white dark:border dark:border-hobby-border-light rounded-3xl p-4 mb-4">
-                            <Text className="text-[#A1A1AA] dark:text-hobby-text-secondary text-xs uppercase mb-2">Serviço</Text>
-                            <Text className="text-white dark:text-hobby-text-light text-lg font-bold mb-2">
+                        <View className="rounded-3xl p-4 mb-4" style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.borderColor }}>
+                            <Text className="text-xs uppercase mb-2" style={{ color: colors.textSecondary }}>Serviço</Text>
+                            <Text className="text-lg font-bold mb-2" style={{ color: colors.textMain }}>
                                 {appointment.service.name}
                             </Text>
                             {appointment.service.price && (
-                                <Text className="text-hobby-yellow dark:text-hobby-accent-light text-xl font-bold">
+                                <Text className="text-xl font-bold" style={{ color: colors.accentYellow }}>
                                     R$ {Number(appointment.service.price).toFixed(2)}
                                 </Text>
                             )}
@@ -153,11 +154,11 @@ const AppointmentDetail = () => {
                     )}
 
                     {/* Card de Data/Hora */}
-                    <View className="bg-[#2E3047] dark:bg-white dark:border dark:border-hobby-border-light rounded-3xl p-4 mb-4">
-                        <Text className="text-[#A1A1AA] dark:text-hobby-text-secondary text-xs uppercase mb-2">Data e Hora</Text>
+                    <View className="rounded-3xl p-4 mb-4" style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.borderColor }}>
+                        <Text className="text-xs uppercase mb-2" style={{ color: colors.textSecondary }}>Data e Hora</Text>
                         <View className="flex-row items-center">
-                            <Ionicons name="calendar" size={20} color={isDark ? '#D97706' : '#FFD600'} />
-                            <Text className="text-white dark:text-hobby-text-light text-lg ml-2">
+                            <Ionicons name="calendar" size={20} color={colors.accentYellow} />
+                            <Text className="text-lg ml-2" style={{ color: colors.textMain }}>
                                 {new Date(appointment.startsAt).toLocaleDateString('pt-BR', {
                                     day: '2-digit',
                                     month: 'long',
@@ -166,8 +167,8 @@ const AppointmentDetail = () => {
                             </Text>
                         </View>
                         <View className="flex-row items-center mt-2">
-                            <Ionicons name="time" size={20} color={isDark ? '#D97706' : '#FFD600'} />
-                            <Text className="text-white dark:text-hobby-text-light text-lg ml-2">
+                            <Ionicons name="time" size={20} color={colors.accentYellow} />
+                            <Text className="text-lg ml-2" style={{ color: colors.textMain }}>
                                 {new Date(appointment.startsAt).toLocaleTimeString('pt-BR', {
                                     hour: '2-digit',
                                     minute: '2-digit'
@@ -178,9 +179,9 @@ const AppointmentDetail = () => {
 
                     {/* Card de Profissional */}
                     {appointment.professional && (
-                        <View className="bg-[#2E3047] dark:bg-white dark:border dark:border-hobby-border-light rounded-3xl p-4 mb-4">
-                            <Text className="text-[#A1A1AA] dark:text-hobby-text-secondary text-xs uppercase mb-2">Profissional</Text>
-                            <Text className="text-white dark:text-hobby-text-light text-lg font-bold">
+                        <View className="rounded-3xl p-4 mb-4" style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.borderColor }}>
+                            <Text className="text-xs uppercase mb-2" style={{ color: colors.textSecondary }}>Profissional</Text>
+                            <Text className="text-lg font-bold" style={{ color: colors.textMain }}>
                                 {appointment.professional.name}
                             </Text>
                         </View>
@@ -188,9 +189,9 @@ const AppointmentDetail = () => {
 
                     {/* Notas */}
                     {appointment.notes && (
-                        <View className="bg-[#2E3047] dark:bg-white dark:border dark:border-hobby-border-light rounded-3xl p-4 mb-4">
-                            <Text className="text-[#A1A1AA] dark:text-hobby-text-secondary text-xs uppercase mb-2">Observações</Text>
-                            <Text className="text-white dark:text-hobby-text-light text-base">
+                        <View className="rounded-3xl p-4 mb-4" style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.borderColor }}>
+                            <Text className="text-xs uppercase mb-2" style={{ color: colors.textSecondary }}>Observações</Text>
+                            <Text className="text-base" style={{ color: colors.textMain }}>
                                 {appointment.notes}
                             </Text>
                         </View>

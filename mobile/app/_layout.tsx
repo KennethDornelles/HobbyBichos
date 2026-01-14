@@ -4,6 +4,8 @@ import { StatusBar } from "expo-status-bar";
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from "@expo-google-fonts/poppins";
 import { useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
+import { setStatusBarStyle, setStatusBarTranslucent } from "expo-status-bar";
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -23,8 +25,11 @@ function RootLayoutContent() {
   useEffect(() => {
     if (fontsLoaded) {
       SplashScreen.hideAsync();
+      // Configurar status bar translúcido
+      setStatusBarTranslucent(true);
+      setStatusBarStyle(isDark ? "light" : "dark");
     }
-  }, [fontsLoaded]);
+  }, [fontsLoaded, isDark]);
 
   if (!fontsLoaded) {
     return null;
@@ -32,7 +37,7 @@ function RootLayoutContent() {
 
   return (
     <>
-      <StatusBar style={isDark ? "light" : "dark"} />
+      <StatusBar translucent={true} style={isDark ? "light" : "dark"} />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -47,10 +52,12 @@ function RootLayoutContent() {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <RootLayoutContent />
-      </AuthProvider>
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <RootLayoutContent />
+        </AuthProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }

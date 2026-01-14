@@ -1,10 +1,26 @@
 import React, { createContext, useState, useContext } from 'react';
 
-const AuthContext = createContext(null);
+interface User {
+    id: string;
+    name: string;
+    email: string;
+    role?: string;
+    [key: string]: any;
+}
 
-export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
+interface AuthContextType {
+    user: User | null;
+    setUser: (user: User | null) => void;
+    signOut: () => Promise<void>;
+    isLoading: boolean;
+}
+
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+    const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(false);
+
     const signOut = async () => {
         setIsLoading(true);
         try {
@@ -17,16 +33,18 @@ export const AuthProvider = ({ children }) => {
             setIsLoading(false);
         }
     };
+
     return (
         <AuthContext.Provider value={{ user, setUser, signOut, isLoading }}>
             {children}
         </AuthContext.Provider>
     );
-    return (
-        <AuthContext.Provider value={{ user, setUser, signOut }}>
-            {children}
-        </AuthContext.Provider>
-    );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = (): AuthContextType => {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth must be used within an AuthProvider');
+    }
+    return context;
+};

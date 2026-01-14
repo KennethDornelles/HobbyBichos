@@ -16,14 +16,29 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mobile.app"
+      "bundleIdentifier": "com.mobile.app",
+      "config": {
+        "googleMapsApiKey": "AIzaSyB6s_mecHKsRBRK_SvmkSKxGmdosY0XFL8"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.mobile.app"
+      "package": "com.mobile.app",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.FOREGROUND_SERVICE"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyB6s_mecHKsRBRK_SvmkSKxGmdosY0XFL8"
+        }
+      },
+      "statusBarStyle": "light",
+      "statusBarBackgroundColor": "#000000"
     },
     "web": {
       "favicon": "./assets/favicon.png"

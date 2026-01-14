@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -7,17 +7,28 @@ import {
     ScrollView,
     ActivityIndicator,
     TextInput,
+    FlatList,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCartStore } from '../src/store/cartStore';
 import api from '../src/services/api';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, MessageCircle } from 'lucide-react-native';
+import { ArrowLeft, MessageCircle, MapPin } from 'lucide-react-native';
+import { useThemeColors } from '../src/hooks/useThemeColors';
 import type { CreateOrderResponse } from '../src/types/order.types';
 
-const STORE_ID = 'store1'; // Store padrão (integrado com seed)
-const PAYMENT_METHODS = ['creditcard', 'pix', 'debit'];
-const PAYMENT_LABELS = {
+interface Store {
+    id: string;
+    name: string;
+    address: string;
+    city: string;
+    whatsappNumber: string;
+}
+
+const PAYMENT_METHODS = ['creditcard', 'pix', 'debit'] as const;
+type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+const PAYMENT_LABELS: Record<PaymentMethod, string> = {
     creditcard: 'Cartão de Crédito',
     pix: 'PIX',
     debit: 'Débito',
@@ -25,18 +36,48 @@ const PAYMENT_LABELS = {
 
 export default function CheckoutScreen() {
     const router = useRouter();
+    const colors = useThemeColors();
     const items = useCartStore((s) => s.items);
     const subtotal = useCartStore((s) => s.subtotal());
     const clear = useCartStore((s) => s.clear);
+    const insets = useSafeAreaInsets();
 
+    const [stores, setStores] = useState<Store[]>([]);
+    const [selectedStoreId, setSelectedStoreId] = useState<string>('');
+    const [loadingStores, setLoadingStores] = useState(true);
     const [shippingAddress, setShippingAddress] = useState('');
-    const [paymentMethod, setPaymentMethod] = useState<string>('pix');
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('pix');
     const [creating, setCreating] = useState(false);
+
+    // Carregar lojas ao montar
+    useEffect(() => {
+        const loadStores = async () => {
+            try {
+                const response = await api.get<Store[]>('/stores');
+                setStores(response.data);
+                // Selecionar primeira loja por padrão
+                if (response.data.length > 0) {
+                    setSelectedStoreId(response.data[0].id);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar lojas:', error);
+                Alert.alert('Erro', 'Não foi possível carregar as lojas disponíveis');
+            } finally {
+                setLoadingStores(false);
+            }
+        };
+        loadStores();
+    }, []);
 
     // Criar pedido e redirecionar para WhatsApp
     const handleCreateOrder = async () => {
         if (items.length === 0) {
             Alert.alert('Carrinho vazio', 'Adicione itens ao carrinho antes de prosseguir.');
+            return;
+        }
+
+        if (!selectedStoreId) {
+            Alert.alert('Loja não selecionada', 'Por favor, selecione uma loja.');
             return;
         }
 
@@ -54,11 +95,11 @@ export default function CheckoutScreen() {
                 price: item.price,
             }));
 
-            console.log('Criando pedido com:', { storeId: STORE_ID, items: orderItems });
+            console.log('Criando pedido com:', { storeId: selectedStoreId, items: orderItems });
 
             // Backend apenas aceita: storeId, items, petId, appointmentId
             const response = await api.post<CreateOrderResponse>('/orders', {
-                storeId: STORE_ID,
+                storeId: selectedStoreId,
                 items: orderItems,
             });
 
@@ -91,36 +132,95 @@ export default function CheckoutScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-white" edges={['top', 'bottom']}>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+        <SafeAreaView className="flex-1" style={{ backgroundColor: colors.bgMain }} edges={['top', 'bottom']}>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{
+                    flexGrow: 1,
+                    paddingBottom: insets.bottom + 16
+                }}
+            >
                 <View className="flex-1 px-5 py-6">
                     {/* Header */}
                     <TouchableOpacity
                         onPress={() => router.back()}
                         className="flex-row items-center mb-6"
                     >
-                        <ArrowLeft size={24} color="#1A1B2E" />
-                        <Text className="text-gray-800 text-lg font-semibold ml-3">Checkout method</Text>
+                        <ArrowLeft size={24} color={colors.textMain} />
+                        <Text style={{ color: colors.textMain }} className="text-lg font-semibold ml-3">Checkout method</Text>
                     </TouchableOpacity>
+
+                    {/* Seção de Loja - Antes do Endereço */}
+                    <View className="mb-8">
+                        <Text style={{ color: colors.textMain }} className="font-bold text-lg mb-4">Selecione a Loja</Text>
+                        {loadingStores ? (
+                            <View className="items-center py-4">
+                                <ActivityIndicator size="large" color={colors.accentYellow} />
+                            </View>
+                        ) : stores.length === 0 ? (
+                            <View style={{ backgroundColor: colors.accentRed + '10', borderColor: colors.accentRed + '30' }} className="border rounded-lg p-3">
+                                <Text style={{ color: colors.accentRed }} className="text-sm">Nenhuma loja disponível</Text>
+                            </View>
+                        ) : (
+                            <FlatList
+                                scrollEnabled={false}
+                                data={stores}
+                                keyExtractor={(item) => item.id}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        onPress={() => setSelectedStoreId(item.id)}
+                                        style={{
+                                            borderColor: selectedStoreId === item.id ? colors.accentYellow : colors.borderColor,
+                                            backgroundColor: selectedStoreId === item.id ? colors.accentYellow + '10' : colors.bgCard
+                                        }}
+                                        className="border-2 rounded-lg p-3 mb-2 flex-row items-start"
+                                    >
+                                        <View
+                                            style={{
+                                                borderColor: selectedStoreId === item.id ? colors.accentYellow : colors.borderColor,
+                                                backgroundColor: selectedStoreId === item.id ? colors.accentYellow : colors.bgCard
+                                            }}
+                                            className="w-5 h-5 rounded-full border-2 mr-3 mt-1 flex items-center justify-center"
+                                        >
+                                            {selectedStoreId === item.id && (
+                                                <View style={{ backgroundColor: colors.bgMain }} className="w-2 h-2 rounded-full" />
+                                            )}
+                                        </View>
+                                        <View className="flex-1">
+                                            <Text style={{ color: colors.textMain }} className="font-semibold text-sm">
+                                                {item.name}
+                                            </Text>
+                                            <View className="flex-row items-center mt-1">
+                                                <MapPin size={12} color={colors.textSecondary} />
+                                                <Text style={{ color: colors.textSecondary }} className="text-xs ml-1">
+                                                    {item.address}, {item.city}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    </TouchableOpacity>
+                                )}
+                            />
+                        )}
+                    </View>
 
                     {/* Seção de Endereço */}
                     <View className="mb-8">
-                        <Text className="text-gray-800 font-bold text-lg mb-4">Shipping address</Text>
-                        <View className="border border-gray-300 rounded-2xl px-4 py-3 bg-gray-50">
+                        <Text style={{ color: colors.textMain }} className="font-bold text-lg mb-4">Shipping address</Text>
+                        <View style={{ borderColor: colors.borderColor, backgroundColor: colors.bgInput }} className="border rounded-2xl px-4 py-3">
                             <TextInput
                                 placeholder="Shipping address"
-                                placeholderTextColor="#999"
+                                placeholderTextColor={colors.textMuted}
                                 value={shippingAddress}
                                 onChangeText={setShippingAddress}
-                                className="text-gray-800 font-medium"
-                                style={{ fontSize: 16 }}
+                                style={{ color: colors.textMain, fontSize: 16 }}
+                                className="font-medium"
                             />
                         </View>
                     </View>
 
                     {/* Seção de Pagamento */}
                     <View className="mb-8">
-                        <Text className="text-gray-800 font-bold text-lg mb-4">Payment</Text>
+                        <Text style={{ color: colors.textMain }} className="font-bold text-lg mb-4">Payment</Text>
 
                         {/* Métodos de Pagamento - Horizontal */}
                         <View className="flex-row gap-3 mb-6">
@@ -128,16 +228,17 @@ export default function CheckoutScreen() {
                                 <TouchableOpacity
                                     key={method}
                                     onPress={() => setPaymentMethod(method)}
-                                    className={`px-4 py-3 rounded-xl flex-1 items-center border-2 ${paymentMethod === method
-                                        ? 'border-yellow-400 bg-yellow-50'
-                                        : 'border-gray-200 bg-gray-50'
-                                        }`}
+                                    style={{
+                                        borderColor: paymentMethod === method ? colors.accentYellow : colors.borderColor,
+                                        backgroundColor: paymentMethod === method ? colors.accentYellow + '10' : colors.bgInput
+                                    }}
+                                    className="px-4 py-3 rounded-xl flex-1 items-center border-2"
                                 >
                                     <Text
-                                        className={`font-semibold text-sm ${paymentMethod === method
-                                            ? 'text-yellow-600'
-                                            : 'text-gray-600'
-                                            }`}
+                                        style={{
+                                            color: paymentMethod === method ? colors.accentYellow : colors.textSecondary
+                                        }}
+                                        className="font-semibold text-sm"
                                     >
                                         {PAYMENT_LABELS[method]}
                                     </Text>
@@ -146,9 +247,9 @@ export default function CheckoutScreen() {
                         </View>
 
                         {/* Card do Estabelecimento - Payment method */}
-                        <View className="bg-gray-900 rounded-2xl p-4 mb-6">
-                            <Text className="text-gray-400 text-xs font-semibold mb-3">Payment method</Text>
-                            <Text className="text-white font-bold text-lg mb-4">
+                        <View style={{ backgroundColor: colors.bgCard, borderColor: colors.borderColor }} className="rounded-2xl p-4 mb-6 border">
+                            <Text style={{ color: colors.textMuted }} className="text-xs font-semibold mb-3">Payment method</Text>
+                            <Text style={{ color: colors.textMain }} className="font-bold text-lg mb-4">
                                 Checkout card
                             </Text>
 
@@ -160,15 +261,15 @@ export default function CheckoutScreen() {
                                         style={{
                                             borderColor:
                                                 paymentMethod === 'creditcard'
-                                                    ? '#FFB800'
-                                                    : '#666',
+                                                    ? colors.accentYellow
+                                                    : colors.borderColor,
                                             backgroundColor:
                                                 paymentMethod === 'creditcard'
-                                                    ? '#FFB800'
+                                                    ? colors.accentYellow
                                                     : 'transparent',
                                         }}
                                     />
-                                    <Text className="text-white text-sm">Crédito/Débito</Text>
+                                    <Text style={{ color: colors.textMain }} className="text-sm">Crédito/Débito</Text>
                                 </View>
                                 <View className="flex-row items-center gap-2 py-2">
                                     <View
@@ -176,42 +277,43 @@ export default function CheckoutScreen() {
                                         style={{
                                             borderColor:
                                                 paymentMethod === 'pix'
-                                                    ? '#FFB800'
-                                                    : '#666',
+                                                    ? colors.accentYellow
+                                                    : colors.borderColor,
                                             backgroundColor:
                                                 paymentMethod === 'pix'
-                                                    ? '#FFB800'
+                                                    ? colors.accentYellow
                                                     : 'transparent',
                                         }}
                                     />
-                                    <Text className="text-white text-sm">9FF8aaA PIX</Text>
+                                    <Text style={{ color: colors.textMain }} className="text-sm">PIX</Text>
                                 </View>
                             </View>
                         </View>
 
                         {/* Info Card */}
-                        <View className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-8">
-                            <Text className="text-gray-700 text-sm leading-5">
-                                The toolon tuhe npe bretors, frui inily itdy anclyrodion tectalify. Inopun to namd do
-                                qelut a fett cri shed empelo yeyr. Docnode.
+                        <View style={{ backgroundColor: colors.bgInput, borderColor: colors.borderColor }} className="border rounded-xl p-4 mb-8">
+                            <Text style={{ color: colors.textSecondary }} className="text-sm leading-5">
+                                💳 Seus dados de pagamento são processados de forma segura.
+                                Após a confirmação, você receberá um link para finalizar o pagamento
+                                via WhatsApp com a loja.
                             </Text>
                         </View>
                     </View>
 
                     {/* Resumo do Pedido */}
                     {items.length > 0 && (
-                        <View className="bg-gray-50 border border-gray-200 rounded-2xl p-4 mb-6">
-                            <View className="mb-3 pb-3 border-b border-gray-200">
+                        <View style={{ backgroundColor: colors.bgCard, borderColor: colors.borderColor }} className="border rounded-2xl p-4 mb-6">
+                            <View style={{ borderBottomColor: colors.borderColor }} className="mb-3 pb-3 border-b">
                                 <View className="flex-row justify-between items-center mb-2">
-                                    <Text className="text-gray-600 font-semibold">Subtotal</Text>
-                                    <Text className="text-gray-800 font-semibold">
+                                    <Text style={{ color: colors.textSecondary }} className="font-semibold">Subtotal</Text>
+                                    <Text style={{ color: colors.textMain }} className="font-semibold">
                                         R$ {subtotal.toFixed(2)}
                                     </Text>
                                 </View>
                             </View>
                             <View className="flex-row justify-between items-center">
-                                <Text className="text-lg text-gray-800 font-bold">Total</Text>
-                                <Text className="text-xl text-gray-800 font-bold">
+                                <Text style={{ color: colors.textMain }} className="text-lg font-bold">Total</Text>
+                                <Text style={{ color: colors.textMain }} className="text-xl font-bold">
                                     R$ {subtotal.toFixed(2)}
                                 </Text>
                             </View>
@@ -220,28 +322,32 @@ export default function CheckoutScreen() {
 
                     {/* Botão Confirm Order */}
                     <TouchableOpacity
-                        disabled={creating || items.length === 0 || !shippingAddress.trim()}
+                        disabled={creating || items.length === 0 || !shippingAddress.trim() || !selectedStoreId || loadingStores}
                         onPress={handleCreateOrder}
-                        className={`p-4 rounded-2xl flex-row items-center justify-center mb-6 ${creating || items.length === 0 || !shippingAddress.trim()
-                            ? 'bg-gray-300'
-                            : 'bg-yellow-400'
-                            }`}
+                        style={{
+                            backgroundColor: (creating || items.length === 0 || !shippingAddress.trim() || !selectedStoreId || loadingStores)
+                                ? colors.borderColor
+                                : colors.accentYellow
+                        }}
+                        className="p-4 rounded-2xl flex-row items-center justify-center mb-6"
                     >
-                        {creating && <ActivityIndicator color="#1A1B2E" style={{ marginRight: 8 }} />}
+                        {creating && <ActivityIndicator color={colors.bgMain} style={{ marginRight: 8 }} />}
                         <MessageCircle
                             size={20}
                             color={
-                                creating || items.length === 0 || !shippingAddress.trim()
-                                    ? '#999'
-                                    : '#1A1B2E'
+                                creating || items.length === 0 || !shippingAddress.trim() || !selectedStoreId || loadingStores
+                                    ? colors.textMuted
+                                    : colors.bgMain
                             }
                             style={{ marginRight: 8 }}
                         />
                         <Text
-                            className={`font-bold text-center text-lg ${creating || items.length === 0 || !shippingAddress.trim()
-                                ? 'text-gray-600'
-                                : 'text-gray-900'
-                                }`}
+                            style={{
+                                color: (creating || items.length === 0 || !shippingAddress.trim() || !selectedStoreId || loadingStores)
+                                    ? colors.textMuted
+                                    : colors.bgMain
+                            }}
+                            className="font-bold text-center text-lg"
                         >
                             {creating ? 'Processando...' : 'Confirm order'}
                         </Text>

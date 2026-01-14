@@ -7,14 +7,15 @@ import {
     Alert,
     ActivityIndicator,
     Linking,
+    StatusBar,
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Clock, CheckCircle, Truck, AlertCircle, MessageCircle, MapPin, RefreshCw } from 'lucide-react-native';
-import api from '../../services/api';
-import { useDeliveryTracking } from '../../hooks/useDeliveryTracking';
-import { useThemeColors } from '../../hooks/useThemeColors';
-import type { OrderDetailsResponse } from '../../types/order.types';
+import api from '../../src/services/api';
+import { useDeliveryTracking } from '../../src/hooks/useDeliveryTracking';
+import { useThemeColors } from '../../src/hooks/useThemeColors';
+import type { OrderDetailsResponse } from '../../src/types/order.types';
 
 interface StatusConfig {
     text: string;
@@ -23,12 +24,9 @@ interface StatusConfig {
     bgColor: string;
 }
 
-interface OrderDetailProps {
-    orderId: string;
-}
-
-export default function OrderDetail({ orderId }: OrderDetailProps) {
+export default function OrderDetailsScreen() {
     const router = useRouter();
+    const { id: orderId } = useLocalSearchParams<{ id: string }>();
     const colors = useThemeColors();
     const insets = useSafeAreaInsets();
 
@@ -174,9 +172,12 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
 
     if (loading) {
         return (
-            <View style={{ flex: 1, backgroundColor: colors.bgMain, paddingTop: insets.top, paddingBottom: insets.bottom }} className="items-center justify-center">
-                <ActivityIndicator size="large" color={colors.accentYellow} />
-                <Text style={{ color: colors.textSecondary }} className="mt-4">Carregando pedido...</Text>
+            <View style={{ flex: 1, backgroundColor: colors.bgMain, paddingTop: insets.top, paddingBottom: insets.bottom }}>
+                <StatusBar barStyle="light-content" backgroundColor={colors.bgMain} />
+                <View className="flex-1 items-center justify-center">
+                    <ActivityIndicator size="large" color={colors.accentYellow} />
+                    <Text style={{ color: colors.textSecondary }} className="mt-4">Carregando pedido...</Text>
+                </View>
             </View>
         );
     }
@@ -184,6 +185,7 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
     if (error || !order) {
         return (
             <View style={{ flex: 1, backgroundColor: colors.bgMain, paddingTop: insets.top, paddingBottom: insets.bottom }}>
+                <StatusBar barStyle="light-content" backgroundColor={colors.bgMain} />
                 <View className="flex-1 p-4 items-center justify-center">
                     <AlertCircle size={48} color="#ef4444" />
                     <Text style={{ color: colors.textMain }} className="font-semibold mt-4 text-center">Pedido não encontrado</Text>
@@ -193,7 +195,7 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
                         style={{ backgroundColor: colors.accentYellow }}
                         className="rounded-xl p-3 mt-6 px-6"
                     >
-                        <Text style={{ color: colors.bgMain }} className="font-semibold">Voltar</Text>
+                        <Text className="text-white font-semibold">Voltar</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -205,6 +207,8 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
 
     return (
         <View style={{ flex: 1, backgroundColor: colors.bgMain }}>
+            <StatusBar barStyle="light-content" backgroundColor={colors.bgCard} />
+
             {/* Header */}
             <View style={{ backgroundColor: colors.bgCard, paddingTop: insets.top }}>
                 <View style={{ backgroundColor: colors.bgCard, borderBottomColor: colors.borderColor }} className="flex-row items-center p-4 border-b">
@@ -222,7 +226,7 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{
                     flexGrow: 1,
-                    paddingBottom: insets.bottom + 16
+                    paddingBottom: insets.bottom + 20
                 }}
             >
                 <View className="p-4">
@@ -244,7 +248,7 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
 
                     {/* Card de alerta para aguardando pagamento */}
                     {order.status === 'WAITING_PAYMENT' && (
-                        <View style={{ backgroundColor: colors.bgCard, borderColor: colors.borderColor }} className="border rounded-xl p-4 mb-6">
+                        <View style={{ backgroundColor: colors.bgInput, borderColor: colors.borderColor }} className="border rounded-xl p-4 mb-6">
                             <View className="flex-row items-center mb-3">
                                 <Clock size={20} color="#ca8a04" style={{ marginRight: 8 }} />
                                 <Text style={{ color: colors.textMain }} className="font-bold flex-1">Finalize o Pagamento</Text>
@@ -262,9 +266,9 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
                         </View>
                     )}
 
-                    {/* Card de Rastreamento - Mostrar quando pedido está em processamento ou entregue */}
+                    {/* Card de Rastreamento */}
                     {(order.status === 'PROCESSING' || order.status === 'DELIVERED') && (
-                        <View style={{ backgroundColor: colors.bgCard, borderColor: colors.borderColor }} className="border rounded-xl p-4 mb-6">
+                        <View style={{ backgroundColor: colors.bgInput, borderColor: colors.borderColor }} className="border rounded-xl p-4 mb-6">
                             <View className="flex-row items-center justify-between mb-3">
                                 <View className="flex-row items-center flex-1">
                                     <MapPin size={20} color={colors.accentYellow} style={{ marginRight: 8 }} />
@@ -295,13 +299,12 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
                                 style={{ backgroundColor: colors.accentYellow }}
                                 className="rounded-lg p-3 flex-row items-center justify-center"
                             >
-                                <Truck size={18} color={colors.bgMain} style={{ marginRight: 8 }} />
-                                <Text style={{ color: colors.bgMain }} className="font-semibold">
+                                <Truck size={18} color="white" style={{ marginRight: 8 }} />
+                                <Text className="text-white font-semibold">
                                     {showTracking ? 'Ocultar' : 'Ver'} Rastreamento
                                 </Text>
                             </TouchableOpacity>
 
-                            {/* Tracking Preview */}
                             {showTracking && (
                                 <View className="mt-4 bg-white rounded-lg p-3 border border-blue-200">
                                     <Text className="text-gray-600 text-xs mb-2">
@@ -309,7 +312,6 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
                                     </Text>
                                     <TouchableOpacity
                                         onPress={() => {
-                                            // Navegar para a tela de rastreamento com os dados do pedido
                                             router.push({
                                                 pathname: '/googlemaps-test',
                                                 params: { orderId: order.id, status: 'delivery' },
@@ -354,11 +356,11 @@ export default function OrderDetail({ orderId }: OrderDetailProps) {
                         )}
                     </View>
 
-                    {/* Botão de teste para atualizar status */}
+                    {/* Botão de teste */}
                     <TouchableOpacity
                         onPress={handleUpdateStatusForTest}
                         disabled={updatingStatus}
-                        style={{ backgroundColor: colors.accentGreen }}
+                        style={{ backgroundColor: colors.textSecondary }}
                         className="rounded-xl p-4 mb-6 flex-row items-center justify-center"
                     >
                         <RefreshCw size={18} color="white" style={{ marginRight: 8 }} />

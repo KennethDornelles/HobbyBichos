@@ -1,24 +1,84 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, Alert, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCartStore } from '../src/store/cartStore';
 import { useRouter } from 'expo-router';
 import { X, Plus, Minus } from 'lucide-react-native';
-import { useTheme } from '../src/context/ThemeContext';
+import { useThemeColors } from '../src/hooks/useThemeColors';
+import api from '../src/services/api';
+import { Ionicons } from '@expo/vector-icons';
+
+interface StockInfo {
+    productId: string;
+    availableStock: number;
+    loading: boolean;
+}
 
 export default function CarrinhoScreen() {
     const router = useRouter();
-    const { isDark } = useTheme();
+    const colors = useThemeColors();
+    const insets = useSafeAreaInsets();
     const items = useCartStore((s) => s.items);
     const subtotal = useCartStore((s) => s.subtotal());
     const updateQuantity = useCartStore((s) => s.updateQuantity);
     const removeItem = useCartStore((s) => s.removeItem);
 
-    const bgMain = isDark ? '#10142D' : '#F4F4F6';
-    const bgCard = isDark ? '#1C213E' : '#FFFFFF';
-    const bgButton = isDark ? '#2A2F4F' : '#E5E7EB';
-    const textMain = isDark ? '#FFFFFF' : '#10142D';
-    const textSecondary = isDark ? '#9CA3AF' : '#6B7280';
+    const [stockInfo, setStockInfo] = useState<Map<string, StockInfo>>(new Map());
+
+    // Carregar estoque disponível para cada produto no carrinho
+    useEffect(() => {
+        const loadStockInfo = async () => {
+            const newStockInfo = new Map<string, StockInfo>();
+
+            for (const item of items) {
+                if (!stockInfo.has(item.productId)) {
+                    newStockInfo.set(item.productId, {
+                        productId: item.productId,
+                        availableStock: 0,
+                        loading: true,
+                    });
+                }
+            }
+
+            setStockInfo((prev) => new Map([...prev, ...newStockInfo]));
+
+            // Buscar estoque de cada produto
+            for (const item of items) {
+                try {
+                    const response = await api.get(`/products/${item.productId}`);
+                    const product = response.data;
+
+                    // Calcular estoque total disponível em todas as lojas
+                    const totalStock = product.stocks?.reduce((sum: number, stock: any) => sum + stock.quantity, 0) || 0;
+
+                    setStockInfo((prev) => {
+                        const newMap = new Map(prev);
+                        newMap.set(item.productId, {
+                            productId: item.productId,
+                            availableStock: totalStock,
+                            loading: false,
+                        });
+                        return newMap;
+                    });
+                } catch (error) {
+                    console.error(`Erro ao buscar estoque do produto ${item.productId}:`, error);
+                    setStockInfo((prev) => {
+                        const newMap = new Map(prev);
+                        newMap.set(item.productId, {
+                            productId: item.productId,
+                            availableStock: 0,
+                            loading: false,
+                        });
+                        return newMap;
+                    });
+                }
+            }
+        };
+
+        if (items.length > 0) {
+            void loadStockInfo();
+        }
+    }, [items]);
 
     const confirmRemove = (productId: string, name: string) => {
         Alert.alert('Remover item', `Deseja remover ${name}?`, [
@@ -28,12 +88,12 @@ export default function CarrinhoScreen() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-hobby-dark dark:bg-hobby-ice-dark" edges={['top', 'bottom']}>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+        <SafeAreaView className="flex-1" style={{ backgroundColor: colors.bgMain }} edges={['top', 'bottom']}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom + 16 }}>
                 <View className="flex-1 px-5 pt-6">
                     {/* Header */}
                     <View className="mb-6">
-                        <Text className="text-white dark:text-hobby-text-light text-3xl font-bold">
+                        <Text style={{ color: colors.textMain }} className="text-3xl font-bold">
                             Seu carrinho
                         </Text>
                     </View>
@@ -41,7 +101,7 @@ export default function CarrinhoScreen() {
                     {/* Items */}
                     {items.length === 0 ? (
                         <View className="flex-1 justify-center items-center">
-                            <Text className="text-gray-400 dark:text-hobby-text-secondary text-lg">
+                            <Text style={{ color: colors.textSecondary }} className="text-lg">
                                 Seu carrinho está vazio.
                             </Text>
                         </View>
@@ -50,11 +110,8 @@ export default function CarrinhoScreen() {
                             {items.map((item) => (
                                 <View
                                     key={item.productId}
-                                    className="
-                                        bg-[#1C213E] dark:bg-white 
-                                        rounded-3xl p-4 mb-4 flex-row items-center
-                                        dark:shadow-card-light dark:border dark:border-hobby-border-light
-                                    "
+                                    style={{ backgroundColor: colors.bgCard, borderColor: colors.borderColor }}
+                                    className="rounded-3xl p-4 mb-4 flex-row items-center border"
                                 >
                                     {/* Imagem do produto */}
                                     {item.image ? (
@@ -68,12 +125,37 @@ export default function CarrinhoScreen() {
 
                                     {/* Info do produto */}
                                     <View className="flex-1">
-                                        <Text className="text-white dark:text-hobby-text-light font-semibold text-base mb-1">
+                                        <Text style={{ color: colors.textMain }} className="font-semibold text-base mb-1">
                                             {item.name}
                                         </Text>
-                                        <Text className="text-hobby-yellow dark:text-hobby-yellow-soft font-bold text-lg">
+                                        <Text style={{ color: colors.accentYellow }} className="font-bold text-lg mb-2">
                                             R$ {item.price.toFixed(2)}
                                         </Text>
+
+                                        {/* Informação de estoque */}
+                                        <View className="flex-row items-center">
+                                            {stockInfo.get(item.productId)?.loading ? (
+                                                <ActivityIndicator size="small" color={colors.accentGreen} />
+                                            ) : (
+                                                <>
+                                                    {stockInfo.get(item.productId)?.availableStock ?? 0 > 0 ? (
+                                                        <>
+                                                            <Ionicons name="checkmark-circle" size={14} color={colors.accentGreen} />
+                                                            <Text style={{ color: colors.accentGreen }} className="text-xs ml-1 font-semibold">
+                                                                {stockInfo.get(item.productId)?.availableStock ?? 0} em estoque
+                                                            </Text>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <Ionicons name="alert-circle" size={14} color={colors.accentRed} />
+                                                            <Text style={{ color: colors.accentRed }} className="text-xs ml-1 font-semibold">
+                                                                Fora de estoque
+                                                            </Text>
+                                                        </>
+                                                    )}
+                                                </>
+                                            )}
+                                        </View>
                                     </View>
 
                                     {/* Controles de quantidade */}
@@ -82,16 +164,13 @@ export default function CarrinhoScreen() {
                                             onPress={() =>
                                                 updateQuantity(item.productId, Math.max(1, item.quantity - 1))
                                             }
-                                            className="
-                                                w-9 h-9 rounded-lg items-center justify-center
-                                                bg-[#2A2F4F] dark:bg-gray-200
-                                                active:bg-[#353B5F] dark:active:bg-gray-300
-                                            "
+                                            style={{ backgroundColor: colors.bgInput }}
+                                            className="w-9 h-9 rounded-lg items-center justify-center"
                                         >
-                                            <Minus size={16} color="#FFD600" />
+                                            <Minus size={16} color={colors.accentYellow} />
                                         </TouchableOpacity>
 
-                                        <Text className="text-white dark:text-hobby-text-light font-bold text-base mx-4 min-w-[24px] text-center">
+                                        <Text style={{ color: colors.textMain }} className="font-bold text-base mx-4 min-w-[24px] text-center">
                                             {item.quantity}
                                         </Text>
 
@@ -102,26 +181,20 @@ export default function CarrinhoScreen() {
                                                     Math.min(item.maxStock, item.quantity + 1)
                                                 )
                                             }
-                                            className="
-                                                w-9 h-9 rounded-lg items-center justify-center
-                                                bg-[#2A2F4F] dark:bg-gray-200
-                                                active:bg-[#353B5F] dark:active:bg-gray-300
-                                            "
+                                            style={{ backgroundColor: colors.bgInput }}
+                                            className="w-9 h-9 rounded-lg items-center justify-center"
                                         >
-                                            <Plus size={16} color="#FFD600" />
+                                            <Plus size={16} color={colors.accentYellow} />
                                         </TouchableOpacity>
                                     </View>
 
                                     {/* Botão remover */}
                                     <TouchableOpacity
                                         onPress={() => confirmRemove(item.productId, item.name)}
-                                        className="
-                                            w-9 h-9 rounded-lg items-center justify-center
-                                            bg-red-500/20 dark:bg-red-100
-                                            active:bg-red-500/30 dark:active:bg-red-200
-                                        "
+                                        style={{ backgroundColor: colors.accentRed + '20' }}
+                                        className="w-9 h-9 rounded-lg items-center justify-center"
                                     >
-                                        <X size={18} color="#EF4444" />
+                                        <X size={18} color={colors.accentRed} />
                                     </TouchableOpacity>
                                 </View>
                             ))}
@@ -132,26 +205,22 @@ export default function CarrinhoScreen() {
 
             {/* Footer com totais */}
             {items.length > 0 && (
-                <View className="px-4 pb-8 pt-4 bg-hobby-dark dark:bg-white border-t border-gray-800 dark:border-hobby-border-light">
+                <View style={{ backgroundColor: colors.bgMain, borderTopColor: colors.borderColor }} className="px-4 pb-8 pt-4 border-t">
                     {/* Subtotal */}
                     <View className="flex-row justify-between mb-4">
-                        <Text className="text-gray-400 dark:text-hobby-text-secondary text-base">
+                        <Text style={{ color: colors.textSecondary }} className="text-base">
                             Subtotal
                         </Text>
-                        <Text className="text-white dark:text-hobby-text-light font-semibold text-base">
+                        <Text style={{ color: colors.textMain }} className="font-semibold text-base">
                             R$ {subtotal.toFixed(2)}
                         </Text>
                     </View>
 
                     {/* Total destacado */}
-                    <View className="
-                        bg-hobby-yellow dark:bg-hobby-yellow-soft 
-                        rounded-full py-4 px-6 mb-3
-                        shadow-lg
-                    ">
+                    <View style={{ backgroundColor: colors.accentYellow }} className="rounded-full py-4 px-6 mb-3 shadow-lg">
                         <View className="flex-row justify-between items-center">
-                            <Text className="text-hobby-dark font-semibold text-sm">Total</Text>
-                            <Text className="text-hobby-dark font-bold text-2xl">
+                            <Text className="font-semibold text-sm" style={{ color: colors.bgMain }}>Total</Text>
+                            <Text className="font-bold text-2xl" style={{ color: colors.bgMain }}>
                                 R$ {subtotal.toFixed(2)}
                             </Text>
                         </View>
@@ -160,12 +229,10 @@ export default function CarrinhoScreen() {
                     {/* Botão checkout */}
                     <TouchableOpacity
                         onPress={() => router.push('/checkout')}
-                        className="
-                            bg-hobby-yellow dark:bg-hobby-yellow-soft 
-                            rounded-full py-4 items-center
-                        "
+                        style={{ backgroundColor: colors.accentYellow }}
+                        className="rounded-full py-4 items-center"
                     >
-                        <Text className="text-hobby-dark font-bold text-lg">
+                        <Text className="font-bold text-lg" style={{ color: colors.bgMain }}>
                             Proceed to Checkout
                         </Text>
                     </TouchableOpacity>

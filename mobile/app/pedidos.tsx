@@ -8,14 +8,17 @@ import {
     RefreshControl,
     Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ShoppingBag, Package } from 'lucide-react-native';
 import api from '../src/services/api';
+import { useThemeColors } from '../src/hooks/useThemeColors';
 import type { OrderListItem } from '../src/types/order.types';
 
 export default function OrdersListScreen() {
     const router = useRouter();
+    const insets = useSafeAreaInsets();
+    const colors = useThemeColors();
     const [orders, setOrders] = useState<OrderListItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -25,15 +28,15 @@ export default function OrdersListScreen() {
     const getActionButton = (status: string) => {
         switch (status) {
             case 'WAITING_PAYMENT':
-                return { text: 'Pagar', color: 'bg-[#1A1B2E]' };
+                return { text: 'Pagar', color: colors.accentYellow };
             case 'PAID':
-                return { text: 'Rastrear', color: 'bg-[#1A1B2E]' };
+                return { text: 'Rastrear', color: colors.accentYellow };
             case 'PROCESSING':
-                return { text: 'Acompanhar', color: 'bg-[#1A1B2E]' };
+                return { text: 'Acompanhar', color: colors.accentYellow };
             case 'DELIVERED':
-                return { text: 'Recebido', color: 'bg-green-600' };
+                return { text: 'Recebido', color: colors.accentGreen };
             default:
-                return { text: 'Ver', color: 'bg-gray-600' };
+                return { text: 'Ver', color: colors.textSecondary };
         }
     };
 
@@ -138,25 +141,26 @@ export default function OrdersListScreen() {
         const canCancel = item.status !== 'CANCELLED' && item.status !== 'DELIVERED';
 
         return (
-            <View className="bg-white rounded-2xl p-4 mb-3 shadow-sm">
+            <View style={{ backgroundColor: colors.bgCard }} className="rounded-2xl p-4 mb-3 shadow-sm">
                 <View className="flex-row items-center justify-between">
                     {/* Ícone e Info */}
                     <View className="flex-row items-center flex-1">
-                        <View className="w-12 h-12 rounded-xl bg-orange-100 items-center justify-center mr-3">
-                            <Package size={24} color="#f97316" />
+                        <View style={{ backgroundColor: colors.accentYellow + '20' }} className="w-12 h-12 rounded-xl items-center justify-center mr-3">
+                            <Package size={24} color={colors.accentYellow} />
                         </View>
                         <View className="flex-1">
-                            <Text className="text-base font-bold text-gray-900">{statusInfo.title}</Text>
-                            <Text className="text-sm text-gray-500 mt-0.5">Pedido #{shortId}</Text>
+                            <Text style={{ color: colors.textMain }} className="text-base font-bold">{statusInfo.title}</Text>
+                            <Text style={{ color: colors.textSecondary }} className="text-sm mt-0.5">Pedido #{shortId}</Text>
                         </View>
                     </View>
 
                     {/* Botão de Ação */}
                     <TouchableOpacity
                         onPress={() => router.push(`/pedidos/${item.id}`)}
-                        className={`${actionButton.color} rounded-full px-5 py-2.5 active:opacity-80`}
+                        style={{ backgroundColor: actionButton.color }}
+                        className="rounded-full px-5 py-2.5 active:opacity-80"
                     >
-                        <Text className="text-white text-sm font-semibold">{actionButton.text}</Text>
+                        <Text style={{ color: colors.bgMain }} className="text-sm font-semibold">{actionButton.text}</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -164,9 +168,10 @@ export default function OrdersListScreen() {
                 {canCancel && (
                     <TouchableOpacity
                         onPress={() => handleCancelOrder(item.id, shortId)}
-                        className="mt-3 border border-red-300 rounded-full py-2 active:opacity-70"
+                        style={{ borderColor: colors.accentRed + '50' }}
+                        className="mt-3 border rounded-full py-2 active:opacity-70"
                     >
-                        <Text className="text-red-600 font-semibold text-center text-sm">Cancelar</Text>
+                        <Text style={{ color: colors.accentRed }} className="font-semibold text-center text-sm">Cancelar</Text>
                     </TouchableOpacity>
                 )}
             </View>
@@ -176,37 +181,38 @@ export default function OrdersListScreen() {
     // Empty state
     const renderEmptyState = () => (
         <View className="flex-1 items-center justify-center p-8">
-            <ShoppingBag size={72} color="#d1d5db" />
-            <Text className="text-xl font-bold text-gray-900 mt-6 text-center">
+            <ShoppingBag size={72} color={colors.textMuted} />
+            <Text style={{ color: colors.textMain }} className="text-xl font-bold mt-6 text-center">
                 Você ainda não fez nenhum pedido
             </Text>
-            <Text className="text-gray-500 text-center mt-2 mb-8 leading-5">
+            <Text style={{ color: colors.textSecondary }} className="text-center mt-2 mb-8 leading-5">
                 Explore nossos produtos e faça seu primeiro pedido!
             </Text>
             <TouchableOpacity
                 onPress={() => router.push('/loja')}
-                className="bg-[#1A1B2E] rounded-full py-3.5 px-10 active:opacity-80"
+                style={{ backgroundColor: colors.accentYellow }}
+                className="rounded-full py-3.5 px-10 active:opacity-80"
             >
-                <Text className="text-white font-bold text-base">Ir para Produtos</Text>
+                <Text style={{ color: colors.bgMain }} className="font-bold text-base">Ir para Produtos</Text>
             </TouchableOpacity>
         </View>
     );
 
     if (loading && !refreshing) {
         return (
-            <SafeAreaView className="flex-1 bg-gray-50 items-center justify-center" edges={['top', 'bottom']}>
-                <ActivityIndicator size="large" color="#1A1B2E" />
-                <Text className="text-gray-600 mt-4 font-medium">Carregando seus pedidos...</Text>
+            <SafeAreaView style={{ backgroundColor: colors.bgMain }} className="flex-1 items-center justify-center" edges={['top', 'bottom']}>
+                <ActivityIndicator size="large" color={colors.accentYellow} />
+                <Text style={{ color: colors.textSecondary }} className="mt-4 font-medium">Carregando seus pedidos...</Text>
             </SafeAreaView>
         );
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50" edges={['top', 'bottom']}>
+        <SafeAreaView style={{ backgroundColor: colors.bgMain }} className="flex-1" edges={['top', 'bottom']}>
             {/* Header */}
-            <View className="bg-white px-5 pt-6 pb-4">
-                <Text className="text-2xl font-bold text-gray-900">Meus Pedidos</Text>
-                <Text className="text-gray-500 text-sm mt-1">
+            <View style={{ backgroundColor: colors.bgCard }} className="px-5 pt-6 pb-4">
+                <Text style={{ color: colors.textMain }} className="text-2xl font-bold">Meus Pedidos</Text>
+                <Text style={{ color: colors.textSecondary }} className="text-sm mt-1">
                     {orders.length} pedido{orders.length !== 1 ? 's' : ''}
                 </Text>
             </View>
@@ -217,7 +223,7 @@ export default function OrdersListScreen() {
                     data={orders}
                     renderItem={renderOrderItem}
                     keyExtractor={(item) => item.id}
-                    contentContainerStyle={{ padding: 16 }}
+                    contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16 }}
                     showsVerticalScrollIndicator={false}
                     refreshControl={
                         <RefreshControl
@@ -236,7 +242,7 @@ export default function OrdersListScreen() {
                         <RefreshControl
                             refreshing={refreshing}
                             onRefresh={onRefresh}
-                            colors={['#1A1B2E']}
+                            colors={[colors.accentYellow]}
                         />
                     }
                 />

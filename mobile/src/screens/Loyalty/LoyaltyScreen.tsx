@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, Pressable } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Award, Gift, Sparkles, Heart } from 'lucide-react-native';
 import QRCode from 'react-native-qrcode-svg';
@@ -55,6 +55,7 @@ export default function LoyaltyScreen() {
     const router = useRouter();
     const { points, name } = useUserStore();
     const userId = `USER${Date.now()}`; // Gerar ID único para QR Code
+    const insets = useSafeAreaInsets();
 
     return (
         <View className="flex-1 bg-primary-dark">
@@ -76,7 +77,7 @@ export default function LoyaltyScreen() {
             <ScrollView
                 className="flex-1"
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 24 }}
+                contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
             >
                 {/* Card de Pontos com Gradiente */}
                 <View className="px-4 py-6">

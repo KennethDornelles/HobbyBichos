@@ -11,7 +11,7 @@ import {
     Alert,
     ActivityIndicator,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import api from '@/services/api';
@@ -20,6 +20,7 @@ import { SideMenu } from '@/components/SideMenu';
 import { Product, ProductCategory } from '@/types/product';
 import { PRODUCT_CATEGORIES } from '@/utils/constants';
 import { useCartStore } from '@/store/cartStore';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 /**
  * Props da interface CategoryChip
@@ -28,27 +29,33 @@ interface CategoryChipProps {
     label: ProductCategory;
     isSelected: boolean;
     onPress: (category: string) => void;
+    colors: ReturnType<typeof useThemeColors>;
 }
 
 /**
  * Componente CategoryChip com otimização
  */
 const CategoryChip = React.memo(
-    ({ label, isSelected, onPress }: CategoryChipProps) => (
+    ({ label, isSelected, onPress, colors }: CategoryChipProps) => (
         <TouchableOpacity
             onPress={() => onPress(label)}
             accessible={true}
             accessibilityLabel={`Categoria ${label}`}
             accessibilityRole="button"
             accessibilityState={{ selected: isSelected }}
-            className={`rounded-full px-6 py-2.5 mr-2 ${isSelected
-                ? 'bg-white border-2 border-[#1A1B2E]'
-                : 'bg-white border border-gray-300'
-                }`}
+            style={{
+                backgroundColor: isSelected ? colors.bgCard : colors.bgInput,
+                borderColor: isSelected ? colors.textMain : colors.borderColor,
+                borderWidth: isSelected ? 2 : 1
+            }}
+            className="rounded-full px-6 py-2.5 mr-2"
         >
             <Text
-                className={`font-quicksand-semibold text-sm ${isSelected ? 'text-[#1A1B2E]' : 'text-gray-700'
-                    }`}
+                style={{
+                    color: isSelected ? colors.textMain : colors.textSecondary,
+                    fontWeight: isSelected ? '600' : '400'
+                }}
+                className="text-sm"
             >
                 {label}
             </Text>
@@ -64,12 +71,13 @@ CategoryChip.displayName = 'CategoryChip';
 interface ProductCardProps {
     product: Product;
     onAddPress: (product: Product) => void;
+    colors: ReturnType<typeof useThemeColors>;
 }
 
 /**
  * Componente ProductCard com otimização
  */
-const ProductCard = React.memo(({ product, onAddPress }: ProductCardProps) => {
+const ProductCard = React.memo(({ product, onAddPress, colors }: ProductCardProps) => {
     const price = Number(product.price) || 0;
     return (
         <TouchableOpacity
@@ -77,46 +85,47 @@ const ProductCard = React.memo(({ product, onAddPress }: ProductCardProps) => {
             accessibilityLabel={`Produto ${product.name}, preço R$ ${price.toFixed(2)}`}
             accessibilityRole="button"
             className="w-full"
-            style={{ aspectRatio: 0.75 } as ViewStyle}
         >
-            <View className="bg-white rounded-[32px] overflow-hidden shadow-sm flex-1 justify-between">
+            <View style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.borderColor }} className="rounded-2xl overflow-hidden">
                 {/* Container da Imagem */}
-                <View className="relative h-[65%]">
+                <View className="relative" style={{ height: 140 }}>
                     <Image
                         source={{ uri: product.imageUrl }}
                         className="w-full h-full"
                         resizeMode="cover"
                     />
 
-                    {/* Gradient Overlay (simulado) */}
-                    <View className="absolute bottom-0 w-full h-16 bg-black/10" />
-
                     {/* Badge de Preço */}
-                    <View className="absolute top-3 left-3 bg-[#FFD25D] rounded-full px-3 py-1.5">
-                        <Text className="font-quicksand-bold text-xs text-[#1A1B2E]">
+                    <View style={{ backgroundColor: colors.accentYellow }} className="absolute top-2 left-2 rounded-lg px-2.5 py-1">
+                        <Text style={{ color: colors.bgMain }} className="font-bold text-xs">
                             R$ {price.toFixed(2)}
                         </Text>
                     </View>
                 </View>
 
                 {/* Info do Produto */}
-                <View className="p-3 flex-1 justify-between">
+                <View className="p-3">
                     <Text
-                        className="font-quicksand-semibold text-sm text-[#1A1B2E]"
+                        style={{ color: colors.textMain }}
+                        className="font-semibold text-sm mb-2"
                         numberOfLines={2}
                     >
                         {product.name}
                     </Text>
 
-                    {/* Botão de Ação */}
+                    {/* Botão de Adicionar */}
                     <TouchableOpacity
                         onPress={() => onAddPress(product)}
-                        className="absolute bottom-2 right-2 bg-[#1A1B2E] rounded-full w-8 h-8 items-center justify-center"
+                        style={{ backgroundColor: colors.accentYellow }}
+                        className="rounded-lg py-2 px-3 flex-row items-center justify-center"
                         accessible={true}
                         accessibilityLabel={`Adicionar ${product.name} ao carrinho`}
                         accessibilityRole="button"
                     >
-                        <Ionicons name="add" size={18} color="white" />
+                        <Ionicons name="cart-outline" size={16} color={colors.bgMain} />
+                        <Text style={{ color: colors.bgMain }} className="font-semibold text-xs ml-1.5">
+                            Adicionar
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -142,13 +151,26 @@ ProductCard.displayName = 'ProductCard';
  */
 const ProductSelectionScreen = (): React.ReactElement => {
     const router = useRouter();
+    const colors = useThemeColors();
     const { addItem, totalItems } = useCartStore();
+    const insets = useSafeAreaInsets();
 
     // Estados
     const [menuVisible, setMenuVisible] = useState<boolean>(false);
     const [selectedCategory, setSelectedCategory] = useState<ProductCategory>('Todos');
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
+    const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
+
+    // Mock data para seções
+    const scheduledPurchaseProducts = products.slice(0, 2);
+    const promotionalProducts = products.slice(2, 4);
+    const fastDeliveryProducts = products.slice(4, 6);
+    const repeatPurchaseHistory = products.slice(0, 2).map((p, idx) => ({
+        ...p,
+        lastPurchaseDate: new Date(Date.now() - (idx + 1) * 24 * 60 * 60 * 1000),
+        quantity: idx + 1
+    }));
 
     // Carregar produtos da API
     useEffect(() => {
@@ -159,7 +181,7 @@ const ProductSelectionScreen = (): React.ReactElement => {
                 const apiProducts: Product[] = response.data.map((p) => ({
                     id: p.id,
                     name: p.name || 'Produto sem nome',
-                    category: 'Todos' as ProductCategory, // TODO: atualizar com categoria real
+                    category: (p.category || 'Todos') as ProductCategory,
                     price: Number(p.basePrice) || 0,
                     imageUrl: p.images?.[0] || 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400',
                 }));
@@ -227,11 +249,12 @@ const ProductSelectionScreen = (): React.ReactElement => {
             label={category}
             isSelected={selectedCategory === category}
             onPress={handleCategoryPress}
+            colors={colors}
         />
     );
 
     const renderProductCard: ListRenderItem<Product> = ({ item }) => (
-        <ProductCard product={item} onAddPress={handleAddToCart} />
+        <ProductCard product={item} onAddPress={handleAddToCart} colors={colors} />
     );
 
     const keyExtractor = (item: Product): string => item.id;
@@ -245,7 +268,7 @@ const ProductSelectionScreen = (): React.ReactElement => {
     const contentContainerStyle: ViewStyle = {
         paddingHorizontal: 12,
         paddingTop: 8,
-        paddingBottom: 96,
+        paddingBottom: insets.bottom + 96,
     };
 
     // TODO: Implementar quando componentes estiverem disponíveis
@@ -254,9 +277,9 @@ const ProductSelectionScreen = (): React.ReactElement => {
 
     if (loading) {
         return (
-            <SafeAreaView className="flex-1 bg-[#F5F5F5] items-center justify-center" edges={['top', 'bottom']}>
-                <ActivityIndicator size="large" color="#1A1B2E" />
-                <Text className="mt-4 text-gray-600 font-quicksand-semibold">
+            <SafeAreaView className="flex-1 items-center justify-center" style={{ backgroundColor: colors.bgMain }} edges={['top', 'bottom']}>
+                <ActivityIndicator size="large" color={colors.accentYellow} />
+                <Text style={{ color: colors.textSecondary }} className="mt-4 font-semibold">
                     Carregando produtos...
                 </Text>
             </SafeAreaView>
@@ -264,9 +287,9 @@ const ProductSelectionScreen = (): React.ReactElement => {
     }
 
     return (
-        <View className="flex-1 bg-[#F5F5F5]">
+        <View className="flex-1" style={{ backgroundColor: colors.bgMain }}>
             {/* Header */}
-            <SafeAreaView edges={['top']} className="bg-[#1A1B2E]">
+            <SafeAreaView edges={['top']} style={{ backgroundColor: colors.bgMain }}>
                 <HomeHeader
                     onMenuPress={() => setMenuVisible(true)}
                     onCameraPress={() => console.log('Camera pressed')}
@@ -282,36 +305,223 @@ const ProductSelectionScreen = (): React.ReactElement => {
                 onSelect={handleMenuSelect}
             />
 
-            {/* Scroll horizontal de categorias */}
+            {/* Scroll com seções */}
             <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                className="px-4 pt-4 pb-3 bg-[#F5F5F5]"
+                showsVerticalScrollIndicator={false}
+                style={{ backgroundColor: colors.bgMain }}
+                contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
             >
-                {PRODUCT_CATEGORIES.map(renderCategoryChip)}
-            </ScrollView>
+                {/* Seção de Categorias */}
+                <View className="pt-4 pb-2">
+                    <Text style={{ color: colors.textMain }} className="px-4 text-lg font-bold mb-3">
+                        Categorias
+                    </Text>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        className="px-4"
+                    >
+                        {PRODUCT_CATEGORIES.map(renderCategoryChip)}
+                    </ScrollView>
+                </View>
 
-            {/* Grid de Produtos */}
-            <FlatList
-                data={filteredProducts}
-                renderItem={renderProductCard}
-                keyExtractor={keyExtractor}
-                numColumns={2}
-                contentContainerStyle={contentContainerStyle}
-                columnWrapperStyle={columnWrapperStyle}
-                initialNumToRender={6}
-                maxToRenderPerBatch={4}
-                updateCellsBatchingPeriod={50}
-                scrollEventThrottle={16}
-                ListEmptyComponent={
-                    <View className="flex-1 items-center justify-center py-8">
-                        <Ionicons name="cube-outline" size={48} color="#9CA3AF" />
-                        <Text className="mt-4 text-gray-500 font-quicksand-semibold">
-                            Nenhum produto encontrado
+                {/* Seção: Produtos em Destaque */}
+                <View className="px-4 mt-6">
+                    <View className="flex-row items-center justify-between mb-4">
+                        <Text style={{ color: colors.textMain }} className="text-lg font-bold">
+                            Produtos em Destaque
+                        </Text>
+                        <TouchableOpacity onPress={() => setSelectedCategory('Todos')}>
+                            <Text style={{ color: colors.accentYellow }} className="text-xs font-semibold">
+                                Ver todos
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <FlatList
+                        scrollEnabled={false}
+                        data={filteredProducts.slice(0, 4)}
+                        renderItem={renderProductCard}
+                        keyExtractor={keyExtractor}
+                        numColumns={2}
+                        columnWrapperStyle={{
+                            gap: 12,
+                            marginBottom: 12,
+                        }}
+                        ListEmptyComponent={
+                            <View className="flex-1 items-center justify-center py-8">
+                                <Ionicons name="cube-outline" size={48} color={colors.textMuted} />
+                                <Text style={{ color: colors.textSecondary }} className="mt-4 font-semibold">
+                                    Nenhum produto encontrado
+                                </Text>
+                            </View>
+                        }
+                    />
+                </View>
+
+                {/* Seção de Destaque - Entrega Rápida */}
+                <View className="mt-4 px-4 py-3 rounded-2xl" style={{ backgroundColor: colors.accentGreen + '20', borderLeftWidth: 4, borderLeftColor: colors.accentGreen }}>
+                    <View className="flex-row items-center">
+                        <Ionicons name="flash" size={20} color={colors.accentGreen} />
+                        <Text style={{ color: colors.textMain }} className="ml-3 flex-1 font-semibold text-sm">
+                            Entrega expressa em até 1 hora
                         </Text>
                     </View>
-                }
-            />
+                </View>
+
+                {/* Seção: Compra Programada */}
+                {scheduledPurchaseProducts.length > 0 && (
+                    <View className="mt-6 px-4">
+                        <View className="flex-row items-center justify-between mb-4">
+                            <Text style={{ color: colors.textMain }} className="text-lg font-bold">
+                                🔄 Compra Programada
+                            </Text>
+                            <Text style={{ color: colors.accentYellow }} className="text-xs font-semibold">
+                                Saiba mais
+                            </Text>
+                        </View>
+                        <Text style={{ color: colors.textSecondary }} className="text-xs mb-3">
+                            Programe suas compras recorrentes e economize
+                        </Text>
+                        <FlatList
+                            scrollEnabled={false}
+                            data={scheduledPurchaseProducts}
+                            renderItem={renderProductCard}
+                            keyExtractor={keyExtractor}
+                            numColumns={2}
+                            columnWrapperStyle={{
+                                gap: 12,
+                                marginBottom: 12,
+                            }}
+                        />
+                    </View>
+                )}
+
+                {/* Seção: Entrega em até 1h */}
+                {fastDeliveryProducts.length > 0 && (
+                    <View className="mt-6 px-4">
+                        <View className="flex-row items-center justify-between mb-4">
+                            <Text style={{ color: colors.textMain }} className="text-lg font-bold">
+                                ⚡ Entrega em até 1h
+                            </Text>
+                            <TouchableOpacity onPress={() => setSelectedCategory('Todos')}>
+                                <Text style={{ color: colors.accentYellow }} className="text-xs font-semibold">
+                                    Ver todos
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                        <FlatList
+                            scrollEnabled={false}
+                            data={fastDeliveryProducts}
+                            renderItem={renderProductCard}
+                            keyExtractor={keyExtractor}
+                            numColumns={2}
+                            columnWrapperStyle={{
+                                gap: 12,
+                                marginBottom: 12,
+                            }}
+                        />
+                    </View>
+                )}
+
+                {/* Seção: Super Ofertas */}
+                {promotionalProducts.length > 0 && (
+                    <View className="mt-6 px-4">
+                        <View className="flex-row items-center justify-between mb-4">
+                            <Text style={{ color: colors.textMain }} className="text-lg font-bold">
+                                💰 Super Ofertas
+                            </Text>
+                            <TouchableOpacity onPress={() => setSelectedCategory('Todos')}>
+                                <Text style={{ color: colors.accentYellow }} className="text-xs font-semibold">
+                                    Ver todos
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                        <FlatList
+                            scrollEnabled={false}
+                            data={promotionalProducts}
+                            renderItem={({ item }) => (
+                                <View className="flex-1">
+                                    <ProductCard product={item} onAddPress={handleAddToCart} colors={colors} />
+                                    <View style={{ backgroundColor: colors.accentRed }} className="absolute top-16 right-2 rounded-lg px-2 py-1">
+                                        <Text style={{ color: colors.bgMain }} className="font-bold text-xs">
+                                            -30%
+                                        </Text>
+                                    </View>
+                                </View>
+                            )}
+                            keyExtractor={keyExtractor}
+                            numColumns={2}
+                            columnWrapperStyle={{
+                                gap: 12,
+                                marginBottom: 12,
+                            }}
+                        />
+                    </View>
+                )}
+
+                {/* Seção: Repetir Compra */}
+                {repeatPurchaseHistory.length > 0 && (
+                    <View className="mt-6 px-4">
+                        <Text style={{ color: colors.textMain }} className="text-lg font-bold mb-4">
+                            🔁 Repetir Compra
+                        </Text>
+                        {repeatPurchaseHistory.map((item) => (
+                            <TouchableOpacity
+                                key={item.id}
+                                className="flex-row rounded-2xl p-4 mb-3"
+                                style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.borderColor }}
+                                onPress={() => handleAddToCart(item)}
+                            >
+                                <Image
+                                    source={{ uri: item.imageUrl }}
+                                    className="w-16 h-16 rounded-lg mr-3"
+                                    resizeMode="cover"
+                                />
+                                <View className="flex-1">
+                                    <Text style={{ color: colors.textMain }} className="font-semibold text-sm mb-1" numberOfLines={1}>
+                                        {item.name}
+                                    </Text>
+                                    <Text style={{ color: colors.textSecondary }} className="text-xs mb-2">
+                                        Comprado há {Math.floor((Date.now() - item.lastPurchaseDate.getTime()) / (24 * 60 * 60 * 1000))} dias
+                                    </Text>
+                                    <Text style={{ color: colors.accentYellow }} className="font-bold text-sm">
+                                        R$ {item.price.toFixed(2)}
+                                    </Text>
+                                </View>
+                                <TouchableOpacity
+                                    onPress={() => handleAddToCart(item)}
+                                    style={{ backgroundColor: colors.accentYellow }}
+                                    className="rounded-full w-10 h-10 items-center justify-center"
+                                >
+                                    <Ionicons name="add" size={18} color={colors.bgMain} />
+                                </TouchableOpacity>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                )}
+
+                {/* Seção: Últimos Vistos */}
+                {recentlyViewed.length > 0 && (
+                    <View className="mt-6 px-4">
+                        <Text style={{ color: colors.textMain }} className="text-lg font-bold mb-4">
+                            👁️ Últimos Vistos
+                        </Text>
+                        <FlatList
+                            scrollEnabled={false}
+                            data={recentlyViewed}
+                            renderItem={renderProductCard}
+                            keyExtractor={keyExtractor}
+                            numColumns={2}
+                            columnWrapperStyle={{
+                                gap: 12,
+                                marginBottom: 12,
+                            }}
+                        />
+                    </View>
+                )}
+
+            </ScrollView>
         </View>
     );
 };

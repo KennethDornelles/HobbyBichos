@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, ScrollView, SafeAreaView, Alert, Linking } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, Alert, Linking } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { CheckCircle, MessageCircle, Copy, ArrowLeft } from 'lucide-react-native';
 import * as Clipboard from 'expo-clipboard';
@@ -71,9 +72,17 @@ export default function OrderCreatedScreen() {
         router.replace('/home');
     };
 
+    const insets = useSafeAreaInsets();
+
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+        <View className="flex-1 bg-gray-50" style={{ paddingTop: insets.top }}>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{
+                    flexGrow: 1,
+                    paddingBottom: insets.bottom + 16
+                }}
+            >
                 <View className="flex-1 p-4 items-center justify-center">
                     {/* Ícone de sucesso celebratório */}
                     <View className="mb-8 mt-12">
@@ -159,6 +168,6 @@ export default function OrderCreatedScreen() {
                     <Text className="text-gray-600 text-sm font-semibold">Voltar para Home</Text>
                 </TouchableOpacity>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }

@@ -72,7 +72,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
     const menuItems = useMemo(() => {
         const items: MenuItem[] = [
             { icon: "grid-view", label: "Início" },
-            { icon: "content-cut", label: "Agendamentos" },
             { icon: "settings", label: "Configurações" },
         ];
         if (user) {
@@ -175,11 +174,6 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                             if (item.label === "Início") {
                                 onClose();
                                 router.push('/home');
-                                return;
-                            }
-                            if (item.label === "Agendamentos") {
-                                onClose();
-                                router.push('/appointments');
                                 return;
                             }
                             if (item.label === "Configurações") {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { LucideIcon } from 'lucide-react-native';
-import { useTheme } from '../context/ThemeContext';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 interface QuickActionProps {
     icon: LucideIcon;
@@ -10,8 +10,7 @@ interface QuickActionProps {
 }
 
 export const QuickAction = React.memo(({ icon: Icon, label, onPress }: QuickActionProps) => {
-    const { isDark } = useTheme();
-    const iconColor = isDark ? '#FDB813' : '#D97706'; // Laranja mais escuro no light mode
+    const colors = useThemeColors();
 
     return (
         <TouchableOpacity
@@ -20,13 +19,16 @@ export const QuickAction = React.memo(({ icon: Icon, label, onPress }: QuickActi
             style={styles.container}
             activeOpacity={0.7}
         >
-            <View className="w-16 h-16 bg-card-input dark:bg-gray-200 rounded-full items-center justify-center">
-                <Icon size={32} color={iconColor} strokeWidth={2} />
+            <View
+                className="w-16 h-16 rounded-full items-center justify-center"
+                style={{ backgroundColor: colors.bgInput }}
+            >
+                <Icon size={32} color={colors.accentYellow} strokeWidth={2} />
             </View>
             <Text
-                className="text-xs text-white dark:text-hobby-text-light mt-2 text-center font-medium"
+                className="text-xs mt-2 text-center font-medium"
                 numberOfLines={2}
-                style={styles.label}
+                style={[styles.label, { color: colors.textMain }]}
             >
                 {label}
             </Text>

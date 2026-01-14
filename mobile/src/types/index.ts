@@ -7,3 +7,6 @@ export interface SignupFormData {
   fullName: string;
   password: string;
 }
+
+// Google Maps Types
+export * from './googlemaps.types';

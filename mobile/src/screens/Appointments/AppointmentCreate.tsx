@@ -7,7 +7,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { SideMenu } from '../../components/SideMenu';
 import { HomeHeader } from '../../components/HomeHeader';
 import { useCartStore } from '../../store/cartStore';
-import { useTheme } from '../../context/ThemeContext';
+import { useThemeColors } from '../../hooks/useThemeColors';
 import { serviceService, Service } from '../../services/serviceService';
 import { storeService, Store } from '../../services/storeService';
 import { appointmentService } from '../../services/appointmentService';
@@ -29,7 +29,7 @@ interface Employee {
 
 export default function AppointmentCreate() {
     const router = useRouter();
-    const { isDark } = useTheme();
+    const colors = useThemeColors();
     const { user } = useAuth();
     const [petName, setPetName] = useState('');
     const [petSpecies, setPetSpecies] = useState('');
@@ -248,7 +248,7 @@ export default function AppointmentCreate() {
     };
 
     return (
-        <SafeAreaView className="flex-1 bg-primary-dark dark:bg-gray-50" edges={['top']}>
+        <SafeAreaView className="flex-1" style={{ backgroundColor: colors.bgMain }} edges={['top']}>
             <HomeHeader
                 onMenuPress={() => setMenuVisible(true)}
                 onCameraPress={() => console.log('Camera pressed')}
@@ -256,35 +256,37 @@ export default function AppointmentCreate() {
                 cartItemsCount={totalItems()}
             />
             <View className="flex-1 p-6">
-                <Text className="text-hobby-yellow dark:text-hobby-text-light text-3xl font-bold mb-8 text-center">Novo Agendamento</Text>
+                <Text className="text-3xl font-bold mb-8 text-center" style={{ color: colors.accentYellow }}>Novo Agendamento</Text>
 
                 {/* Seletor de Loja */}
                 <Pressable
-                    className="bg-[#2E3047] dark:bg-white dark:border dark:border-hobby-border-light rounded-2xl p-4 mb-4 flex-row items-center justify-between"
+                    className="rounded-2xl p-4 mb-4 flex-row items-center justify-between"
+                    style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.borderColor }}
                     onPress={() => setStoreModalVisible(true)}
                 >
                     <View className="flex-1 flex-row items-center">
-                        <Ionicons name="storefront" size={20} color={isDark ? '#9CA3AF' : '#A1A1AA'} style={{ marginRight: 12 }} />
-                        <Text className={selectedStore ? 'text-white dark:text-hobby-text-light text-lg' : 'text-[#A1A1AA] dark:text-[#9CA3AF] text-lg'}>
+                        <Ionicons name="storefront" size={20} color={colors.textSecondary} style={{ marginRight: 12 }} />
+                        <Text className="text-lg" style={{ color: selectedStore ? colors.textMain : colors.textSecondary }}>
                             {selectedStore ? selectedStore.name : 'Selecionar Loja'}
                         </Text>
                     </View>
-                    <Ionicons name="chevron-down" size={24} color={isDark ? '#9CA3AF' : '#A1A1AA'} />
+                    <Ionicons name="chevron-down" size={24} color={colors.textSecondary} />
                 </Pressable>
 
                 {/* Seletor de Pet */}
                 <View className="mb-4">
                     <Pressable
-                        className="bg-[#2E3047] dark:bg-white dark:border dark:border-hobby-border-light rounded-2xl p-4 mb-2 flex-row items-center justify-between"
+                        className="rounded-2xl p-4 mb-2 flex-row items-center justify-between"
+                        style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.borderColor }}
                         onPress={() => setPetModalVisible(true)}
                     >
                         <View className="flex-1 flex-row items-center">
-                            <Ionicons name="paw" size={20} color={isDark ? '#9CA3AF' : '#A1A1AA'} style={{ marginRight: 12 }} />
-                            <Text className={selectedPet ? 'text-white dark:text-hobby-text-light text-lg' : 'text-[#A1A1AA] dark:text-[#9CA3AF] text-lg'}>
+                            <Ionicons name="paw" size={20} color={colors.textSecondary} style={{ marginRight: 12 }} />
+                            <Text className="text-lg" style={{ color: selectedPet ? colors.textMain : colors.textSecondary }}>
                                 {selectedPet ? `${selectedPet.name} (${selectedPet.species})` : 'Selecionar Pet'}
                             </Text>
                         </View>
-                        <Ionicons name="chevron-down" size={24} color={isDark ? '#9CA3AF' : '#A1A1AA'} />
+                        <Ionicons name="chevron-down" size={24} color={colors.textSecondary} />
                     </Pressable>
 
                     {/* Botão para criar novo pet */}
@@ -292,8 +294,8 @@ export default function AppointmentCreate() {
                         onPress={() => setCreatePetModalVisible(true)}
                         className="flex-row items-center justify-center"
                     >
-                        <Ionicons name="add-circle-outline" size={18} color={isDark ? '#D97706' : '#FFD600'} />
-                        <Text className="text-hobby-yellow dark:text-hobby-accent-light ml-2 text-sm">
+                        <Ionicons name="add-circle-outline" size={18} color={colors.accentYellow} />
+                        <Text className="ml-2 text-sm" style={{ color: colors.accentYellow }}>
                             Cadastrar novo pet
                         </Text>
                     </Pressable>
@@ -301,78 +303,82 @@ export default function AppointmentCreate() {
 
                 {/* Seletor de Serviço */}
                 <Pressable
-                    className="bg-[#2E3047] dark:bg-white dark:border dark:border-hobby-border-light rounded-2xl p-4 mb-4 flex-row items-center justify-between"
+                    className="rounded-2xl p-4 mb-4 flex-row items-center justify-between"
+                    style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.borderColor }}
                     onPress={() => setServiceModalVisible(true)}
                 >
-                    <Text className={selectedService ? 'text-white dark:text-hobby-text-light text-lg' : 'text-[#A1A1AA] dark:text-[#9CA3AF] text-lg'}>
+                    <Text className="text-lg" style={{ color: selectedService ? colors.textMain : colors.textSecondary }}>
                         {selectedService ? selectedService.name : 'Selecionar Serviço'}
                     </Text>
-                    <Ionicons name="chevron-down" size={24} color={isDark ? '#9CA3AF' : '#A1A1AA'} />
+                    <Ionicons name="chevron-down" size={24} color={colors.textSecondary} />
                 </Pressable>
 
                 {selectedService && (
-                    <View className="bg-hobby-yellow/20 rounded-2xl p-3 mb-4 flex-row items-center justify-between">
+                    <View className="rounded-2xl p-3 mb-4 flex-row items-center justify-between" style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.accentYellow }}>
                         <View>
-                            <Text className="text-hobby-yellow dark:text-hobby-accent-light text-sm">Valor do serviço</Text>
-                            <Text className="text-white dark:text-hobby-text-light text-xl font-bold">R$ {Number(selectedService.price).toFixed(2)}</Text>
+                            <Text className="text-sm" style={{ color: colors.accentYellow }}>Valor do serviço</Text>
+                            <Text className="text-xl font-bold" style={{ color: colors.textMain }}>R$ {Number(selectedService.price).toFixed(2)}</Text>
                         </View>
                         <View>
-                            <Text className="text-hobby-yellow dark:text-hobby-accent-light text-sm">Duração</Text>
-                            <Text className="text-white dark:text-hobby-text-light text-lg font-bold">{selectedService.durationMin} min</Text>
+                            <Text className="text-sm" style={{ color: colors.accentYellow }}>Duração</Text>
+                            <Text className="text-lg font-bold" style={{ color: colors.textMain }}>{selectedService.durationMin} min</Text>
                         </View>
                     </View>
                 )}
 
                 {/* Seletor de Profissional */}
                 <Pressable
-                    className="bg-[#2E3047] dark:bg-white dark:border dark:border-hobby-border-light rounded-2xl p-4 mb-4 flex-row items-center justify-between"
+                    className="rounded-2xl p-4 mb-4 flex-row items-center justify-between"
+                    style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.borderColor }}
                     onPress={() => setEmployeeModalVisible(true)}
                     disabled={!selectedStore || employees.length === 0}
                 >
                     <View className="flex-1 flex-row items-center">
-                        <Ionicons name="person" size={20} color={isDark ? '#9CA3AF' : '#A1A1AA'} style={{ marginRight: 12 }} />
-                        <Text className={selectedEmployee ? 'text-white dark:text-hobby-text-light text-lg' : 'text-[#A1A1AA] dark:text-[#9CA3AF] text-lg'}>
+                        <Ionicons name="person" size={20} color={colors.textSecondary} style={{ marginRight: 12 }} />
+                        <Text className="text-lg" style={{ color: selectedEmployee ? colors.textMain : colors.textSecondary }}>
                             {!selectedStore ? 'Selecione uma loja primeiro' :
                                 employees.length === 0 ? 'Nenhum profissional disponível' :
                                     selectedEmployee ? selectedEmployee.name : 'Selecionar Profissional'}
                         </Text>
                     </View>
-                    <Ionicons name="chevron-down" size={24} color={isDark ? '#9CA3AF' : '#A1A1AA'} />
+                    <Ionicons name="chevron-down" size={24} color={colors.textSecondary} />
                 </Pressable>
 
                 {/* Seletor de Data e Hora */}
                 <Pressable
-                    className="bg-[#2E3047] dark:bg-white dark:border dark:border-hobby-border-light rounded-2xl p-4 mb-4 flex-row items-center justify-between"
+                    className="rounded-2xl p-4 mb-4 flex-row items-center justify-between"
+                    style={{ backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.borderColor }}
                     onPress={() => setShowDatePicker(true)}
                 >
                     <View className="flex-1 flex-row items-center">
-                        <Ionicons name="calendar" size={20} color={isDark ? '#9CA3AF' : '#A1A1AA'} style={{ marginRight: 12 }} />
-                        <Text className={selectedDate ? 'text-white dark:text-hobby-text-light text-lg' : 'text-[#A1A1AA] dark:text-[#9CA3AF] text-lg'}>
+                        <Ionicons name="calendar" size={20} color={colors.textSecondary} style={{ marginRight: 12 }} />
+                        <Text className="text-lg" style={{ color: selectedDate ? colors.textMain : colors.textSecondary }}>
                             {selectedDate ? formatDateTime(selectedDate) : 'Selecionar Data e Hora'}
                         </Text>
                     </View>
-                    <Ionicons name="chevron-down" size={24} color={isDark ? '#9CA3AF' : '#A1A1AA'} />
+                    <Ionicons name="chevron-down" size={24} color={colors.textSecondary} />
                 </Pressable>
 
                 {error && (
-                    <View className="bg-red-500/20 rounded-2xl p-3 mb-4 flex-row items-center">
-                        <Ionicons name="alert-circle" size={20} color="#EF4444" />
-                        <Text className="text-red-500 ml-2 flex-1">{error}</Text>
+                    <View className="rounded-2xl p-3 mb-4 flex-row items-center" style={{ backgroundColor: colors.accentRed + '33' }}>
+                        <Ionicons name="alert-circle" size={20} color={colors.accentRed} />
+                        <Text className="ml-2 flex-1" style={{ color: colors.accentRed }}>{error}</Text>
                     </View>
                 )}
 
                 <Pressable
-                    className={`bg-hobby-yellow rounded-3xl flex-row items-center justify-center py-4 mt-4 ${creating ? 'opacity-50' : ''
+                    className={`rounded-3xl flex-row items-center justify-center py-4 mt-4 ${creating ? 'opacity-50' : ''
                         }`}
+                    style={{ backgroundColor: colors.accentYellow }}
                     onPress={handleCreate}
                     disabled={creating}
                 >
                     {creating ? (
-                        <ActivityIndicator size="small" color="#23243A" />
+                        <ActivityIndicator size="small" color={colors.bgMain} />
                     ) : (
-                        <Ionicons name="checkmark" size={24} color="#23243A" />
+                        <Ionicons name="checkmark" size={24} color={colors.bgMain} />
                     )}
-                    <Text className="text-primary-dark text-lg font-bold ml-2">
+                    <Text className="text-lg font-bold ml-2" style={{ color: colors.bgMain }}>
                         {creating ? 'Criando...' : 'Criar Agendamento'}
                     </Text>
                 </Pressable>
@@ -410,23 +416,23 @@ export default function AppointmentCreate() {
                 onRequestClose={() => setStoreModalVisible(false)}
             >
                 <View className="flex-1 bg-black/50 justify-end">
-                    <View className="bg-primary-dark dark:bg-white rounded-t-3xl max-h-[70%]">
-                        <View className="flex-row items-center justify-between p-5 border-b border-[#2E3047] dark:border-hobby-border-light">
-                            <Text className="text-white dark:text-hobby-text-light text-xl font-bold">Selecionar Loja</Text>
+                    <View className="rounded-t-3xl max-h-[70%]" style={{ backgroundColor: colors.bgMain }}>
+                        <View className="flex-row items-center justify-between p-5 border-b" style={{ borderColor: colors.borderColor }}>
+                            <Text className="text-xl font-bold" style={{ color: colors.textMain }}>Selecionar Loja</Text>
                             <Pressable onPress={() => setStoreModalVisible(false)}>
-                                <Ionicons name="close" size={28} color={isDark ? '#1F2937' : '#FFFFFF'} />
+                                <Ionicons name="close" size={28} color={colors.textMain} />
                             </Pressable>
                         </View>
 
                         {loadingStores ? (
                             <View className="items-center justify-center py-12">
-                                <ActivityIndicator size="large" color={isDark ? '#D97706' : '#FFD600'} />
-                                <Text className="text-white dark:text-hobby-text-secondary mt-4">Carregando lojas...</Text>
+                                <ActivityIndicator size="large" color={colors.accentYellow} />
+                                <Text className="mt-4" style={{ color: colors.textSecondary }}>Carregando lojas...</Text>
                             </View>
                         ) : stores.length === 0 ? (
                             <View className="items-center justify-center py-12 px-6">
-                                <Ionicons name="storefront-outline" size={64} color={isDark ? '#9CA3AF' : '#6B7280'} />
-                                <Text className="text-white dark:text-hobby-text-light text-center mt-4 text-lg">
+                                <Ionicons name="storefront-outline" size={64} color={colors.textSecondary} />
+                                <Text className="text-center mt-4 text-lg" style={{ color: colors.textMain }}>
                                     Nenhuma loja disponível
                                 </Text>
                             </View>
@@ -435,11 +441,10 @@ export default function AppointmentCreate() {
                                 {stores.map((store) => (
                                     <Pressable
                                         key={store.id}
-                                        className="bg-[#2E3047] dark:bg-gray-50 rounded-2xl p-4 mb-3 border-2"
+                                        className="rounded-2xl p-4 mb-3 border-2"
                                         style={{
-                                            borderColor: selectedStore?.id === store.id
-                                                ? (isDark ? '#D97706' : '#FFD600')
-                                                : 'transparent'
+                                            backgroundColor: colors.bgCard,
+                                            borderColor: selectedStore?.id === store.id ? colors.accentYellow : 'transparent'
                                         }}
                                         onPress={() => {
                                             setSelectedStore(store);
@@ -448,17 +453,17 @@ export default function AppointmentCreate() {
                                     >
                                         <View className="flex-row items-center justify-between">
                                             <View className="flex-1 mr-3">
-                                                <Text className="text-white dark:text-hobby-text-light text-lg font-bold mb-1">
+                                                <Text className="text-lg font-bold mb-1" style={{ color: colors.textMain }}>
                                                     {store.name}
                                                 </Text>
                                                 {store.phone && (
-                                                    <Text className="text-[#A1A1AA] dark:text-hobby-text-secondary text-sm">
+                                                    <Text className="text-sm" style={{ color: colors.textSecondary }}>
                                                         {store.phone}
                                                     </Text>
                                                 )}
                                             </View>
                                             {selectedStore?.id === store.id && (
-                                                <Ionicons name="checkmark-circle" size={24} color={isDark ? '#D97706' : '#FFD600'} />
+                                                <Ionicons name="checkmark-circle" size={24} color={colors.accentYellow} />
                                             )}
                                         </View>
                                     </Pressable>
@@ -477,23 +482,23 @@ export default function AppointmentCreate() {
                 onRequestClose={() => setServiceModalVisible(false)}
             >
                 <View className="flex-1 bg-black/50 justify-end">
-                    <View className="bg-primary-dark dark:bg-white rounded-t-3xl max-h-[70%]">
-                        <View className="flex-row items-center justify-between p-5 border-b border-[#2E3047] dark:border-hobby-border-light">
-                            <Text className="text-white dark:text-hobby-text-light text-xl font-bold">Selecionar Serviço</Text>
+                    <View className="rounded-t-3xl max-h-[70%]" style={{ backgroundColor: colors.bgMain }}>
+                        <View className="flex-row items-center justify-between p-5 border-b" style={{ borderColor: colors.borderColor }}>
+                            <Text className="text-xl font-bold" style={{ color: colors.textMain }}>Selecionar Serviço</Text>
                             <Pressable onPress={() => setServiceModalVisible(false)}>
-                                <Ionicons name="close" size={28} color={isDark ? '#1F2937' : '#FFFFFF'} />
+                                <Ionicons name="close" size={28} color={colors.textMain} />
                             </Pressable>
                         </View>
 
                         {loadingServices ? (
                             <View className="items-center justify-center py-12">
-                                <ActivityIndicator size="large" color={isDark ? '#D97706' : '#FFD600'} />
-                                <Text className="text-white dark:text-hobby-text-secondary mt-4">Carregando serviços...</Text>
+                                <ActivityIndicator size="large" color={colors.accentYellow} />
+                                <Text className="mt-4" style={{ color: colors.textSecondary }}>Carregando serviços...</Text>
                             </View>
                         ) : services.length === 0 ? (
                             <View className="items-center justify-center py-12 px-6">
-                                <Ionicons name="list-outline" size={64} color={isDark ? '#9CA3AF' : '#6B7280'} />
-                                <Text className="text-white dark:text-hobby-text-light text-center mt-4 text-lg">
+                                <Ionicons name="list-outline" size={64} color={colors.textSecondary} />
+                                <Text className="text-center mt-4 text-lg" style={{ color: colors.textMain }}>
                                     Nenhum serviço disponível
                                 </Text>
                             </View>
@@ -502,11 +507,10 @@ export default function AppointmentCreate() {
                                 {services.map((service) => (
                                     <Pressable
                                         key={service.id}
-                                        className="bg-[#2E3047] dark:bg-gray-50 rounded-2xl p-4 mb-3 border-2"
+                                        className="rounded-2xl p-4 mb-3 border-2"
                                         style={{
-                                            borderColor: selectedService?.id === service.id
-                                                ? (isDark ? '#D97706' : '#FFD600')
-                                                : 'transparent'
+                                            backgroundColor: colors.bgCard,
+                                            borderColor: selectedService?.id === service.id ? colors.accentYellow : 'transparent'
                                         }}
                                         onPress={() => {
                                             setSelectedService(service);
@@ -515,27 +519,27 @@ export default function AppointmentCreate() {
                                     >
                                         <View className="flex-row items-start justify-between mb-2">
                                             <View className="flex-1 mr-3">
-                                                <Text className="text-white dark:text-hobby-text-light text-lg font-bold mb-1">
+                                                <Text className="text-lg font-bold mb-1" style={{ color: colors.textMain }}>
                                                     {service.name}
                                                 </Text>
                                                 {service.store && (
-                                                    <Text className="text-hobby-yellow dark:text-hobby-accent-light text-xs mb-1">
+                                                    <Text className="text-xs mb-1" style={{ color: colors.accentYellow }}>
                                                         {service.store.name}
                                                     </Text>
                                                 )}
-                                                <Text className="text-[#A1A1AA] dark:text-hobby-text-secondary text-sm">
+                                                <Text className="text-sm" style={{ color: colors.textSecondary }}>
                                                     Duração: {service.durationMin} minutos
                                                 </Text>
                                             </View>
                                             <View className="items-end">
-                                                <Text className="text-hobby-yellow dark:text-hobby-accent-light text-xl font-bold">
+                                                <Text className="text-xl font-bold" style={{ color: colors.accentYellow }}>
                                                     R$ {Number(service.price).toFixed(2)}
                                                 </Text>
                                             </View>
                                         </View>
                                         {selectedService?.id === service.id && (
                                             <View className="absolute top-4 right-4">
-                                                <Ionicons name="checkmark-circle" size={24} color={isDark ? '#D97706' : '#FFD600'} />
+                                                <Ionicons name="checkmark-circle" size={24} color={colors.accentYellow} />
                                             </View>
                                         )}
                                     </Pressable>
@@ -554,23 +558,23 @@ export default function AppointmentCreate() {
                 onRequestClose={() => setPetModalVisible(false)}
             >
                 <View className="flex-1 bg-black/50 justify-end">
-                    <View className="bg-primary-dark dark:bg-white rounded-t-3xl max-h-[70%]">
-                        <View className="flex-row items-center justify-between p-5 border-b border-[#2E3047] dark:border-hobby-border-light">
-                            <Text className="text-white dark:text-hobby-text-light text-xl font-bold">Selecionar Pet</Text>
+                    <View className="rounded-t-3xl max-h-[70%]" style={{ backgroundColor: colors.bgMain }}>
+                        <View className="flex-row items-center justify-between p-5 border-b" style={{ borderColor: colors.borderColor }}>
+                            <Text className="text-xl font-bold" style={{ color: colors.textMain }}>Selecionar Pet</Text>
                             <Pressable onPress={() => setPetModalVisible(false)}>
-                                <Ionicons name="close" size={28} color={isDark ? '#1F2937' : '#FFFFFF'} />
+                                <Ionicons name="close" size={28} color={colors.textMain} />
                             </Pressable>
                         </View>
 
                         {loadingPets ? (
                             <View className="items-center justify-center py-12">
-                                <ActivityIndicator size="large" color={isDark ? '#D97706' : '#FFD600'} />
-                                <Text className="text-white dark:text-hobby-text-secondary mt-4">Carregando pets...</Text>
+                                <ActivityIndicator size="large" color={colors.accentYellow} />
+                                <Text className="mt-4" style={{ color: colors.textSecondary }}>Carregando pets...</Text>
                             </View>
                         ) : pets.length === 0 ? (
                             <View className="items-center justify-center py-12 px-6">
-                                <Ionicons name="paw-outline" size={64} color={isDark ? '#9CA3AF' : '#6B7280'} />
-                                <Text className="text-white dark:text-hobby-text-light text-center mt-4 text-lg">
+                                <Ionicons name="paw-outline" size={64} color={colors.textSecondary} />
+                                <Text className="text-center mt-4 text-lg" style={{ color: colors.textMain }}>
                                     Nenhum pet cadastrado
                                 </Text>
                                 <Pressable
@@ -578,9 +582,10 @@ export default function AppointmentCreate() {
                                         setPetModalVisible(false);
                                         setCreatePetModalVisible(true);
                                     }}
-                                    className="bg-hobby-yellow rounded-2xl px-6 py-3 mt-4"
+                                    className="rounded-2xl px-6 py-3 mt-4"
+                                    style={{ backgroundColor: colors.accentYellow }}
                                 >
-                                    <Text className="text-primary-dark font-bold">Cadastrar Pet</Text>
+                                    <Text className="font-bold" style={{ color: colors.bgMain }}>Cadastrar Pet</Text>
                                 </Pressable>
                             </View>
                         ) : (
@@ -588,11 +593,10 @@ export default function AppointmentCreate() {
                                 {pets.map((pet) => (
                                     <Pressable
                                         key={pet.id}
-                                        className="bg-[#2E3047] dark:bg-gray-50 rounded-2xl p-4 mb-3 border-2"
+                                        className="rounded-2xl p-4 mb-3 border-2"
                                         style={{
-                                            borderColor: selectedPet?.id === pet.id
-                                                ? (isDark ? '#D97706' : '#FFD600')
-                                                : 'transparent'
+                                            backgroundColor: colors.bgCard,
+                                            borderColor: selectedPet?.id === pet.id ? colors.accentYellow : 'transparent'
                                         }}
                                         onPress={() => {
                                             setSelectedPet(pet);
@@ -601,15 +605,15 @@ export default function AppointmentCreate() {
                                     >
                                         <View className="flex-row items-center justify-between">
                                             <View className="flex-1 mr-3">
-                                                <Text className="text-white dark:text-hobby-text-light text-lg font-bold mb-1">
+                                                <Text className="text-lg font-bold mb-1" style={{ color: colors.textMain }}>
                                                     {pet.name}
                                                 </Text>
-                                                <Text className="text-[#A1A1AA] dark:text-hobby-text-secondary text-sm">
+                                                <Text className="text-sm" style={{ color: colors.textSecondary }}>
                                                     {pet.species} {pet.breed ? `- ${pet.breed}` : ''}
                                                 </Text>
                                             </View>
                                             {selectedPet?.id === pet.id && (
-                                                <Ionicons name="checkmark-circle" size={24} color={isDark ? '#D97706' : '#FFD600'} />
+                                                <Ionicons name="checkmark-circle" size={24} color={colors.accentYellow} />
                                             )}
                                         </View>
                                     </Pressable>
@@ -628,45 +632,49 @@ export default function AppointmentCreate() {
                 onRequestClose={() => setCreatePetModalVisible(false)}
             >
                 <View className="flex-1 bg-black/50 justify-end">
-                    <View className="bg-primary-dark dark:bg-white rounded-t-3xl">
-                        <View className="flex-row items-center justify-between p-5 border-b border-[#2E3047] dark:border-hobby-border-light">
-                            <Text className="text-white dark:text-hobby-text-light text-xl font-bold">Cadastrar Pet</Text>
+                    <View className="rounded-t-3xl" style={{ backgroundColor: colors.bgMain }}>
+                        <View className="flex-row items-center justify-between p-5 border-b" style={{ borderColor: colors.borderColor }}>
+                            <Text className="text-xl font-bold" style={{ color: colors.textMain }}>Cadastrar Pet</Text>
                             <Pressable onPress={() => setCreatePetModalVisible(false)}>
-                                <Ionicons name="close" size={28} color={isDark ? '#1F2937' : '#FFFFFF'} />
+                                <Ionicons name="close" size={28} color={colors.textMain} />
                             </Pressable>
                         </View>
 
                         <View className="p-5">
                             <TextInput
-                                className="bg-[#2E3047] dark:bg-gray-50 text-white dark:text-hobby-text-light rounded-2xl p-4 text-lg mb-4"
+                                className="rounded-2xl p-4 text-lg mb-4"
+                                style={{ backgroundColor: colors.bgCard, color: colors.textMain }}
                                 placeholder="Nome do Pet"
                                 value={petName}
                                 onChangeText={setPetName}
-                                placeholderTextColor={isDark ? '#9CA3AF' : '#A1A1AA'}
+                                placeholderTextColor={colors.textSecondary}
                             />
 
                             <TextInput
-                                className="bg-[#2E3047] dark:bg-gray-50 text-white dark:text-hobby-text-light rounded-2xl p-4 text-lg mb-4"
+                                className="rounded-2xl p-4 text-lg mb-4"
+                                style={{ backgroundColor: colors.bgCard, color: colors.textMain }}
                                 placeholder="Espécie (ex: Cachorro, Gato)"
                                 value={petSpecies}
                                 onChangeText={setPetSpecies}
-                                placeholderTextColor={isDark ? '#9CA3AF' : '#A1A1AA'}
+                                placeholderTextColor={colors.textSecondary}
                             />
 
                             <TextInput
-                                className="bg-[#2E3047] dark:bg-gray-50 text-white dark:text-hobby-text-light rounded-2xl p-4 text-lg mb-4"
+                                className="rounded-2xl p-4 text-lg mb-4"
+                                style={{ backgroundColor: colors.bgCard, color: colors.textMain }}
                                 placeholder="Raça (opcional)"
                                 value={petBreed}
                                 onChangeText={setPetBreed}
-                                placeholderTextColor={isDark ? '#9CA3AF' : '#A1A1AA'}
+                                placeholderTextColor={colors.textSecondary}
                             />
 
                             <Pressable
-                                className={`bg-hobby-yellow rounded-2xl py-4 ${creatingPet ? 'opacity-50' : ''}`}
+                                className={`rounded-2xl py-4 ${creatingPet ? 'opacity-50' : ''}`}
+                                style={{ backgroundColor: colors.accentYellow }}
                                 onPress={handleCreatePet}
                                 disabled={creatingPet}
                             >
-                                <Text className="text-primary-dark text-center font-bold text-lg">
+                                <Text className="text-center font-bold text-lg" style={{ color: colors.bgMain }}>
                                     {creatingPet ? 'Cadastrando...' : 'Cadastrar'}
                                 </Text>
                             </Pressable>
@@ -683,23 +691,23 @@ export default function AppointmentCreate() {
                 onRequestClose={() => setEmployeeModalVisible(false)}
             >
                 <View className="flex-1 bg-black/50 justify-end">
-                    <View className="bg-primary-dark dark:bg-white rounded-t-3xl max-h-[70%]">
-                        <View className="flex-row items-center justify-between p-5 border-b border-[#2E3047] dark:border-hobby-border-light">
-                            <Text className="text-white dark:text-hobby-text-light text-xl font-bold">Selecionar Profissional</Text>
+                    <View className="rounded-t-3xl max-h-[70%]" style={{ backgroundColor: colors.bgMain }}>
+                        <View className="flex-row items-center justify-between p-5 border-b" style={{ borderColor: colors.borderColor }}>
+                            <Text className="text-xl font-bold" style={{ color: colors.textMain }}>Selecionar Profissional</Text>
                             <Pressable onPress={() => setEmployeeModalVisible(false)}>
-                                <Ionicons name="close" size={28} color={isDark ? '#1F2937' : '#FFFFFF'} />
+                                <Ionicons name="close" size={28} color={colors.textMain} />
                             </Pressable>
                         </View>
 
                         {loadingEmployees ? (
                             <View className="items-center justify-center py-12">
-                                <ActivityIndicator size="large" color={isDark ? '#D97706' : '#FFD600'} />
-                                <Text className="text-white dark:text-hobby-text-secondary mt-4">Carregando profissionais...</Text>
+                                <ActivityIndicator size="large" color={colors.accentYellow} />
+                                <Text className="mt-4" style={{ color: colors.textSecondary }}>Carregando profissionais...</Text>
                             </View>
                         ) : employees.length === 0 ? (
                             <View className="items-center justify-center py-12 px-6">
-                                <Ionicons name="person-outline" size={64} color={isDark ? '#9CA3AF' : '#6B7280'} />
-                                <Text className="text-white dark:text-hobby-text-light text-center mt-4 text-lg">
+                                <Ionicons name="person-outline" size={64} color={colors.textSecondary} />
+                                <Text className="text-center mt-4 text-lg" style={{ color: colors.textMain }}>
                                     Nenhum profissional disponível
                                 </Text>
                             </View>
@@ -708,11 +716,10 @@ export default function AppointmentCreate() {
                                 {employees.map((employee) => (
                                     <Pressable
                                         key={employee.id}
-                                        className="bg-[#2E3047] dark:bg-gray-50 rounded-2xl p-4 mb-3 border-2"
+                                        className="rounded-2xl p-4 mb-3 border-2"
                                         style={{
-                                            borderColor: selectedEmployee?.id === employee.id
-                                                ? (isDark ? '#D97706' : '#FFD600')
-                                                : 'transparent'
+                                            backgroundColor: colors.bgCard,
+                                            borderColor: selectedEmployee?.id === employee.id ? colors.accentYellow : 'transparent'
                                         }}
                                         onPress={() => {
                                             setSelectedEmployee(employee);
@@ -721,15 +728,15 @@ export default function AppointmentCreate() {
                                     >
                                         <View className="flex-row items-center justify-between">
                                             <View className="flex-1 mr-3">
-                                                <Text className="text-white dark:text-hobby-text-light text-lg font-bold mb-1">
+                                                <Text className="text-lg font-bold mb-1" style={{ color: colors.textMain }}>
                                                     {employee.name}
                                                 </Text>
-                                                <Text className="text-[#A1A1AA] dark:text-hobby-text-secondary text-sm">
+                                                <Text className="text-sm" style={{ color: colors.textSecondary }}>
                                                     {employee.role}
                                                 </Text>
                                             </View>
                                             {selectedEmployee?.id === employee.id && (
-                                                <Ionicons name="checkmark-circle" size={24} color={isDark ? '#D97706' : '#FFD600'} />
+                                                <Ionicons name="checkmark-circle" size={24} color={colors.accentYellow} />
                                             )}
                                         </View>
                                     </Pressable>
