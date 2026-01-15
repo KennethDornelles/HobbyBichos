@@ -5,9 +5,10 @@ import * as SecureStore from 'expo-secure-store';
 interface UserState {
   name: string;
   email: string;
+  role?: string;
   points: number;
   loading: boolean;
-  setUser: (name: string, email: string, points: number) => void;
+  setUser: (name: string, email: string, points: number, role?: string) => void;
   loadUserProfile: () => Promise<void>;
   reset: () => void;
 }
@@ -15,9 +16,10 @@ interface UserState {
 export const useUserStore = create<UserState>((set) => ({
   name: 'Visitante',
   email: '',
+  role: undefined,
   points: 0,
   loading: false,
-  setUser: (name, email, points) => set({ name, email, points }),
+  setUser: (name, email, points, role) => set({ name, email, points, role }),
   
   loadUserProfile: async () => {
     // Verificar se usuário está autenticado antes de carregar
@@ -31,18 +33,21 @@ export const useUserStore = create<UserState>((set) => ({
     try {
       console.log('🔍 Iniciando GET /users/me...');
       const res = await api.get<{
+        id: string;
         name: string;
         email: string;
+        role: string;
         loyaltyAccount?: { currentPoints: number };
       }>('/users/me');
       const pointsFromAccount = res.data.loyaltyAccount?.currentPoints || 0;
       set({
         name: res.data.name || 'Visitante',
         email: res.data.email || '',
+        role: res.data.role,
         points: pointsFromAccount,
         loading: false,
       });
-      console.log('✅ Perfil do usuário carregado:', res.data.name, `(${pointsFromAccount} pontos)`);
+      console.log('✅ Perfil do usuário carregado:', res.data.name, `(role: ${res.data.role}, ${pointsFromAccount} pontos)`);
     } catch (error: any) {
       console.error('❌ Erro ao carregar perfil do usuário:', {
         message: error.message,
@@ -54,5 +59,5 @@ export const useUserStore = create<UserState>((set) => ({
     }
   },
   
-  reset: () => set({ name: 'Visitante', email: '', points: 0 }),
+  reset: () => set({ name: 'Visitante', email: '', role: undefined, points: 0 }),
 }));

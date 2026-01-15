@@ -3,9 +3,11 @@ import { useRouter } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import HomeScreen from "./home";
+import { useUserStore } from "../src/store/userStore";
 
 export default function IndexRedirect() {
     const router = useRouter();
+    const { loadUserProfile } = useUserStore();
     const [isChecking, setIsChecking] = useState(true);
 
     useEffect(() => {
@@ -20,7 +22,8 @@ export default function IndexRedirect() {
                 // Sem token, redirecionar para login
                 router.replace("/login");
             } else {
-                // Token existe, pode ficar na home
+                // Token existe, carregar perfil do usuário
+                await loadUserProfile();
                 setIsChecking(false);
             }
         } catch (error) {

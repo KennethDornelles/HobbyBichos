@@ -9,9 +9,10 @@ interface HeaderProps {
     onCartPress?: () => void;
     onMenuPress?: () => void;
     cartItemsCount?: number;
+    hideCart?: boolean;
 }
 
-export const HomeHeader = React.memo(({ onSearchChange, onCameraPress, onCartPress, onMenuPress, cartItemsCount = 0 }: HeaderProps) => {
+export const HomeHeader = React.memo(({ onSearchChange, onCameraPress, onCartPress, onMenuPress, cartItemsCount = 0, hideCart = false }: HeaderProps) => {
     const { isDark } = useTheme();
 
     return (
@@ -37,18 +38,20 @@ export const HomeHeader = React.memo(({ onSearchChange, onCameraPress, onCartPre
                 </View>
 
                 {/* Botão Carrinho com Badge */}
-                <View>
-                    <TouchableOpacity onPress={onCartPress} activeOpacity={0.7}>
-                        <ShoppingCart size={28} color="#FFFFFF" strokeWidth={2} />
-                    </TouchableOpacity>
-                    {cartItemsCount > 0 && (
-                        <View className="absolute -top-1 -right-1 bg-red-500 rounded-full min-w-[20px] h-5 items-center justify-center px-1">
-                            <Text className="text-white text-xs font-bold">
-                                {cartItemsCount > 99 ? '99+' : cartItemsCount}
-                            </Text>
-                        </View>
-                    )}
-                </View>
+                {!hideCart && (
+                    <View>
+                        <TouchableOpacity onPress={onCartPress} activeOpacity={0.7}>
+                            <ShoppingCart size={28} color="#FFFFFF" strokeWidth={2} />
+                        </TouchableOpacity>
+                        {cartItemsCount > 0 && (
+                            <View className="absolute -top-1 -right-1 bg-red-500 rounded-full min-w-[20px] h-5 items-center justify-center px-1">
+                                <Text className="text-white text-xs font-bold">
+                                    {cartItemsCount > 99 ? '99+' : cartItemsCount}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                )}
             </View>
         </View>
     );

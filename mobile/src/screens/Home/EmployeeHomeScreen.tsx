@@ -2,28 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { View, ScrollView, FlatList, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
+    Calendar,
+    CheckCircle,
     Clock,
-    Tag,
-    CreditCard,
-    Star,
-    Scissors,
-    ShoppingCart,
-    Package,
-    Heart,
+    AlertCircle,
     LucideIcon,
-    MapPin,
-    Clock3,
+    Package,
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { HomeHeader } from '../../components/HomeHeader';
-import { UserGreeting } from '../../components/UserGreeting';
 import { QuickAction } from '../../components/QuickAction';
 import { ActionCard } from '../../components/ActionCard';
 import { SideMenu } from '../../components/SideMenu';
 import { useUserStore } from '../../store/userStore';
-import { useCartStore } from '../../store/cartStore';
 import { useThemeColors } from '../../hooks/useThemeColors';
-import { useNearbyPetShops } from '../../hooks/useNearbyPetShops';
+import { useDashboard } from '../../hooks/useDashboard';
 import { useAuth } from '../../context/AuthContext';
 
 interface QuickActionItem {
@@ -40,45 +33,43 @@ interface ActionCardItem {
     route?: string;
 }
 
-const quickActions: QuickActionItem[] = [
-    { id: '1', icon: Clock, label: 'Delivery Rápido' },
-    { id: '2', icon: Tag, label: 'Promoções' },
-    { id: '4', icon: Star, label: 'Clube Hobby' },
-    { id: '5', icon: Scissors, label: 'Serviços Pet' },
+const employeeQuickActions: QuickActionItem[] = [
+    { id: '1', icon: Calendar, label: 'Agendamentos' },
+    { id: '2', icon: CheckCircle, label: 'Concluir Serviço' },
+    { id: '3', icon: Clock, label: 'Em Progresso' },
 ];
 
-const mainActions: ActionCardItem[] = [
+const employeeMainActions: ActionCardItem[] = [
     {
         id: '1',
-        title: 'Comprar',
-        subtitle: 'Produtos para seu pet',
-        icon: ShoppingCart,
-        route: '/loja',
+        title: 'Meus Agendamentos',
+        subtitle: 'Ver todos os agendamentos',
+        icon: Calendar,
+        route: '/employee/dashboard',
     },
     {
         id: '2',
-        title: 'Agendar Serviço',
-        subtitle: 'Banho, tosa e mais',
-        icon: Scissors,
-        route: '/appointments/create',
+        title: 'Atualizar Status',
+        subtitle: 'Marcar serviço como concluído',
+        icon: CheckCircle,
+        route: '/employee/update-status',
     },
     {
         id: '3',
-        title: 'Meus Pedidos',
-        subtitle: 'Acompanhar compras',
+        title: 'Pedidos da Loja',
+        subtitle: 'Ver pedidos para processar',
         icon: Package,
-        route: '/pedidos',
+        route: '/employee/store-orders',
     },
 ];
 
-export default function ClientHomeScreen() {
+export default function EmployeeHomeScreen() {
     const router = useRouter();
     const colors = useThemeColors();
-    const { name, role, points, loadUserProfile, loading } = useUserStore();
+    const { name, role, loadUserProfile } = useUserStore();
     const { setUser } = useAuth();
-    const { totalItems } = useCartStore();
+    const { dashboard, loading, error, refetch } = useDashboard();
     const [menuVisible, setMenuVisible] = useState(false);
-    const { shops, loading: shopsLoading, error: shopsError } = useNearbyPetShops(5, true);
     const insets = useSafeAreaInsets();
 
     // Carregar perfil do usuário autenticado ao montar
@@ -99,13 +90,11 @@ export default function ClientHomeScreen() {
     }, [name, role, setUser]);
 
     const handleQuickAction = (id: string) => {
-        // Implementar navegação para cada ação
-        if (id === '5') {
-            // Serviços Pet - navegar para listagem de agendamentos
-            router.push('/appointments');
-            return;
+        if (id === '1') {
+            router.push('/employee/dashboard');
+        } else if (id === '2') {
+            router.push('/employee/update-status');
         }
-        console.log('Quick action pressed:', id);
     };
 
     const handleCardAction = (route?: string) => {
@@ -114,25 +103,19 @@ export default function ClientHomeScreen() {
         }
     };
 
-    const handleRewards = () => {
-        router.push('/loyalty'); // Navegar para tela de detalhamento de pontos
-    };
-
     const handleMenuSelect = (label: string) => {
         setMenuVisible(false);
         console.log('Menu item selected:', label);
-        // Implementar navegação baseada no label
     };
 
     return (
         <View className="flex-1" style={{ backgroundColor: colors.bgMain }}>
-            {/* Header com busca integrado ao SafeAreaView */}
+            {/* Header */}
             <SafeAreaView edges={['top']} style={{ backgroundColor: colors.bgMain }}>
                 <HomeHeader
                     onMenuPress={() => setMenuVisible(true)}
                     onCameraPress={() => console.log('Camera pressed')}
-                    onCartPress={() => router.push('/carrinho')}
-                    cartItemsCount={totalItems()}
+                    hideCart
                 />
             </SafeAreaView>
 
@@ -150,14 +133,24 @@ export default function ClientHomeScreen() {
                 style={{ backgroundColor: colors.bgMain }}
                 contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}
             >
-                {/* Saudação com Saldo Hobby Club */}
-                <UserGreeting name={name} points={points} onPress={handleRewards} />
+                {/* Saudação */}
+                <View className="px-4 py-6">
+                    <Text style={{ color: colors.textSecondary }} className="text-sm font-medium">
+                        Bem-vindo!
+                    </Text>
+                    <Text style={{ color: colors.textMain }} className="text-3xl font-bold mt-2">
+                        Olá, {name?.split(' ')[0]}
+                    </Text>
+                    <Text style={{ color: colors.textSecondary }} className="text-sm mt-2">
+                        Dashboard de serviços do dia
+                    </Text>
+                </View>
 
                 {/* Ações Rápidas */}
                 <View style={{ backgroundColor: colors.bgCard }} className="py-6 mb-2">
                     <FlatList
                         horizontal
-                        data={quickActions}
+                        data={employeeQuickActions}
                         keyExtractor={(item) => item.id}
                         showsHorizontalScrollIndicator={false}
                         contentContainerStyle={{ paddingHorizontal: 16 }}
@@ -174,7 +167,7 @@ export default function ClientHomeScreen() {
 
                 {/* Cards Principais */}
                 <View className="px-4 py-2">
-                    {mainActions.map((action) => (
+                    {employeeMainActions.map((action) => (
                         <ActionCard
                             key={action.id}
                             title={action.title}
@@ -185,83 +178,92 @@ export default function ClientHomeScreen() {
                     ))}
                 </View>
 
-                {/* Seção Lojas */}
+                {/* Estatísticas do Dia */}
                 <View className="px-4 py-4 mb-6">
                     <View className="flex-row items-center justify-between mb-4">
-                        <Text style={{ color: colors.textMain }} className="text-xl font-bold">🏪 Lojas Próximas</Text>
-                        <TouchableOpacity onPress={() => router.push('/googlemaps-test')} activeOpacity={0.7}>
-                            <Text style={{ color: colors.accentYellow }} className="text-sm font-semibold">Ver todas</Text>
-                        </TouchableOpacity>
+                        <Text style={{ color: colors.textMain }} className="text-xl font-bold">📊 Estatísticas do Dia</Text>
                     </View>
 
                     {/* Loading state */}
-                    {shopsLoading && (
+                    {loading && (
                         <View className="items-center py-8">
                             <ActivityIndicator size="large" color={colors.accentYellow} />
                             <Text style={{ color: colors.textSecondary }} className="text-sm mt-2">
-                                Buscando lojas próximas...
+                                Carregando dados...
                             </Text>
                         </View>
                     )}
 
                     {/* Error state */}
-                    {shopsError && !shopsLoading && (
+                    {error && !loading && (
                         <View style={{ backgroundColor: colors.bgCard }} className="p-3 rounded-lg mb-3">
-                            <Text style={{ color: colors.accentYellow }} className="text-sm">
-                                ⚠️ Habilite a localização para ver lojas próximas
+                            <Text style={{ color: '#EF4444' }} className="text-sm">
+                                ⚠️ Erro ao carregar dados: {error}
                             </Text>
                         </View>
                     )}
 
-                    {/* Lojas list */}
-                    {!shopsLoading && shops.length > 0 && (
+                    {/* Stats Cards */}
+                    {!loading && dashboard && (
                         <FlatList
-                            horizontal
-                            data={shops}
-                            keyExtractor={(item) => item.id}
-                            showsHorizontalScrollIndicator={false}
+                            scrollEnabled={false}
+                            data={[
+                                {
+                                    id: '1',
+                                    icon: Calendar,
+                                    label: 'Agendamentos Hoje',
+                                    value: dashboard.totalAppointmentsToday || 0,
+                                    color: '#3B82F6',
+                                },
+                                {
+                                    id: '2',
+                                    icon: CheckCircle,
+                                    label: 'Concluídos',
+                                    value: dashboard.completedAppointmentsToday || 0,
+                                    color: '#10B981',
+                                },
+                                {
+                                    id: '3',
+                                    icon: Clock,
+                                    label: 'Em Progresso',
+                                    value: dashboard.todayAppointments?.filter(apt => apt.status === 'IN_PROGRESS').length || 0,
+                                    color: '#F59E0B',
+                                },
+                                {
+                                    id: '4',
+                                    icon: AlertCircle,
+                                    label: 'Pendentes',
+                                    value: dashboard.todayAppointments?.filter(apt => apt.status === 'SCHEDULED').length || 0,
+                                    color: '#EF4444',
+                                },
+                            ]}
+                            numColumns={2}
+                            columnWrapperStyle={{ gap: 12 }}
                             contentContainerStyle={{ gap: 12 }}
-                            scrollEnabled={true}
+                            keyExtractor={(item) => item.id}
                             renderItem={({ item }) => (
-                                <TouchableOpacity
-                                    onPress={() => router.push('/googlemaps-test')}
-                                    activeOpacity={0.7}
+                                <View
+                                    className="flex-1 p-4 rounded-lg"
                                     style={{
                                         backgroundColor: colors.bgCard,
-                                        borderRadius: 12,
-                                        padding: 12,
-                                        width: 160,
-                                        borderLeftWidth: 3,
-                                        borderLeftColor: colors.accentYellow,
+                                        borderLeftWidth: 4,
+                                        borderLeftColor: item.color,
                                     }}
                                 >
-                                    <Text style={{ color: colors.textMain }} className="font-bold text-sm mb-2">
-                                        {item.name.length > 18 ? item.name.substring(0, 18) + '...' : item.name}
-                                    </Text>
-                                    <View className="flex-row items-center mb-1">
-                                        <MapPin size={14} color={colors.accentYellow} />
-                                        <Text style={{ color: colors.textSecondary }} className="text-xs ml-1">
-                                            {item.distance}
-                                        </Text>
+                                    <View className="flex-row items-center justify-between">
+                                        <View className="flex-1">
+                                            <Text style={{ color: colors.textSecondary }} className="text-xs font-medium">
+                                                {item.label}
+                                            </Text>
+                                            <Text style={{ color: item.color }} className="text-2xl font-bold mt-2">
+                                                {item.value}
+                                            </Text>
+                                        </View>
+                                        <item.icon size={24} color={item.color} opacity={0.3} />
                                     </View>
-                                    <View className="flex-row items-center">
-                                        <Clock3 size={14} color={colors.accentYellow} />
-                                        <Text style={{ color: colors.textSecondary }} className="text-xs ml-1">
-                                            {item.duration}
-                                        </Text>
-                                    </View>
-                                </TouchableOpacity>
+                                </View>
                             )}
                         />
-                    )}
-
-                    {/* Empty state */}
-                    {!shopsLoading && shops.length === 0 && !shopsError && (
-                        <View style={{ backgroundColor: colors.bgCard }} className="p-4 rounded-lg items-center">
-                            <Text style={{ color: colors.textSecondary }} className="text-sm">
-                                Nenhuma loja encontrada
-                            </Text>
-                        </View>
                     )}
                 </View>
             </ScrollView>

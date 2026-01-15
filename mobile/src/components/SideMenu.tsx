@@ -35,7 +35,10 @@ type MenuItemIcon =
     | "content-cut"
     | "attach-money"
     | "groups"
-    | "supervisor-account";
+    | "supervisor-account"
+    | "dashboard"
+    | "event-available"
+    | "settings";
 
 interface MenuItem {
     icon: MenuItemIcon;
@@ -77,6 +80,10 @@ export const SideMenu: React.FC<SideMenuProps> = ({
         if (user) {
             if (user.role === "CLIENT") {
                 items.push({ icon: "attach-money", label: "Meus Gastos" });
+            }
+            if (user.role === "EMPLOYEE") {
+                items.push({ icon: "dashboard", label: "Dashboard" });
+                items.push({ icon: "event-available", label: "Agendamentos" });
             }
             if (user.role !== "CLIENT") {
                 items.push({ icon: "content-cut", label: "Serviços" });
@@ -179,6 +186,16 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                             if (item.label === "Configurações") {
                                 onClose();
                                 router.push('/settings');
+                                return;
+                            }
+                            if (item.label === "Dashboard") {
+                                onClose();
+                                router.push('/employee/dashboard');
+                                return;
+                            }
+                            if (item.label === "Agendamentos") {
+                                onClose();
+                                router.push('/appointments');
                                 return;
                             }
                             if (user?.role === "CLIENT" && item.label === "Meus Gastos") {
