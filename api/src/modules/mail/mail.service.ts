@@ -106,4 +106,38 @@ export class MailService {
       throw error;
     }
   }
+
+  async sendAppointmentCompleted(
+    to: string,
+    appointmentData: {
+      clientName: string;
+      petName?: string;
+      serviceName?: string;
+      storeName?: string;
+    },
+  ) {
+    const sanitizedTo = this.sanitizeEmail(to);
+    if (!this.validateEmailDomain(sanitizedTo)) {
+      throw new Error(`Domínio não permitido: ${sanitizedTo}`);
+    }
+    try {
+      await this.mailerService.sendMail({
+        to: sanitizedTo,
+        subject: 'Serviço Concluído - Obrigado!',
+        template: 'appointment-completed',
+        context: {
+          clientName: appointmentData.clientName,
+          petName: appointmentData.petName || 'seu pet',
+          serviceName: appointmentData.serviceName || 'o serviço',
+          storeName: appointmentData.storeName || 'Hobby Bichos',
+        },
+      });
+    } catch (error) {
+      console.error('Erro ao enviar email de conclusão:', error);
+      if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
+        return;
+      }
+      throw error;
+    }
+  }
 }

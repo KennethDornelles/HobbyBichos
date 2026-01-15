@@ -181,6 +181,20 @@ async function main(): Promise<void> {
           storeId: store.id,
         },
       });
+
+      // Criar employee para cada loja
+      await prisma.user.upsert({
+        where: { email: `employee.${store.slug}@hobbybichos.com` },
+        update: {},
+        create: {
+          name: `Funcionário ${store.name}`,
+          email: `employee.${store.slug}@hobbybichos.com`,
+          password: passwordHash,
+          phone: `839${Math.floor(10000000 + Math.random() * 90000000)}`,
+          role: Role.EMPLOYEE,
+          storeId: store.id,
+        },
+      });
     }
 
     // 3. Produtos - Uma variedade de cada categoria

@@ -256,4 +256,192 @@ export class AppointmentsService {
 
     return appointment;
   }
+
+  /**
+   * Obtém o dashboard de agendamentos para um employee
+   * Retorna agendamentos de hoje e próximos agendamentos
+   */
+  async getEmployeeDashboard(user: {
+    storeId?: string;
+    userId?: string;
+    id?: string;
+    name?: string;
+    role?: string;
+  }) {
+    const userId = user.userId || user.id;
+
+    if (!userId || user.role !== 'EMPLOYEE') {
+      throw new ConflictException('Apenas employees podem acessar o dashboard');
+    }
+
+    if (!user.storeId) {
+      throw new ConflictException('Employee não possui loja associada');
+    }
+
+    // Data de hoje
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(today.getDate() + 1);
+
+    // Próximos 7 dias
+    const nextWeek = new Date(today);
+    nextWeek.setDate(today.getDate() + 7);
+
+    // Agendamentos de hoje
+    const todayAppointments = await this.prisma.appointment.findMany({
+      where: {
+        storeId: user.storeId,
+        startsAt: { gte: today, lt: tomorrow },
+        status: { in: [AppointmentStatus.SCHEDULED, AppointmentStatus.COMPLETED] },
+      },
+      include: {
+        pet: true,
+        service: true,
+        user: {
+          select: { id: true, name: true },
+        },
+      },
+      orderBy: { startsAt: 'asc' },
+    });
+
+    // Próximos agendamentos (excluindo hoje)
+    const upcomingAppointments = await this.prisma.appointment.findMany({
+      where: {
+        storeId: user.storeId,
+        startsAt: { gte: tomorrow, lte: nextWeek },
+        status: { in: [AppointmentStatus.SCHEDULED, AppointmentStatus.COMPLETED] },
+      },
+      include: {
+        pet: true,
+        service: true,
+        user: {
+          select: { id: true, name: true },
+        },
+      },
+      orderBy: { startsAt: 'asc' },
+      take: 10,
+    });
+
+    const transformAppointment = (apt) => ({
+      id: apt.id,
+      startsAt: apt.startsAt,
+      status: apt.status,
+      petName: apt.pet?.name || 'Pet',
+      petSpecies: apt.pet?.species || 'N/A',
+      clientName: apt.user?.name || 'Cliente',
+      serviceName: apt.service?.name || 'Serviço',
+      servicePrice: apt.service?.price ? Number(apt.service.price) : 0,
+      serviceDuration: apt.service?.durationMin || 30,
+      notes: apt.notes,
+    });
+
+    const completedToday = todayAppointments.filter(
+      (apt) => apt.status === AppointmentStatus.COMPLETED,
+    ).length;
+    const cancelledToday = todayAppointments.filter(
+      (apt) => apt.status === AppointmentStatus.CANCELLED,
+    ).length;
+
+    return {
+      employeeId: userId,
+      employeeName: user.name || 'Employee',
+      todayAppointments: todayAppointments.map(transformAppointment),
+      upcomingAppointments: upcomingAppointments.map(transformAppointment),
+      totalAppointmentsToday: todayAppointments.length,
+      completedAppointmentsToday: completedToday,
+      cancelledAppointmentsToday: cancelledToday,
+    };
+  }
+
+  /**
+   * Atualiza o status de um agendamento
+   * Apenas o employee pode atualizar agendamentos
+   */
+  async updateAppointmentStatus(
+    appointmentId: string,
+    updateStatusDto: { status: string; notes?: string },
+    user: { storeId?: string; userId?: string; id?: string; role?: string },
+  ) {
+    const userId = user.userId || user.id;
+
+    // Verifica se o usuário é EMPLOYEE
+    if (user.role !== 'EMPLOYEE') {
+      throw new ConflictException('Apenas employees podem atualizar agendamentos');
+    }
+
+    // Busca o agendamento
+    const appointment = await this.prisma.appointment.findUnique({
+      where: { id: appointmentId },
+      include: {
+        pet: true,
+        service: true,
+        user: {
+          select: { id: true, name: true, email: true },
+        },
+        store: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    if (!appointment) {
+      throw new NotFoundException('Agendamento não encontrado');
+    }
+
+    // Verifica se o agendamento pertence à loja do employee
+    if (appointment.storeId !== user.storeId) {
+      throw new ConflictException('Sem permissão para atualizar este agendamento');
+    }
+
+    // Atualiza o agendamento
+    const updatedAppointment = await this.prisma.appointment.update({
+      where: { id: appointmentId },
+      data: {
+        status: updateStatusDto.status,
+        notes: updateStatusDto.notes || appointment.notes,
+        updatedAt: new Date(),
+      },
+      include: {
+        pet: true,
+        service: true,
+        user: {
+          select: { id: true, name: true, email: true },
+        },
+        store: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    // Envia notificação por email ao cliente
+    if (
+      appointment.user?.email &&
+      updateStatusDto.status === AppointmentStatus.COMPLETED
+    ) {
+      try {
+        await this.mailService.sendAppointmentCompleted(
+          appointment.user.email,
+          {
+            clientName: appointment.user.name,
+            petName: appointment.pet?.name,
+            serviceName: appointment.service?.name,
+            storeName: appointment.store?.name,
+          },
+        );
+      } catch (error) {
+        console.error('Erro ao enviar email de conclusão:', error);
+      }
+    }
+
+    return {
+      id: updatedAppointment.id,
+      startsAt: updatedAppointment.startsAt,
+      status: updatedAppointment.status,
+      petName: updatedAppointment.pet?.name,
+      clientName: updatedAppointment.user?.name,
+      serviceName: updatedAppointment.service?.name,
+      notes: updatedAppointment.notes,
+    };
+  }
 }
