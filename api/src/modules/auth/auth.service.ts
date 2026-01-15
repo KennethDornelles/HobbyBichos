@@ -70,8 +70,18 @@ export class AuthService {
   }
 
   async login(email: string, password: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { email },
+    // Normalização: tentar variações comuns de separadores no local-part
+    const [local, domain] = email.split('@');
+    const variants = Array.from(
+      new Set([
+        email,
+        domain ? `${local.replace(/-/g, '.')}@${domain}` : email,
+        domain ? `${local.replace(/\./g, '-')}@${domain}` : email,
+      ]),
+    );
+
+    const user = await this.prisma.user.findFirst({
+      where: { email: { in: variants } },
     });
     // Verifica se o usuário existe e se a senha está correta
     if (!user || !(await bcrypt.compare(password, user.password))) {

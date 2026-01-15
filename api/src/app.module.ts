@@ -20,6 +20,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { OrdersModule } from './modules/orders/orders.module'; // ← ADICIONE ESTA LINHA
 import { CartModule } from './modules/cart/cart.module';
 import { LoyaltyModule } from './modules/loyalty/loyalty.module';
+import { ManagerModule } from './modules/manager/manager.module';
 
 @Module({
   imports: [
@@ -62,6 +63,7 @@ import { LoyaltyModule } from './modules/loyalty/loyalty.module';
     OrdersModule, // ← ADICIONE ESTA LINHA
     CartModule,
     LoyaltyModule,
+    ManagerModule,
   ],
   controllers: [AppController],
   providers: [AppService],

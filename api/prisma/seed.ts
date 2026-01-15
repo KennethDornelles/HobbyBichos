@@ -171,7 +171,10 @@ async function main(): Promise<void> {
     for (const store of stores) {
       await prisma.user.upsert({
         where: { email: `owner.${store.slug}@hobbybichos.com` },
-        update: {},
+        update: {
+          storeId: store.id,
+          role: Role.OWNER,
+        },
         create: {
           name: `Dono ${store.name}`,
           email: `owner.${store.slug}@hobbybichos.com`,
@@ -185,7 +188,10 @@ async function main(): Promise<void> {
       // Criar employee para cada loja
       await prisma.user.upsert({
         where: { email: `employee.${store.slug}@hobbybichos.com` },
-        update: {},
+        update: {
+          storeId: store.id,
+          role: Role.EMPLOYEE,
+        },
         create: {
           name: `Funcionário ${store.name}`,
           email: `employee.${store.slug}@hobbybichos.com`,
