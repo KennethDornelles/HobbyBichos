@@ -90,6 +90,7 @@ model User {
   reviews                  Review[]                  @relation("ReviewUser")
   reviewsAsEmployee        Review[]                  @relation("ReviewEmployee")
   loyaltyAccount           LoyaltyAccount?
+  memberCodes              MemberCode[]
   referralsReceived        Referral[]                @relation("ReferralReferee")
   birthdayAwards           LoyaltyBirthdayAward[]
   cart                     Cart?
@@ -473,4 +474,30 @@ model LoyaltyBirthdayAward {
   @@unique([userId, year])
   @@index([userId])
   @@map("loyalty_birthday_awards")
+}
+
+/// Códigos de membro do programa de fidelidade.
+/// IMPORTANTE: Campo "code" usa tipo citext (case-insensitive text) do PostgreSQL.
+/// Isso significa que buscas são CASE-INSENSITIVE automaticamente no banco de dados.
+/// 
+/// Vantagens:
+/// - ✅ Case-insensitive nativo do PostgreSQL
+/// - ✅ Sem necessidade de middleware ou normalização no código
+/// - ✅ Melhor performance que LOWER() em índices
+/// - ✅ Funciona automaticamente em todas as queries
+/// - ✅ Mantém o valor original (não converte para uppercase/lowercase)
+/// 
+/// Exemplos de busca:
+/// - Armazena: "USER123"
+/// - Busca "user123" → encontra ✅
+/// - Busca "UsEr123" → encontra ✅
+/// - Busca "USER123" → encontra ✅
+model MemberCode {
+  code      String  @id @db.Citext
+  userId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("member_codes")
 }

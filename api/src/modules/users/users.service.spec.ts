@@ -120,4 +120,269 @@ describe('UsersService', () => {
       });
     });
   });
+
+  describe('findByMemberCode', () => {
+    it('deve normalizar código em lowercase para UPPERCASE', async () => {
+      const prisma = {
+        memberCode: {
+          findUnique: jest.fn().mockResolvedValue({
+            code: 'USER123',
+            userId: 'user1',
+            user: { id: 'user1', loyaltyAccount: { id: 'loyalty1' } },
+          }),
+        },
+      };
+      (service as any).prisma = prisma;
+      const result = await service.findByMemberCode('user123');
+      expect(result).toEqual({
+        id: 'user1',
+        loyaltyAccount: { id: 'loyalty1' },
+      });
+      expect(prisma.memberCode.findUnique).toHaveBeenCalledWith({
+        where: { code: 'USER123' },
+        include: { user: { include: { loyaltyAccount: true } } },
+      });
+    });
+
+    it('deve normalizar código com espaços', async () => {
+      const prisma = {
+        memberCode: {
+          findUnique: jest.fn().mockResolvedValue({
+            code: 'USER123',
+            userId: 'user1',
+            user: { id: 'user1', loyaltyAccount: null },
+          }),
+        },
+      };
+      (service as any).prisma = prisma;
+      const result = await service.findByMemberCode('  USER123  ');
+      expect(result).toEqual({ id: 'user1', loyaltyAccount: null });
+      expect(prisma.memberCode.findUnique).toHaveBeenCalledWith({
+        where: { code: 'USER123' },
+        include: { user: { include: { loyaltyAccount: true } } },
+      });
+    });
+
+    it('deve normalizar código mixed-case', async () => {
+      const prisma = {
+        memberCode: {
+          findUnique: jest.fn().mockResolvedValue({
+            code: 'USER123',
+            userId: 'user1',
+            user: { id: 'user1' },
+          }),
+        },
+      };
+      (service as any).prisma = prisma;
+      const result = await service.findByMemberCode('UsEr123');
+      expect(prisma.memberCode.findUnique).toHaveBeenCalledWith({
+        where: { code: 'USER123' },
+        include: { user: { include: { loyaltyAccount: true } } },
+      });
+    });
+
+    it('deve retornar null se código não encontrado', async () => {
+      const prisma = {
+        memberCode: {
+          findUnique: jest.fn().mockResolvedValue(null),
+        },
+      };
+      (service as any).prisma = prisma;
+      const result = await service.findByMemberCode('invalid');
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('assignMemberCode', () => {
+    it('deve atribuir código normalizado para novo membro', async () => {
+      const user = {
+        id: 'user1',
+        email: 'test@example.com',
+        loyaltyAccount: { id: 'loyalty1' },
+      };
+      const prisma = {
+        user: {
+          findUnique: jest.fn().mockResolvedValue(user),
+        },
+        memberCode: {
+          findUnique: jest.fn().mockResolvedValue(null),
+          upsert: jest.fn().mockResolvedValue({
+            code: 'USER123',
+            userId: 'user1',
+          }),
+        },
+      };
+      (service as any).prisma = prisma;
+
+      const result = await service.assignMemberCode({
+        id: 'user1',
+        code: 'user123',
+      });
+
+      expect(result).toEqual({ code: 'USER123', userId: 'user1' });
+      expect(prisma.memberCode.upsert).toHaveBeenCalledWith({
+        where: { code: 'USER123' },
+        update: { userId: 'user1' },
+        create: { code: 'USER123', userId: 'user1' },
+      });
+    });
+
+    it('deve normalizar código com espaços ao atribuir', async () => {
+      const user = {
+        id: 'user1',
+        email: 'test@example.com',
+        loyaltyAccount: { id: 'loyalty1' },
+      };
+      const prisma = {
+        user: {
+          findUnique: jest.fn().mockResolvedValue(user),
+        },
+        memberCode: {
+          findUnique: jest.fn().mockResolvedValue(null),
+          upsert: jest.fn().mockResolvedValue({
+            code: 'USER123',
+            userId: 'user1',
+          }),
+        },
+      };
+      (service as any).prisma = prisma;
+
+      await service.assignMemberCode({
+        id: 'user1',
+        code: '  user123  ',
+      });
+
+      expect(prisma.memberCode.upsert).toHaveBeenCalledWith({
+        where: { code: 'USER123' },
+        update: { userId: 'user1' },
+        create: { code: 'USER123', userId: 'user1' },
+      });
+    });
+
+    it('deve lançar erro se código está vinculado a outro usuário', async () => {
+      const user = {
+        id: 'user1',
+        email: 'test@example.com',
+        loyaltyAccount: { id: 'loyalty1' },
+      };
+      const existing = {
+        code: 'USER123',
+        userId: 'user2', // Diferente de user1
+      };
+      const prisma = {
+        user: {
+          findUnique: jest.fn().mockResolvedValue(user),
+        },
+        memberCode: {
+          findUnique: jest.fn().mockResolvedValue(existing),
+        },
+      };
+      (service as any).prisma = prisma;
+
+      await expect(
+        service.assignMemberCode({
+          id: 'user1',
+          code: 'USER123',
+        }),
+      ).rejects.toThrow('Código já está vinculado a outro usuário');
+    });
+
+    it('deve atualizar código se pertence ao mesmo usuário', async () => {
+      const user = {
+        id: 'user1',
+        email: 'test@example.com',
+        loyaltyAccount: { id: 'loyalty1' },
+      };
+      const existing = {
+        code: 'USER123',
+        userId: 'user1', // Mesmo usuário
+      };
+      const prisma = {
+        user: {
+          findUnique: jest.fn().mockResolvedValue(user),
+        },
+        memberCode: {
+          findUnique: jest.fn().mockResolvedValue(existing),
+          upsert: jest.fn().mockResolvedValue({
+            code: 'USER123',
+            userId: 'user1',
+          }),
+        },
+      };
+      (service as any).prisma = prisma;
+
+      const result = await service.assignMemberCode({
+        id: 'user1',
+        code: 'USER123',
+      });
+
+      expect(result).toEqual({ code: 'USER123', userId: 'user1' });
+      expect(prisma.memberCode.upsert).toHaveBeenCalled();
+    });
+
+    it('deve lançar erro se código não é fornecido', async () => {
+      (service as any).prisma = {};
+      await expect(
+        service.assignMemberCode({
+          id: 'user1',
+          code: '',
+        }),
+      ).rejects.toThrow('Informe o código');
+    });
+
+    it('deve lançar erro se usuário não encontrado', async () => {
+      const prisma = {
+        user: {
+          findUnique: jest.fn().mockResolvedValue(null),
+        },
+      };
+      (service as any).prisma = prisma;
+
+      await expect(
+        service.assignMemberCode({
+          id: 'invalid',
+          code: 'USER123',
+        }),
+      ).rejects.toThrow('Usuário não encontrado');
+    });
+
+    it('deve criar loyalty account se não existir', async () => {
+      const user = {
+        id: 'user1',
+        email: 'test@example.com',
+        loyaltyAccount: null,
+      };
+      const prisma = {
+        user: {
+          findUnique: jest.fn().mockResolvedValue(user),
+        },
+        loyaltyAccount: {
+          create: jest.fn().mockResolvedValue({ id: 'loyalty1' }),
+        },
+        memberCode: {
+          findUnique: jest.fn().mockResolvedValue(null),
+          upsert: jest.fn().mockResolvedValue({
+            code: 'USER123',
+            userId: 'user1',
+          }),
+        },
+      };
+      (service as any).prisma = prisma;
+
+      // Mock ensureLoyaltyForUser
+      jest.spyOn(service, 'ensureLoyaltyForUser').mockResolvedValue({
+        id: 'loyalty1',
+      });
+
+      await service.assignMemberCode({
+        id: 'user1',
+        code: 'USER123',
+      });
+
+      expect(service.ensureLoyaltyForUser).toHaveBeenCalledWith({
+        email: undefined,
+        id: 'user1',
+      });
+    });
+  });
 });

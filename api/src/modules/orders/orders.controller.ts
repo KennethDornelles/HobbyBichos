@@ -66,8 +66,14 @@ export class OrdersController {
   }
 
   @Patch(':id/test-status')
-  @ApiOperation({ summary: 'Atualizar status do pedido para testes (dev only)' })
-  testUpdateStatus(@Param('id') id: string, @Body() body: { status: string }, @Request() req: AuthenticatedRequest) {
+  @ApiOperation({
+    summary: 'Atualizar status do pedido para testes (dev only)',
+  })
+  testUpdateStatus(
+    @Param('id') id: string,
+    @Body() body: { status: string },
+    @Request() req: AuthenticatedRequest,
+  ) {
     const user = req.user as AuthUser;
     return this.ordersService.testUpdateStatus(id, body.status, user);
   }

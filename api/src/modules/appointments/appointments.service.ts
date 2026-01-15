@@ -293,7 +293,9 @@ export class AppointmentsService {
       where: {
         storeId: user.storeId,
         startsAt: { gte: today, lt: tomorrow },
-        status: { in: [AppointmentStatus.SCHEDULED, AppointmentStatus.COMPLETED] },
+        status: {
+          in: [AppointmentStatus.SCHEDULED, AppointmentStatus.COMPLETED],
+        },
       },
       include: {
         pet: true,
@@ -310,7 +312,9 @@ export class AppointmentsService {
       where: {
         storeId: user.storeId,
         startsAt: { gte: tomorrow, lte: nextWeek },
-        status: { in: [AppointmentStatus.SCHEDULED, AppointmentStatus.COMPLETED] },
+        status: {
+          in: [AppointmentStatus.SCHEDULED, AppointmentStatus.COMPLETED],
+        },
       },
       include: {
         pet: true,
@@ -367,7 +371,9 @@ export class AppointmentsService {
 
     // Verifica se o usuário é EMPLOYEE
     if (user.role !== 'EMPLOYEE') {
-      throw new ConflictException('Apenas employees podem atualizar agendamentos');
+      throw new ConflictException(
+        'Apenas employees podem atualizar agendamentos',
+      );
     }
 
     // Busca o agendamento
@@ -391,7 +397,9 @@ export class AppointmentsService {
 
     // Verifica se o agendamento pertence à loja do employee
     if (appointment.storeId !== user.storeId) {
-      throw new ConflictException('Sem permissão para atualizar este agendamento');
+      throw new ConflictException(
+        'Sem permissão para atualizar este agendamento',
+      );
     }
 
     // Atualiza o agendamento

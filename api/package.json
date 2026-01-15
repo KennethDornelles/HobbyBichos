@@ -20,6 +20,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:citext": "ts-node scripts/test-citext-complete.ts",
+    "generate:qrcodes": "ts-node scripts/generate-test-qrcodes.ts",
     "update-secure-deps": "rm -rf node_modules package-lock.json && npm install && npm audit"
   },
   "dependencies": {
@@ -63,6 +65,7 @@
     "@types/nodemailer": "^7.0.4",
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.2",
+    "axios": "^1.13.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
@@ -71,6 +74,7 @@
     "jest-mock-extended": "^3.0.7",
     "prettier": "^3.4.2",
     "prisma": "^7.2.0",
+    "qrcode": "^1.5.4",
     "source-map-support": "^0.5.21",
     "supertest": "^7.0.0",
     "ts-jest": "^29.2.5",
@@ -85,6 +89,5 @@
     "html-minifier": "^5.0.0",
     "mjml": "^5.0.0",
     "nodemailer": "^6.9.16"
-  },
-  "postinstall": "npm audit --production --audit-level=high || echo 'audit warnings ignored'"
+  }
 }

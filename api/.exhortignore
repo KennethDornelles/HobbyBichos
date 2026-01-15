@@ -1,0 +1,11 @@
+# Ignorar vulnerabilidades de severidade média ou baixa
+# Configuração para Red Hat Dependency Analytics
+
+# Ignorar nodemailer
+nodemailer
+
+# Ignorar todas as vulnerabilidades de severidade média
+*.medium
+
+# Ignorar todas as vulnerabilidades de severidade baixa
+*.low

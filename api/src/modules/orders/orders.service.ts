@@ -326,7 +326,7 @@ export class OrdersService {
   async findOne(id: string, user: AuthUser) {
     // Construir filtro baseado no tipo de usuário
     const where: any = { id };
-    
+
     // Se o usuário for funcionário de loja, filtrar por storeId
     if (user.storeId) {
       where.storeId = user.storeId;
@@ -387,14 +387,26 @@ export class OrdersService {
     }
 
     // Permitir apenas para store employees ou se for proprietário
-    if (user.storeId && order.storeId !== user.storeId && order.userId !== user.id) {
+    if (
+      user.storeId &&
+      order.storeId !== user.storeId &&
+      order.userId !== user.id
+    ) {
       throw new ForbiddenException('Sem permissão para atualizar este pedido');
     }
 
     // Validar status
-    const validStatuses = ['WAITING_PAYMENT', 'PAID', 'PROCESSING', 'DELIVERED', 'CANCELLED'];
+    const validStatuses = [
+      'WAITING_PAYMENT',
+      'PAID',
+      'PROCESSING',
+      'DELIVERED',
+      'CANCELLED',
+    ];
     if (!validStatuses.includes(newStatus)) {
-      throw new PreconditionFailedException(`Status inválido. Válidos: ${validStatuses.join(', ')}`);
+      throw new PreconditionFailedException(
+        `Status inválido. Válidos: ${validStatuses.join(', ')}`,
+      );
     }
 
     // Atualizar status

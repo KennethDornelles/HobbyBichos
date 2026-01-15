@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -11,6 +12,8 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async create(dto: CreateUserDto, creatorRole?: Role) {
@@ -43,10 +46,11 @@ export class UsersService {
           storeId: dto.storeId,
         },
       });
-    } catch (err: any) {
-      if (err.code === 'P2002') {
+    } catch (err) {
+      const error = err as { code?: string; meta?: { target?: string[] } };
+      if (error.code === 'P2002') {
         // Prisma unique constraint failed
-        const target = err.meta?.target?.join(', ');
+        const target = error.meta?.target?.join(', ');
         throw new ConflictException(
           `Já existe usuário com este ${target || 'dado único'}`,
         );
@@ -79,6 +83,7 @@ export class UsersService {
   async findByEmail(email: string) {
     return this.prisma.user.findUnique({
       where: { email },
+      include: { loyaltyAccount: true },
     });
   }
 
@@ -89,9 +94,112 @@ export class UsersService {
     });
   }
 
+  async findByMemberCode(code: string) {
+    this.logger.debug(`[MemberCode] 🎫 Buscando código: "${code}"`);
+    const normalized = code.trim().toUpperCase();
+    this.logger.debug(`[MemberCode] 🎫 Código normalizado: "${normalized}"`);
+
+    // CITEXT no PostgreSQL é case-insensitive automaticamente
+    // A busca funciona independente do case fornecido
+    const mc = await this.prisma.memberCode.findUnique({
+      where: { code: normalized },
+      include: { user: { include: { loyaltyAccount: true } } },
+    });
+
+    if (!mc) {
+      this.logger.debug(
+        `[MemberCode] ❌ Código não encontrado: "${normalized}"`,
+      );
+      return null;
+    }
+
+    this.logger.debug(
+      `[MemberCode] ✅ Código encontrado para usuário: ${mc.userId}`,
+    );
+    return mc?.user ?? null;
+  }
+
+  async ensureLoyaltyForUser(params: { email?: string; id?: string }) {
+    const { email, id } = params;
+    if (!email && !id) {
+      throw new BadRequestException('Informe email ou id');
+    }
+
+    const user = email
+      ? await this.findByEmail(email)
+      : await this.findById(id as string);
+
+    if (!user) {
+      throw new BadRequestException('Usuário não encontrado');
+    }
+
+    if (user.loyaltyAccount) {
+      return user.loyaltyAccount;
+    }
+
+    const account = await this.prisma.loyaltyAccount.create({
+      data: { userId: user.id },
+    });
+    return account;
+  }
+
+  async assignMemberCode(params: {
+    email?: string;
+    id?: string;
+    code: string;
+  }) {
+    const { email, id, code } = params;
+    if (!code) {
+      throw new BadRequestException('Informe o código');
+    }
+
+    // Normalizar o código logo no início do método para garantir consistência
+    const normalizedCode = code.trim().toUpperCase();
+    this.logger.debug(
+      `[MemberCode] 🎫 Atribuindo código: original="${code}" → normalizado="${normalizedCode}"`,
+    );
+
+    const user = email
+      ? await this.findByEmail(email)
+      : await this.findById(id as string);
+    if (!user) {
+      throw new BadRequestException('Usuário não encontrado');
+    }
+
+    // Garante loyalty account
+    if (!user.loyaltyAccount) {
+      await this.ensureLoyaltyForUser({ email, id });
+    }
+
+    // Verificar se código já existe e pertence a outro usuário (usando código normalizado)
+    const existing = await this.prisma.memberCode.findUnique({
+      where: { code: normalizedCode },
+    });
+
+    if (existing && existing.userId !== user.id) {
+      this.logger.warn(
+        `[MemberCode] ⚠️ Conflito: código "${normalizedCode}" já vinculado ao usuário ${existing.userId}`,
+      );
+      throw new BadRequestException('Código já está vinculado a outro usuário');
+    }
+
+    // Usar código normalizado em todas as operações (upsert)
+    const mc = await this.prisma.memberCode.upsert({
+      where: { code: normalizedCode },
+      update: { userId: user.id },
+      create: { code: normalizedCode, userId: user.id },
+    });
+
+    this.logger.debug(
+      `[MemberCode] ✅ Código atribuído com sucesso ao usuário ${user.id}: "${normalizedCode}"`,
+    );
+
+    return mc;
+  }
+
   async update(id: string, data: Partial<CreateUserDto>) {
     if (data.password) {
-      data.password = (await bcrypt.hash(data.password, 10)) as string;
+      data.password = await bcrypt.hash(data.password, 10);
     }
     return this.prisma.user.update({
       where: { id },

@@ -8,6 +8,9 @@ import {
   Request,
   Patch,
   ForbiddenException,
+  BadRequestException,
+  NotFoundException,
+  Query,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -16,6 +19,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
+import { Public } from '../../decorators/public.decorator';
 import {
   ApiTags,
   ApiBearerAuth,
@@ -46,6 +50,45 @@ export class UsersController {
     return this.usersService.findAllByStore(storeId);
   }
 
+  @Public()
+  @Get('lookup')
+  @ApiOperation({
+    summary: 'Busca pública de membro (scanner, sem autenticação)',
+  })
+  @ApiResponse({ status: 200, description: 'Membro encontrado com sucesso.' })
+  @ApiResponse({ status: 404, description: 'Membro não encontrado.' })
+  async lookupMember(@Query('email') email?: string, @Query('id') id?: string) {
+    if (!email && !id) {
+      throw new BadRequestException('Informe email ou id para buscar o membro');
+    }
+
+    let user;
+    if (email) {
+      user = await this.usersService.findByEmail(email);
+    } else if (id) {
+      user = await this.usersService.findById(id);
+    }
+
+    if (!user) {
+      throw new NotFoundException('Membro não encontrado');
+    }
+
+    return user;
+  }
+
+  @Public()
+  @Get('code/:code')
+  @ApiOperation({ summary: 'Busca usuário por código de membro (público)' })
+  @ApiResponse({ status: 200, description: 'Usuário retornado com sucesso.' })
+  @ApiResponse({ status: 404, description: 'Código não encontrado.' })
+  async findByMemberCode(@Param('code') code: string) {
+    const user = await this.usersService.findByMemberCode(code);
+    if (!user) {
+      throw new NotFoundException('Código não encontrado');
+    }
+    return user;
+  }
+
   @Get('store/:storeId/employees')
   @ApiOperation({
     summary:
@@ -58,6 +101,39 @@ export class UsersController {
   @ApiResponse({ status: 401, description: 'Não autorizado.' })
   async findEmployeesByStore(@Param('storeId') storeId: string) {
     return this.usersService.findEmployeesByStore(storeId);
+  }
+
+  @Public()
+  @Post('loyalty')
+  @ApiOperation({
+    summary:
+      'Cria/vincula loyalty account para usuário existente (público para testes)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Loyalty criado/vinculado com sucesso.',
+  })
+  async createLoyaltyForUser(@Body() body: { email?: string; id?: string }) {
+    return this.usersService.ensureLoyaltyForUser({
+      email: body.email,
+      id: body.id,
+    });
+  }
+
+  @Public()
+  @Post('code')
+  @ApiOperation({
+    summary: 'Vincula código de membro a um usuário (público para testes)',
+  })
+  @ApiResponse({ status: 200, description: 'Código vinculado com sucesso.' })
+  async setMemberCode(
+    @Body() body: { email?: string; id?: string; code: string },
+  ) {
+    return this.usersService.assignMemberCode({
+      email: body.email,
+      id: body.id,
+      code: body.code,
+    });
   }
 
   @Post()
