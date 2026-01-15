@@ -462,7 +462,7 @@ export default function TeamManagementScreen() {
                                                     borderColor: formData.role === r ? '#FF6B35' : borderColor,
                                                 }}
                                             >
-                                                <Text
+                                               <Text
                                                     style={{
                                                         textAlign: 'center',
                                                         fontWeight: '600',
