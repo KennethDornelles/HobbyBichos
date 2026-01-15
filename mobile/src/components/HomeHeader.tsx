@@ -2,6 +2,7 @@ import React from 'react';
 import { View, TouchableOpacity, TextInput, Text } from 'react-native';
 import { Search, Camera, ShoppingCart, Menu } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
+import { useUserStore } from '../store/userStore';
 
 interface HeaderProps {
     onSearchChange?: (text: string) => void;
@@ -10,10 +11,15 @@ interface HeaderProps {
     onMenuPress?: () => void;
     cartItemsCount?: number;
     hideCart?: boolean;
+    hideCamera?: boolean;
 }
 
-export const HomeHeader = React.memo(({ onSearchChange, onCameraPress, onCartPress, onMenuPress, cartItemsCount = 0, hideCart = false }: HeaderProps) => {
+export const HomeHeader = React.memo(({ onSearchChange, onCameraPress, onCartPress, onMenuPress, cartItemsCount = 0, hideCart = false, hideCamera = false }: HeaderProps) => {
     const { isDark } = useTheme();
+    const { role } = useUserStore();
+
+    // Mostrar câmera apenas se não estiver oculta E não for cliente
+    const showCamera = !hideCamera && role !== 'CLIENT';
 
     return (
         <View className="bg-primary-dark px-4 pt-2 pb-4">
@@ -32,9 +38,11 @@ export const HomeHeader = React.memo(({ onSearchChange, onCameraPress, onCartPre
                         className="flex-1 ml-3 text-white dark:text-gray-900 text-base"
                         onChangeText={onSearchChange}
                     />
-                    <TouchableOpacity onPress={onCameraPress} className="ml-2" activeOpacity={0.7}>
-                        <Camera size={24} color="#FDB813" />
-                    </TouchableOpacity>
+                    {showCamera && (
+                        <TouchableOpacity onPress={onCameraPress} className="ml-2" activeOpacity={0.7}>
+                            <Camera size={24} color="#FDB813" />
+                        </TouchableOpacity>
+                    )}
                 </View>
 
                 {/* Botão Carrinho com Badge */}

@@ -68,10 +68,10 @@ export default function AppointmentList() {
         <SafeAreaView className="flex-1" style={{ backgroundColor: colors.bgMain }} edges={["top", "left", "right"]}>
             <HomeHeader
                 onMenuPress={() => setMenuVisible(true)}
-                onCameraPress={() => console.log('Camera pressed')}
                 onCartPress={() => router.push('/carrinho')}
                 cartItemsCount={totalItems()}
                 onSearchChange={setSearch}
+                hideCamera={true}
             />
             <View className="flex-1 px-5 pt-2" style={{ paddingBottom: insets.bottom + 8 }}>
                 <View className="mb-6">

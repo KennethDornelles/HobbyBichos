@@ -292,9 +292,10 @@ const ProductSelectionScreen = (): React.ReactElement => {
             <SafeAreaView edges={['top']} style={{ backgroundColor: colors.bgMain }}>
                 <HomeHeader
                     onMenuPress={() => setMenuVisible(true)}
-                    onCameraPress={() => console.log('Camera pressed')}
+
                     onCartPress={() => router.push('/carrinho')}
                     cartItemsCount={totalItems()}
+                    hideCamera={true}
                 />
             </SafeAreaView>
 

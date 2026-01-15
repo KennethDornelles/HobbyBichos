@@ -251,9 +251,9 @@ export default function AppointmentCreate() {
         <SafeAreaView className="flex-1" style={{ backgroundColor: colors.bgMain }} edges={['top']}>
             <HomeHeader
                 onMenuPress={() => setMenuVisible(true)}
-                onCameraPress={() => console.log('Camera pressed')}
                 onCartPress={() => router.push('/carrinho')}
                 cartItemsCount={totalItems()}
+                hideCamera={true}
             />
             <View className="flex-1 p-6">
                 <Text className="text-3xl font-bold mb-8 text-center" style={{ color: colors.accentYellow }}>Novo Agendamento</Text>

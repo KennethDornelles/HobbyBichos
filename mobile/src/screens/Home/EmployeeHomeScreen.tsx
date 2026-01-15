@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, ScrollView, FlatList, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, ScrollView, FlatList, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
     Calendar,
@@ -68,9 +68,21 @@ export default function EmployeeHomeScreen() {
     const colors = useThemeColors();
     const { name, role, loadUserProfile } = useUserStore();
     const { setUser } = useAuth();
+    // ✅ Só chamar dashboard se for EMPLOYEE
     const { dashboard, loading, error, refetch } = useDashboard();
     const [menuVisible, setMenuVisible] = useState(false);
     const insets = useSafeAreaInsets();
+
+    // Verificar se é realmente employee antes de fazer requisições
+    useEffect(() => {
+        if (role && role !== 'EMPLOYEE') {
+            Alert.alert(
+                'Acesso Negado',
+                'Apenas funcionários podem acessar esta tela.',
+                [{ text: 'OK', onPress: () => router.replace('/home') }]
+            );
+        }
+    }, [role]);
 
     // Carregar perfil do usuário autenticado ao montar
     useEffect(() => {
@@ -108,13 +120,17 @@ export default function EmployeeHomeScreen() {
         console.log('Menu item selected:', label);
     };
 
+    const handleCameraPress = () => {
+        router.push('/scanner');
+    };
+
     return (
         <View className="flex-1" style={{ backgroundColor: colors.bgMain }}>
             {/* Header */}
             <SafeAreaView edges={['top']} style={{ backgroundColor: colors.bgMain }}>
                 <HomeHeader
                     onMenuPress={() => setMenuVisible(true)}
-                    onCameraPress={() => console.log('Camera pressed')}
+                    onCameraPress={handleCameraPress}
                     hideCart
                 />
             </SafeAreaView>

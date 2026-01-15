@@ -65,9 +65,9 @@ const AppointmentDetail = () => {
         <SafeAreaView className="flex-1" style={{ backgroundColor: colors.bgMain }} edges={['top']}>
             <HomeHeader
                 onMenuPress={() => setMenuVisible(true)}
-                onCameraPress={() => console.log('Camera pressed')}
                 onCartPress={() => router.push('/carrinho')}
                 cartItemsCount={totalItems()}
+                hideCamera={true}
             />
 
             {loading ? (
