@@ -3,7 +3,8 @@
     "backend",
     "mobile",
     "project",
-    "ci/cd"
+    "ci/cd",
+    "docs"
   ],
 
   // --- MATA TODOS OS SONS DE ACESSIBILIDADE ---
