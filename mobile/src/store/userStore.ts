@@ -3,23 +3,25 @@ import api from '../services/api';
 import * as SecureStore from 'expo-secure-store';
 
 interface UserState {
+  id: string;
   name: string;
   email: string;
   role?: string;
   points: number;
   loading: boolean;
-  setUser: (name: string, email: string, points: number, role?: string) => void;
+  setUser: (id: string, name: string, email: string, points: number, role?: string) => void;
   loadUserProfile: () => Promise<void>;
   reset: () => void;
 }
 
 export const useUserStore = create<UserState>((set) => ({
+  id: '',
   name: 'Visitante',
   email: '',
   role: undefined,
   points: 0,
   loading: false,
-  setUser: (name, email, points, role) => set({ name, email, points, role }),
+  setUser: (id, name, email, points, role) => set({ id, name, email, points, role }),
   
   loadUserProfile: async () => {
     // Verificar se usuário está autenticado antes de carregar
@@ -41,6 +43,7 @@ export const useUserStore = create<UserState>((set) => ({
       }>('/users/me');
       const pointsFromAccount = res.data.loyaltyAccount?.currentPoints || 0;
       set({
+        id: res.data.id || '',
         name: res.data.name || 'Visitante',
         email: res.data.email || '',
         role: res.data.role,
@@ -60,4 +63,5 @@ export const useUserStore = create<UserState>((set) => ({
   },
   
   reset: () => set({ name: 'Visitante', email: '', role: undefined, points: 0 }),
+  reset: () => set({ id: '', name: 'Visitante', email: '', role: undefined, points: 0 }),
 }));

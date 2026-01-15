@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 
 const baseURL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000/api';
@@ -8,7 +8,7 @@ export const api = axios.create({ baseURL });
 
 async function getToken(): Promise<string | null> {
   try {
-    return await SecureStore.getItemAsync('authToken');
+    return await AsyncStorage.getItem('@app:token');
   } catch {
     return null;
   }
@@ -28,7 +28,8 @@ api.interceptors.response.use(
   async (error) => {
     if (error?.response?.status === 401) {
       // token inválido/expirado
-      await SecureStore.deleteItemAsync('authToken');
+      await AsyncStorage.removeItem('@app:token');
+      await AsyncStorage.removeItem('@app:user');
       router.replace('/login');
     }
     return Promise.reject(error);

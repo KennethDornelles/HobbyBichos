@@ -74,7 +74,7 @@ const mainActions: ActionCardItem[] = [
 export default function ClientHomeScreen() {
     const router = useRouter();
     const colors = useThemeColors();
-    const { name, role, points, loadUserProfile, loading } = useUserStore();
+    const { id, name, email, role, points, loadUserProfile, loading } = useUserStore();
     const { setUser } = useAuth();
     const { totalItems } = useCartStore();
     const [menuVisible, setMenuVisible] = useState(false);
@@ -90,13 +90,14 @@ export default function ClientHomeScreen() {
     useEffect(() => {
         if (name && name !== 'Visitante') {
             setUser({
-                id: '',
+                id,
                 name,
-                email: '',
+                email,
+                points,
                 role,
             });
         }
-    }, [name, role, setUser]);
+    }, [id, name, email, points, role, setUser]);
 
     const handleQuickAction = (id: string) => {
         // Implementar navegação para cada ação

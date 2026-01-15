@@ -18,7 +18,7 @@ import CustomInput from '../../components/CustomInput';
 import { LoginFormData } from '../../types';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
-import * as SecureStore from 'expo-secure-store';
+import { useAuth } from '../../context/AuthContext';
 
 const LoginScreen: React.FC = () => {
     const { isDark } = useTheme();
@@ -29,6 +29,8 @@ const LoginScreen: React.FC = () => {
     });
     const [loading, setLoading] = useState(false);
     const router = useRouter();
+
+    const { login: authLogin } = useAuth();
 
     const handleLogin = async () => {
         // Validação básica
@@ -51,11 +53,15 @@ const LoginScreen: React.FC = () => {
                 throw new Error('Token inválido recebido do servidor');
             }
 
-            console.log('✅ Login bem-sucedido');
+            // Buscar dados do usuário autenticado
+            const userResponse = await api.get('/auth/me', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const userData = userResponse.data;
 
-            // Salvar token em SecureStore
-            await SecureStore.setItemAsync('authToken', token);
-            console.log('✅ Token salvo em SecureStore');
+            // Salvar usuário e token no AuthContext (e AsyncStorage)
+            await authLogin(userData, token);
+            console.log('✅ Login e sessão salvos:', userData.name, userData.role);
 
             // Navegar para home
             router.replace('/home');
