@@ -16,6 +16,7 @@ import {
 } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
 import { HomeHeader } from '../../components/HomeHeader';
+import { Ionicons } from '@expo/vector-icons';
 import { UserGreeting } from '../../components/UserGreeting';
 import { QuickAction } from '../../components/QuickAction';
 import { ActionCard } from '../../components/ActionCard';
@@ -135,6 +136,14 @@ export default function ClientHomeScreen() {
                     cartItemsCount={totalItems()}
                     hideCamera={true}
                 />
+                {/* Botão de notificações no topo */}
+                <TouchableOpacity
+                    style={{ position: 'absolute', top: 18, right: 24, zIndex: 10 }}
+                    onPress={() => router.push('/NotificationsScreen')}
+                    activeOpacity={0.7}
+                >
+                    <Ionicons name="notifications-outline" size={28} color={colors.accentYellow} />
+                </TouchableOpacity>
             </SafeAreaView>
 
             {/* Side Menu */}
