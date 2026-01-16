@@ -223,6 +223,7 @@ MANAGER_DASHBOARD_SUMMARY.md        ✅ Novo (este arquivo)
 
 Para dúvidas ou problemas:
 1. Consultar [MANAGER_DASHBOARD_DOCUMENTATION.md](./MANAGER_DASHBOARD_DOCUMENTATION.md)
+1. Consultar MANAGER_DASHBOARD_DOCUMENTATION.md
 2. Verificar logs da API
 3. Testar endpoints via Postman/Insomnia
 

@@ -340,6 +340,10 @@ Authorization: Bearer <TOKEN>
 - [Prisma Aggregations](https://www.prisma.io/docs/concepts/components/prisma-client/aggregation-grouping-summarizing)
 - [Expo Router](https://docs.expo.dev/router/introduction/)
 - [React Navigation](https://reactnavigation.org/)
+- NestJS Guards
+- Prisma Aggregations
+- Expo Router
+- React Navigation
 
 ---
 
