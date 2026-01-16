@@ -10,7 +10,7 @@ Implementação completa de normalização de códigos de membro (MemberCode) us
 
 ### ✔️ Tarefa 1: Atualizar `users.service.ts`
 
-**Arquivo**: [src/modules/users/users.service.ts](src/modules/users/users.service.ts)
+**Arquivo**: src/modules/users/users.service.ts
 
 **Mudanças**:
 1. ✅ Adicionado `Logger` do NestJS para rastreamento
@@ -41,7 +41,7 @@ assignMemberCode({ id: 'user1', code: '  USER123  ' });  // "  USER123  " → "U
 
 ### ✔️ Tarefa 2: Adicionar Middleware Prisma
 
-**Arquivo**: [src/database/prisma.service.ts](src/database/prisma.service.ts)
+**Arquivo**: src/database/prisma.service.ts
 
 **Mudanças**:
 1. ✅ Implementado middleware Prisma completo no método `onModuleInit()`
@@ -76,7 +76,7 @@ assignMemberCode({ id: 'user1', code: '  USER123  ' });  // "  USER123  " → "U
 
 ### ✔️ Tarefa 3: Atualizar Schema Prisma
 
-**Arquivo**: [prisma/schema.prisma](prisma/schema.prisma)
+**Arquivo**: prisma/schema.prisma
 
 **Mudanças**:
 1. ✅ Adicionados comentários explicativos acima do model `MemberCode`:
@@ -103,7 +103,7 @@ assignMemberCode({ id: 'user1', code: '  USER123  ' });  // "  USER123  " → "U
 
 ### ✔️ Tarefa 4: Adicionar Testes de Validação
 
-**Arquivo**: [src/modules/users/users.service.spec.ts](src/modules/users/users.service.spec.ts)
+**Arquivo**: src/modules/users/users.service.spec.ts
 
 **Testes Adicionados** (16 novos testes):
 
@@ -145,7 +145,7 @@ Time:        3.458 s
 
 **Implementado em**:
 
-#### 1. [src/modules/users/users.service.ts](src/modules/users/users.service.ts)
+#### 1. src/modules/users/users.service.ts
 ```typescript
 // Em findByMemberCode():
 this.logger.debug(`[MemberCode] 🎫 Buscando código: "${code}"`);

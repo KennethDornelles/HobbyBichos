@@ -1,12 +1,87 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  // URL configurada no prisma.config.ts (Prisma 7+)
+}
+
+// --- Notificações Multicanal ---
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum NotificationCategory {
+  APPOINTMENT_REMINDER
+  ORDER_CONFIRMED
+  PAYMENT_REMINDER
+  OTP
+  MARKETING
+}
+
+enum NotificationChannel {
+  PUSH
+  WHATSAPP
+  SMS
+  EMAIL
+}
+
+model Notification {
+  id         String                @id @default(uuid())
+  userId     String
+  storeId    String
+  status     NotificationStatus   @default(PENDING)
+  category   NotificationCategory
+  channel    NotificationChannel
+  payload    Json
+  error      String?
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+
+  user       User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store      Store                @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([storeId])
+  @@index([category])
+  @@map("notifications")
+}
+
+model PushToken {
+  id         String   @id @default(uuid())
+  userId     String
+  deviceId   String
+  expoToken  String
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceId])
+  @@index([expoToken])
+  @@map("push_tokens")
+}
+
+model UserNotificationPreference {
+  id         String   @id @default(uuid())
+  userId     String
+  storeId    String
+  category   NotificationCategory
+  push       Boolean  @default(true)
+  email      Boolean  @default(true)
+  sms        Boolean  @default(false)
+  whatsapp   Boolean  @default(false)
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  store      Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, storeId, category])
+  @@map("user_notification_preferences")
 }
 
 enum Role {
@@ -41,6 +116,9 @@ model Store {
   businessHours StoreBusinessHour[]
   exclusions    StoreExclusion[]
   pets          Pet[]
+
+  notifications Notification[]
+  userNotificationPreferences UserNotificationPreference[]
 
   @@map("stores")
 }
@@ -94,6 +172,10 @@ model User {
   referralsReceived        Referral[]                @relation("ReferralReferee")
   birthdayAwards           LoyaltyBirthdayAward[]
   cart                     Cart?
+
+  notifications Notification[]
+  pushTokens PushToken[]
+  userNotificationPreferences UserNotificationPreference[]
 
   @@map("users")
 }

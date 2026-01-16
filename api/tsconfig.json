@@ -22,5 +22,12 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false
   },
-  "exclude": ["node_modules", "dist", "coverage", "jest.config.js"]
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs",
+      "moduleResolution": "node",
+      "resolvePackageJsonExports": false
+    }
+  },
+  "exclude": ["node_modules", "dist", "coverage", "jest.config.js", "prisma", "prisma.config.ts"]
 }

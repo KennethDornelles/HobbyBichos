@@ -28,7 +28,12 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
   async validate(
     payload: UserPayload,
-  ): Promise<{ id: string; role: string; storeId: string | null; email: string }> {
+  ): Promise<{
+    id: string;
+    role: string;
+    storeId: string | null;
+    email: string;
+  }> {
     this.logger.debug(`Validando payload do JWT: ${JSON.stringify(payload)}`);
     // Busca o usuário atualizado no banco de dados
     const user = await this.prisma.user.findUnique({
@@ -43,7 +48,9 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     if (!user) {
       throw new UnauthorizedException('Usuário não encontrado');
     }
-    this.logger.debug(`Usuário atualizado do banco: ${user.email} (role: ${user.role})`);
+    this.logger.debug(
+      `Usuário atualizado do banco: ${user.email} (role: ${user.role})`,
+    );
     return {
       id: user.id,
       email: user.email,

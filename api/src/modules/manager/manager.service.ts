@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -925,7 +929,9 @@ export class ManagerService {
     if (roleFilter) {
       where.role = roleFilter as Role;
       if (!allowedRoles.includes(roleFilter as Role)) {
-        throw new ForbiddenException('Você não tem permissão para visualizar esses usuários');
+        throw new ForbiddenException(
+          'Você não tem permissão para visualizar esses usuários',
+        );
       }
     } else {
       where.role = { in: allowedRoles };
@@ -971,7 +977,9 @@ export class ManagerService {
     }
 
     if (!this.canManageRole(managerRole, user.role)) {
-      throw new ForbiddenException('Você não tem permissão para visualizar este usuário');
+      throw new ForbiddenException(
+        'Você não tem permissão para visualizar este usuário',
+      );
     }
 
     // Validar que o usuário pertence à loja (exceto CLIENTs)
@@ -986,7 +994,9 @@ export class ManagerService {
     const targetRole = data.role as string;
 
     if (!this.canManageRole(managerRole, targetRole)) {
-      throw new ForbiddenException('Você não tem permissão para criar usuários com este papel');
+      throw new ForbiddenException(
+        'Você não tem permissão para criar usuários com este papel',
+      );
     }
 
     // Verificar se email ou telefone já existe
@@ -1041,7 +1051,9 @@ export class ManagerService {
     }
 
     if (!this.canManageRole(managerRole, user.role)) {
-      throw new ForbiddenException('Você não tem permissão para editar este usuário');
+      throw new ForbiddenException(
+        'Você não tem permissão para editar este usuário',
+      );
     }
 
     // Validar que o usuário pertence à loja (exceto CLIENTs)
@@ -1069,7 +1081,9 @@ export class ManagerService {
       const targetRole = data.role as string;
       if (['OWNER', 'SUPER_ADMIN'].includes(managerRole)) {
         if (!this.canManageRole(managerRole, targetRole)) {
-          throw new ForbiddenException('Você não tem permissão para atribuir este papel');
+          throw new ForbiddenException(
+            'Você não tem permissão para atribuir este papel',
+          );
         }
         updateData.role = targetRole as Role;
       } else if (managerRole === 'MANAGER') {
@@ -1078,7 +1092,9 @@ export class ManagerService {
         if (allowed.includes(user.role) && allowed.includes(targetRole)) {
           updateData.role = targetRole as Role;
         } else {
-          throw new ForbiddenException('MANAGER só pode promover/demover entre EMPLOYEE e MANAGER');
+          throw new ForbiddenException(
+            'MANAGER só pode promover/demover entre EMPLOYEE e MANAGER',
+          );
         }
       }
     }
@@ -1110,7 +1126,9 @@ export class ManagerService {
     }
 
     if (!this.canManageRole(managerRole, user.role)) {
-      throw new ForbiddenException('Você não tem permissão para remover este usuário');
+      throw new ForbiddenException(
+        'Você não tem permissão para remover este usuário',
+      );
     }
 
     // Validar que o usuário pertence à loja (exceto CLIENTs)

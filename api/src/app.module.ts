@@ -21,6 +21,7 @@ import { OrdersModule } from './modules/orders/orders.module'; // ← ADICIONE E
 import { CartModule } from './modules/cart/cart.module';
 import { LoyaltyModule } from './modules/loyalty/loyalty.module';
 import { ManagerModule } from './modules/manager/manager.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { ManagerModule } from './modules/manager/manager.module';
     CartModule,
     LoyaltyModule,
     ManagerModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

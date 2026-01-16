@@ -4,7 +4,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 
-import { PrismaClient, Role, Store, Product } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
@@ -116,7 +116,7 @@ async function main(): Promise<void> {
       },
     ];
 
-    const stores: Store[] = [];
+    const stores: any[] = [];
     for (const data of storeData) {
       const store = await prisma.store.create({ data });
       stores.push(store);
@@ -164,7 +164,7 @@ async function main(): Promise<void> {
         email: 'admin@hobbybichos.com',
         password: passwordHash,
         phone: '00000000000',
-        role: Role.SUPER_ADMIN,
+        role: 'SUPER_ADMIN',
       },
     });
 
@@ -173,14 +173,14 @@ async function main(): Promise<void> {
         where: { email: `owner.${store.slug}@hobbybichos.com` },
         update: {
           storeId: store.id,
-          role: Role.OWNER,
+          role: 'OWNER',
         },
         create: {
           name: `Dono ${store.name}`,
           email: `owner.${store.slug}@hobbybichos.com`,
           password: passwordHash,
           phone: `839${Math.floor(10000000 + Math.random() * 90000000)}`,
-          role: Role.OWNER,
+          role: 'OWNER',
           storeId: store.id,
         },
       });
@@ -190,14 +190,14 @@ async function main(): Promise<void> {
         where: { email: `employee.${store.slug}@hobbybichos.com` },
         update: {
           storeId: store.id,
-          role: Role.EMPLOYEE,
+          role: 'EMPLOYEE',
         },
         create: {
           name: `Funcionário ${store.name}`,
           email: `employee.${store.slug}@hobbybichos.com`,
           password: passwordHash,
           phone: `839${Math.floor(10000000 + Math.random() * 90000000)}`,
-          role: Role.EMPLOYEE,
+          role: 'EMPLOYEE',
           storeId: store.id,
         },
       });
@@ -336,7 +336,7 @@ async function main(): Promise<void> {
       },
     ];
 
-    const products: Product[] = [];
+    const products: any[] = [];
     for (const data of productData) {
       const product = await prisma.product.create({ data });
       products.push(product);
@@ -374,8 +374,8 @@ async function main(): Promise<void> {
         email: 'test@qa.com',
         password: passwordHash,
         phone: '11999999999',
-        role: Role.OWNER,
-        storeId: 'store1',
+        role: 'OWNER',
+        storeId: 'hobby_geisel',
       },
     });
 
@@ -388,8 +388,8 @@ async function main(): Promise<void> {
         email: 'client@qa.com',
         password: await bcrypt.hash('Senha123!', 10),
         phone: '11999999998',
-        role: Role.CLIENT,
-        storeId: 'store1',
+        role: 'CLIENT',
+        storeId: 'hobby_geisel',
       },
     });
 

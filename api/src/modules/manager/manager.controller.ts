@@ -243,10 +243,7 @@ export class ManagerController {
 
   @Post('users')
   @ApiOperation({ summary: 'Criar novo usuário (equipe ou cliente)' })
-  async createUser(
-    @Req() req: AuthRequest,
-    @Body() data: any,
-  ): Promise<any> {
+  async createUser(@Req() req: AuthRequest, @Body() data: any): Promise<any> {
     const storeId = req.user.storeId;
     const userRole = req.user.role;
     return this.managerService.createUser(storeId, userRole, data);
