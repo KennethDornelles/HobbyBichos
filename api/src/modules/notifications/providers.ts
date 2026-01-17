@@ -3,9 +3,12 @@ import { Expo } from 'expo-server-sdk';
 export class PushProvider {
   private expo = new Expo();
 
-  async send(tokens: string[], message: { title: string; body: string; data?: any }): Promise<boolean> {
+  async send(
+    tokens: string[],
+    message: { title: string; body: string; data?: any },
+  ): Promise<boolean> {
     if (!tokens || tokens.length === 0) return false;
-    
+
     const messages = tokens
       .filter((token) => Expo.isExpoPushToken(token))
       .map((token) => ({
@@ -15,9 +18,9 @@ export class PushProvider {
         body: message.body,
         data: message.data || {},
       }));
-    
+
     if (messages.length === 0) return false;
-    
+
     try {
       const chunks = this.expo.chunkPushNotifications(messages);
       for (const chunk of chunks) {

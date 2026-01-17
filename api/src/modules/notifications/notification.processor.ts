@@ -1,4 +1,4 @@
-import { Processor } from '@nestjs/bullmq';
+import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
@@ -11,7 +11,7 @@ import {
 import type { NotificationCategory, NotificationChannel } from '@prisma/client';
 
 @Processor('notification_queue')
-export class NotificationProcessor {
+export class NotificationProcessor extends WorkerHost {
   private readonly logger = new Logger(NotificationProcessor.name);
 
   private pushProvider = new PushProvider();
@@ -19,14 +19,17 @@ export class NotificationProcessor {
   private smsProvider = new SmsProvider();
   private emailProvider = new EmailProvider();
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {
+    super();
+  }
 
-  async process(job: Job) {
-    const { userId, storeId, category, payload } = job.data as {
+  async process(job: Job): Promise<any> {
+    const { userId, storeId, category, payload, notificationId } = job.data as {
       userId: string;
       storeId: string;
       category: NotificationCategory;
       payload: any;
+      notificationId?: string;
     };
     this.logger.log(
       `Processando notificação para user ${userId}, categoria ${category}`,
@@ -50,16 +53,10 @@ export class NotificationProcessor {
           tokens.map((t) => t.expoToken),
           payload,
         );
-        if (pushOk) {
-          await this.prisma.notification.create({
-            data: {
-              userId,
-              storeId,
-              status: 'SENT',
-              category,
-              channel: 'PUSH',
-              payload,
-            },
+        if (pushOk && notificationId) {
+          await this.prisma.notification.update({
+            where: { id: notificationId },
+            data: { status: 'SENT', channel: 'PUSH' },
           });
           return { status: 'sent', channel: 'PUSH' };
         }
@@ -83,16 +80,10 @@ export class NotificationProcessor {
       const waOk = user?.phone
         ? await this.whatsappProvider.send(user.phone, templateId, payload)
         : false;
-      if (waOk) {
-        await this.prisma.notification.create({
-          data: {
-            userId,
-            storeId,
-            status: 'SENT',
-            category,
-            channel: 'WHATSAPP',
-            payload,
-          },
+      if (waOk && notificationId) {
+        await this.prisma.notification.update({
+          where: { id: notificationId },
+          data: { status: 'SENT', channel: 'WHATSAPP' },
         });
         return { status: 'sent', channel: 'WHATSAPP' };
       }
@@ -101,23 +92,18 @@ export class NotificationProcessor {
     // 4. SMS (Zenvia) para OTP ou fallback urgente
     if (
       (!preferences || preferences.sms) &&
-      (category === 'OTP' || ['APPOINTMENT_REMINDER', 'PAYMENT_REMINDER'].includes(category))
+      (category === 'OTP' ||
+        ['APPOINTMENT_REMINDER', 'PAYMENT_REMINDER'].includes(category))
     ) {
       const user = await this.prisma.user.findUnique({ where: { id: userId } });
       this.logger.log('Enviando SMS via Zenvia');
       const smsOk = user?.phone
         ? await this.smsProvider.send(user.phone, payload?.message || '')
         : false;
-      if (smsOk) {
-        await this.prisma.notification.create({
-          data: {
-            userId,
-            storeId,
-            status: 'SENT',
-            category,
-            channel: 'SMS',
-            payload,
-          },
+      if (smsOk && notificationId) {
+        await this.prisma.notification.update({
+          where: { id: notificationId },
+          data: { status: 'SENT', channel: 'SMS' },
         });
         return { status: 'sent', channel: 'SMS' };
       }
@@ -134,33 +120,25 @@ export class NotificationProcessor {
             payload?.message || '',
           )
         : false;
-      if (emailOk) {
-        await this.prisma.notification.create({
-          data: {
-            userId,
-            storeId,
-            status: 'SENT',
-            category,
-            channel: 'EMAIL' as NotificationChannel,
-            payload,
-          },
+      if (emailOk && notificationId) {
+        await this.prisma.notification.update({
+          where: { id: notificationId },
+          data: { status: 'SENT', channel: 'EMAIL' as NotificationChannel },
         });
         return { status: 'sent', channel: 'EMAIL' };
       }
     }
 
     // Se nada foi enviado
-    await this.prisma.notification.create({
-      data: {
-        userId,
-        storeId,
-        status: 'FAILED',
-        category,
-        channel: 'PUSH' as NotificationChannel, // fallback para PUSH, pode ser ajustado
-        payload,
-        error: 'Nenhum canal disponível ou permitido',
-      },
-    });
+    if (notificationId) {
+      await this.prisma.notification.update({
+        where: { id: notificationId },
+        data: {
+          status: 'FAILED',
+          error: 'Nenhum canal disponível ou permitido',
+        },
+      });
+    }
     return { status: 'failed', reason: 'Nenhum canal disponível ou permitido' };
   }
 }

@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { BullModule } from '@nestjs/bullmq';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -26,6 +27,17 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        connection: {
+          host: configService.get('REDIS_HOST') || 'redis',
+          port: Number(configService.get('REDIS_PORT')) || 6379,
+          password: configService.get('REDIS_PASSWORD'),
+        },
+      }),
+      inject: [ConfigService],
+    }),
     MailerModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (config: ConfigService) => ({

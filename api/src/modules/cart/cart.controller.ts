@@ -10,21 +10,30 @@ import {
 import { CartService } from './cart.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../../decorators/current-user.decorator';
+import { IsArray, IsNotEmpty, IsNumber, IsUUID, Min, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class AddItemDto {
+  @IsUUID()
+  @IsNotEmpty()
   productId: string;
+
+  @IsNumber()
+  @Min(1)
   quantity: number;
 }
 
 export class UpdateQuantityDto {
+  @IsNumber()
+  @Min(1)
   quantity: number;
 }
 
 export class SyncCartDto {
-  items: Array<{
-    productId: string;
-    quantity: number;
-  }>;
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => AddItemDto) // Reutilizando a estrutura de AddItemDto que já tem productId e quantity
+  items: AddItemDto[];
 }
 
 @Controller('cart')
