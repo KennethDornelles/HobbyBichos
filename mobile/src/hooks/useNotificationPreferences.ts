@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { api } from '../services/api';
 
 export function useNotificationPreferences(userId: string, storeId: string) {
   const [prefs, setPrefs] = useState<any>({});
@@ -7,8 +8,8 @@ export function useNotificationPreferences(userId: string, storeId: string) {
   useEffect(() => {
     if (!userId || !storeId) return;
     setLoading(true);
-    fetch(`https://SEU_BACKEND_URL/notifications/preferences?userId=${userId}&storeId=${storeId}`)
-      .then(res => res.json())
+    api.get(`/notifications/preferences`, { params: { userId, storeId } })
+      .then(res => res.data)
       .then(data => {
         // Transforma array em objeto por categoria
         const obj: any = {};
@@ -33,17 +34,13 @@ export function useNotificationPreferences(userId: string, storeId: string) {
         [channel]: value,
       },
     }));
-    await fetch('https://SEU_BACKEND_URL/notifications/preferences', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
+    await api.put('/notifications/preferences', {
         userId,
         storeId,
         category,
         ...prefs[category],
         [channel]: value,
-      }),
-    });
+      });
   };
 
   return { prefs, loading, updatePref };

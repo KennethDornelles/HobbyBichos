@@ -1,13 +1,11 @@
 import axios from 'axios';
 import * as SecureStore from 'expo-secure-store';
 
-// ⚠️ IMPORTANTE: Substitua pelo IP da sua máquina que você pegou no passo 1.
-// Não use 'localhost' se for testar no celular físico.
-// Exemplo: 'http://192.168.1.15:3000'
-const API_URL = 'http://192.168.0.5:3000/api'; 
-
-// Se estiver usando APENAS o emulador do Android Studio, pode usar:
-// const API_URL = 'http://10.0.2.2:3000';
+// A URL da API é definida pela variável de ambiente EXPO_PUBLIC_API_URL.
+// Isso permite configurar a URL para diferentes ambientes (desenvolvimento, produção)
+// sem precisar alterar o código.
+// O fallback para 'http://10.0.2.2:3000/api' é para desenvolvimento local com emulador Android.
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:3000/api';
 
 export const api = axios.create({
   baseURL: API_URL,

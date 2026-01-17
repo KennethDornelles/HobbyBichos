@@ -1,3 +1,4 @@
+import { api } from '../services/api';
 import { useEffect, useRef, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
@@ -13,10 +14,10 @@ export function usePushNotifications(userId: string, deviceId: string) {
     registerForPushNotificationsAsync().then(token => {
       setExpoPushToken(token);
       if (token && userId && deviceId) {
-        fetch('https://SEU_BACKEND_URL/notifications/register-token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, deviceId, expoToken: token }),
+        api.post('/notifications/register-token', {
+          userId,
+          deviceId,
+          expoToken: token,
         });
       }
     });

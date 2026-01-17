@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { api } from '../services/api';
 
 export function useUserNotifications(userId: string, storeId: string) {
   const [notifications, setNotifications] = useState<any[]>([]);
@@ -7,8 +8,8 @@ export function useUserNotifications(userId: string, storeId: string) {
   useEffect(() => {
     if (!userId || !storeId) return;
     setLoading(true);
-    fetch(`https://SEU_BACKEND_URL/notifications/user?userId=${userId}&storeId=${storeId}`)
-      .then(res => res.json())
+    api.get(`/notifications/user`, { params: { userId, storeId } })
+      .then(res => res.data)
       .then(data => setNotifications(data))
       .finally(() => setLoading(false));
   }, [userId, storeId]);

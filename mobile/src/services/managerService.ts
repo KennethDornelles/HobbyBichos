@@ -1,7 +1,4 @@
-import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://10.0.2.2:3333';
+import { api } from './api';
 
 export interface DashboardSummary {
   todayAppointments: number;
@@ -110,36 +107,19 @@ export interface EmployeePerformance {
 }
 
 class ManagerService {
-  private async getAuthToken(): Promise<string> {
-    const token = await SecureStore.getItemAsync('authToken');
-    if (!token) {
-      throw new Error('Token de autenticação não encontrado');
-    }
-    return token;
-  }
-
   // ==================== DASHBOARD ====================
   
   async getDashboard(): Promise<ManagerDashboard> {
-    const token = await this.getAuthToken();
-    const response = await axios.get(`${API_URL}/manager/dashboard`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get(`/manager/dashboard`);
     return response.data;
   }
 
   async getFinancialDashboard(startDate?: string, endDate?: string): Promise<FinancialDashboard> {
-    const token = await this.getAuthToken();
     const params: any = {};
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
     
-    const response = await axios.get(`${API_URL}/manager/dashboard/financial`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await api.get(`/manager/dashboard/financial`, {
       params,
     });
     return response.data;
@@ -148,22 +128,12 @@ class ManagerService {
   // ==================== GESTÃO DE SERVIÇOS ====================
   
   async getServices(): Promise<ServiceWithStats[]> {
-    const token = await this.getAuthToken();
-    const response = await axios.get(`${API_URL}/manager/services`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get(`/manager/services`);
     return response.data;
   }
 
   async getServiceById(serviceId: string): Promise<ServiceWithStats> {
-    const token = await this.getAuthToken();
-    const response = await axios.get(`${API_URL}/manager/services/${serviceId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.get(`/manager/services/${serviceId}`);
     return response.data;
   }
 
@@ -173,12 +143,7 @@ class ManagerService {
     durationMin?: number;
     isActive?: boolean;
   }): Promise<ServiceWithStats> {
-    const token = await this.getAuthToken();
-    const response = await axios.post(`${API_URL}/manager/services`, data, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.post(`/manager/services`, data);
     return response.data;
   }
 
@@ -188,55 +153,33 @@ class ManagerService {
     durationMin?: number;
     isActive?: boolean;
   }): Promise<ServiceWithStats> {
-    const token = await this.getAuthToken();
-    const response = await axios.put(`${API_URL}/manager/services/${serviceId}`, data, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.put(`/manager/services/${serviceId}`, data);
     return response.data;
   }
 
   async deactivateService(serviceId: string): Promise<ServiceWithStats> {
-    const token = await this.getAuthToken();
-    const response = await axios.delete(`${API_URL}/manager/services/${serviceId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await api.delete(`/manager/services/${serviceId}`);
     return response.data;
   }
 
   // ==================== FINANCEIRO ====================
   
   async getRevenue(period: 'today' | 'week' | 'month' | 'year' = 'month'): Promise<RevenueData> {
-    const token = await this.getAuthToken();
-    const response = await axios.get(`${API_URL}/manager/financial/revenue`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await api.get(`/manager/financial/revenue`, {
       params: { period },
     });
     return response.data;
   }
 
   async getTopProducts(limit: number = 10): Promise<TopProduct[]> {
-    const token = await this.getAuthToken();
-    const response = await axios.get(`${API_URL}/manager/financial/top-products`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await api.get(`/manager/financial/top-products`, {
       params: { limit },
     });
     return response.data;
   }
 
   async getTopServices(limit: number = 10): Promise<TopService[]> {
-    const token = await this.getAuthToken();
-    const response = await axios.get(`${API_URL}/manager/financial/top-services`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await api.get(`/manager/financial/top-services`, {
       params: { limit },
     });
     return response.data;
@@ -246,15 +189,11 @@ class ManagerService {
     period: { start: string; end: string };
     employees: EmployeePerformance[];
   }> {
-    const token = await this.getAuthToken();
     const params: any = {};
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
     
-    const response = await axios.get(`${API_URL}/manager/reports/employee-performance`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await api.get(`/manager/reports/employee-performance`, {
       params,
     });
     return response.data;
