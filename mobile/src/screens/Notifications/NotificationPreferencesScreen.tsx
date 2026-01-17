@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Switch, StyleSheet, SafeAreaView, StatusBar, FlatList, ActivityIndicator } from 'react-native';
-import { useNotificationPreferences } from '../hooks/useNotificationPreferences';
+import { useNotificationPreferences } from '../../hooks/useNotificationPreferences';
 
 // Mock de categorias e canais (substitua por fetch da API futuramente)
 const categories = [

@@ -255,9 +255,9 @@ export const TopBar: React.FC<any> = ({
                 onChangeText={onSearchChange}
             />
         </View>
-        <TouchableOpacity onPress={onBellPress} style={styles.iconBtn}>
+        {/* <TouchableOpacity onPress={onBellPress} style={styles.iconBtn}>
             <Ionicons name="notifications-outline" size={24} color="#FFF" />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
     </View>
 );
 

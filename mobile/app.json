@@ -31,7 +31,8 @@
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
         "android.permission.FOREGROUND_SERVICE",
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ],
       "config": {
         "googleMaps": {
@@ -54,6 +55,12 @@
         }
       ]
     ],
-    "scheme": "mobile"
+    "scheme": "mobile",
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "cec4d8ed-7796-4121-aab6-6bf93eb597ef"
+      }
+    }
   }
 }

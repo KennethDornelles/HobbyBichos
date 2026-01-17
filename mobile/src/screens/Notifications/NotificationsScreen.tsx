@@ -1,9 +1,9 @@
-
 import React, { useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, SafeAreaView, StatusBar, ActivityIndicator } from 'react-native';
-import { usePushNotifications } from '../hooks/usePushNotifications';
-import { useUserNotifications } from '../hooks/useUserNotifications';
+import { View, Text, FlatList, StyleSheet, SafeAreaView, StatusBar, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { usePushNotifications } from '../../hooks/usePushNotifications';
+import { useUserNotifications } from '../../hooks/useUserNotifications';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
 export default function NotificationsScreen() {
   // Substitua por dados reais do usuário/dispositivo
@@ -12,6 +12,7 @@ export default function NotificationsScreen() {
   const deviceId = 'DEVICE_ID';
   const { notification } = usePushNotifications(userId, deviceId);
   const { notifications, loading } = useUserNotifications(userId, storeId);
+  const router = useRouter();
 
   useEffect(() => {
     if (notification) {
@@ -35,16 +36,21 @@ export default function NotificationsScreen() {
           data={notifications}
           keyExtractor={item => item.id}
           renderItem={({ item }) => (
-            <View style={styles.card}>
-              <View style={styles.iconWrap}>
-                <Ionicons name={getIcon(item.category)} size={32} color="#FFD600" />
+            <TouchableOpacity
+              onPress={() => router.push(`/notifications/${item.id}`)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.card}>
+                <View style={styles.iconWrap}>
+                  <Ionicons name={getIcon(item.category)} size={32} color="#FFD600" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.title}>{item.category.replace('_', ' ')}</Text>
+                  <Text style={styles.message}>{item.payload?.message || '-'}</Text>
+                </View>
+                <Ionicons name="checkmark-circle" size={28} color="#FFD600" />
               </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.title}>{item.category.replace('_', ' ')}</Text>
-                <Text style={styles.message}>{item.payload?.message || '-'}</Text>
-              </View>
-              <Ionicons name="checkmark-circle" size={28} color="#FFD600" />
-            </View>
+            </TouchableOpacity>
           )}
           contentContainerStyle={{ paddingBottom: 32 }}
         />
@@ -64,7 +70,6 @@ function getIcon(category: string) {
     default:
       return 'notifications';
   }
-}
 }
 
 const styles = StyleSheet.create({

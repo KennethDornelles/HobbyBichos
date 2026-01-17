@@ -134,14 +134,6 @@ export default function EmployeeHomeScreen() {
                     onCameraPress={handleCameraPress}
                     hideCart
                 />
-                {/* Botão de notificações no topo */}
-                <TouchableOpacity
-                    style={{ position: 'absolute', top: 18, right: 24, zIndex: 10 }}
-                    onPress={() => router.push('/NotificationsScreen')}
-                    activeOpacity={0.7}
-                >
-                    <Ionicons name="notifications-outline" size={28} color={colors.accentYellow} />
-                </TouchableOpacity>
             </SafeAreaView>
 
             {/* Side Menu */}

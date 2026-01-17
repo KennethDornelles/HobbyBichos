@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, TouchableOpacity, TextInput, Text } from 'react-native';
-import { Search, Camera, ShoppingCart, Menu } from 'lucide-react-native';
+import { Search, Camera, ShoppingCart, Menu, Bell } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useUserStore } from '../store/userStore';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { api } from '../services/api';
 
 interface HeaderProps {
     onSearchChange?: (text: string) => void;
@@ -16,10 +18,26 @@ interface HeaderProps {
 
 export const HomeHeader = React.memo(({ onSearchChange, onCameraPress, onCartPress, onMenuPress, cartItemsCount = 0, hideCart = false, hideCamera = false }: HeaderProps) => {
     const { isDark } = useTheme();
-    const { role } = useUserStore();
+    const { role, id: userId } = useUserStore();
+    const router = useRouter();
+    const [unreadCount, setUnreadCount] = useState(0);
 
-    // Mostrar câmera apenas se não estiver oculta E não for cliente
-    const showCamera = !hideCamera && role !== 'CLIENT';
+    useFocusEffect(
+        useCallback(() => {
+            if (!userId) return;
+
+            const fetchNotifications = async () => {
+                try {
+                    const response = await api.get('/notifications/user', { params: { userId } });
+                    const unread = response.data.filter((n: any) => !n.read).length;
+                    setUnreadCount(unread);
+                } catch (error) {
+                    console.error('Erro ao buscar notificações:', error);
+                }
+            };
+            fetchNotifications();
+        }, [userId])
+    );
 
     return (
         <View className="bg-primary-dark px-4 pt-2 pb-4">
@@ -38,12 +56,31 @@ export const HomeHeader = React.memo(({ onSearchChange, onCameraPress, onCartPre
                         className="flex-1 ml-3 text-white dark:text-gray-900 text-base"
                         onChangeText={onSearchChange}
                     />
-                    {showCamera && (
+                    {(!hideCamera && role !== 'CLIENT') && (
                         <TouchableOpacity onPress={onCameraPress} className="ml-2" activeOpacity={0.7}>
                             <Camera size={24} color="#FDB813" />
                         </TouchableOpacity>
                     )}
                 </View>
+
+                {/* Botão Notificações */}
+                <TouchableOpacity
+                    onPress={() => router.push('/notifications')}
+                    className="ml-2"
+                    activeOpacity={0.7}
+                    accessibilityLabel="Notificações"
+                >
+                    <View>
+                        <Bell size={28} color="#FDB813" strokeWidth={2} />
+                        {unreadCount > 0 && (
+                            <View className="absolute -top-1 -right-1 bg-red-500 rounded-full min-w-[18px] h-[18px] items-center justify-center px-1 border border-white dark:border-gray-900">
+                                <Text className="text-white text-[10px] font-bold">
+                                    {unreadCount > 99 ? '99+' : unreadCount}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                </TouchableOpacity>
 
                 {/* Botão Carrinho com Badge */}
                 {!hideCart && (
