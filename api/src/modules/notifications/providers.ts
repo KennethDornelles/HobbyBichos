@@ -1,4 +1,5 @@
 import { Expo } from 'expo-server-sdk';
+import { Resend } from 'resend';
 
 export class PushProvider {
   private expo = new Expo();
@@ -32,7 +33,7 @@ export class PushProvider {
       return false;
     }
   }
-} // ✅ Apenas UMA chave de fechamento
+}
 
 export class WhatsAppProvider {
   async send(phone: string, templateId: string, params: any): Promise<boolean> {
@@ -49,8 +50,28 @@ export class SmsProvider {
 }
 
 export class EmailProvider {
+  private resend: Resend;
+  private from: string;
+
+  constructor(apiKey: string, from: string) {
+    this.resend = new Resend(apiKey);
+    this.from = from;
+  }
+
   async send(email: string, subject: string, body: string): Promise<boolean> {
-    // TODO: Integrar com SendGrid
-    return true;
+    try {
+      if (!email) return false;
+
+      await this.resend.emails.send({
+        from: this.from,
+        to: email.trim().toLowerCase(),
+        subject,
+        html: body,
+      });
+      return true;
+    } catch (err) {
+      console.error('Erro ao enviar e-mail via Resend:', err);
+      return false;
+    }
   }
 }

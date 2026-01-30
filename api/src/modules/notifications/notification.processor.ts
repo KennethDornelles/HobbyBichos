@@ -1,6 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../database/prisma.service';
 import {
   PushProvider,
@@ -14,13 +15,23 @@ import type { NotificationCategory, NotificationChannel } from '@prisma/client';
 export class NotificationProcessor extends WorkerHost {
   private readonly logger = new Logger(NotificationProcessor.name);
 
-  private pushProvider = new PushProvider();
-  private whatsappProvider = new WhatsAppProvider();
-  private smsProvider = new SmsProvider();
-  private emailProvider = new EmailProvider();
+  private pushProvider: PushProvider;
+  private whatsappProvider: WhatsAppProvider;
+  private smsProvider: SmsProvider;
+  private emailProvider: EmailProvider;
 
-  constructor(private readonly prisma: PrismaService) {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {
     super();
+    this.pushProvider = new PushProvider();
+    this.whatsappProvider = new WhatsAppProvider();
+    this.smsProvider = new SmsProvider();
+    
+    const resendKey = this.configService.get<string>('RESEND_API_KEY') || '';
+    const mailFrom = this.configService.get<string>('MAIL_FROM') || 'Hobby Bichos <onboarding@resend.dev>';
+    this.emailProvider = new EmailProvider(resendKey, mailFrom);
   }
 
   async process(job: Job): Promise<any> {

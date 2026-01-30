@@ -14,9 +14,11 @@ export interface AppointmentMailData {
 @Injectable()
 export class MailService {
   private resend: Resend;
+  private from: string;
 
   constructor(private readonly configService: ConfigService) {
     const apiKey = this.configService.get<string>('RESEND_API_KEY');
+    this.from = this.configService.get<string>('MAIL_FROM') || 'Hobby Bichos <onboarding@resend.dev>';
     if (!apiKey) {
       console.warn('RESEND_API_KEY not found. MailService will not send emails.');
     }
@@ -64,7 +66,7 @@ export class MailService {
       });
 
       await this.resend.emails.send({
-        from: 'Hobby Bichos <onboarding@resend.dev>', // Update this to your verified domain later
+        from: this.from,
         to: sanitizedTo,
         subject: 'Confirmação de Agendamento',
         html,
@@ -92,7 +94,7 @@ export class MailService {
       });
 
       await this.resend.emails.send({
-        from: 'Hobby Bichos <onboarding@resend.dev>',
+        from: this.from,
         to: sanitizedTo,
         subject: 'Lembrete: Seu agendamento é amanhã!',
         html,
@@ -122,7 +124,7 @@ export class MailService {
       });
 
       await this.resend.emails.send({
-        from: 'Hobby Bichos <onboarding@resend.dev>',
+        from: this.from,
         to: sanitizedTo,
         subject: 'Seu pet está pronto!',
         html,
@@ -158,7 +160,7 @@ export class MailService {
       });
 
       await this.resend.emails.send({
-        from: 'Hobby Bichos <onboarding@resend.dev>',
+        from: this.from,
         to: sanitizedTo,
         subject: 'Serviço Concluído - Obrigado!',
         html,

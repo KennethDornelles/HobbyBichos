@@ -6,9 +6,13 @@ import helmet from 'helmet';
 
 import { PrismaExceptionFilter } from './common/filters/prisma-exception.filter';
 import { GlobalHttpExceptionFilter } from './common/filters/http-exception.filter';
+import { WinstonLoggerService } from './common/logger/winston-logger.service';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: new WinstonLoggerService(),
+  });
 
   // Security: Helmet for HTTP headers
   app.use(helmet());
@@ -29,6 +33,7 @@ async function bootstrap() {
       }
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
+        return; // Fixed: added return
       } else {
         callback(new Error(`Origin ${origin} not allowed by CORS`));
       }
@@ -45,10 +50,14 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  app.useGlobalInterceptors(new LoggingInterceptor());
+
   app.useGlobalFilters(
     new PrismaExceptionFilter(),
     new GlobalHttpExceptionFilter(),
   );
+
   app.setGlobalPrefix('api');
 
   // Swagger Config
@@ -77,4 +86,3 @@ async function bootstrap() {
   console.log(`📚 Swagger docs at http://localhost:${port}/api/docs`);
 }
 void bootstrap();
-

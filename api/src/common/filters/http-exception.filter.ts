@@ -4,25 +4,14 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
+  Logger,
 } from '@nestjs/common';
-import { Response } from 'express';
-import winston from 'winston';
-
-const logger = winston.createLogger({
-  level: 'error',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json(),
-  ),
-  transports: [
-    new winston.transports.Console(),
-    // Adicione outros transports se desejar, como arquivo
-  ],
-});
+import { Response, Request } from 'express';
 
 @Catch()
 export class GlobalHttpExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(GlobalHttpExceptionFilter.name);
+
   catch(exception: any, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
@@ -46,10 +35,14 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
       } else {
         message = 'Erro desconhecido';
       }
+    } else if (exception instanceof Error) {
+        // If it's not a HttpException but is an Error (like a syntax error or a bug), treat as 500
+        status = HttpStatus.INTERNAL_SERVER_ERROR;
+        message = exception.message;
     }
 
     // Loga todos os erros, independente do status e ambiente
-    logger.error('Erro HTTP capturado', {
+    this.logger.error(`Erro HTTP capturado: ${message}`, {
       status,
       url: request.url,
       exception:
