@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Get, UseGuards } from '@nestjs/common';
+import { Controller, Post, Body, Get, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { PasswordForgotService } from './password-forgot.service';
 import {
@@ -11,6 +11,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { PasswordForgotDto } from './dto/password-forgot.dto';
 import { PasswordResetDto } from './dto/password-reset.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { Public } from '../../decorators/public.decorator';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from '../../decorators/current-user.decorator';
@@ -66,6 +67,10 @@ export class AuthController {
           type: 'string',
           example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
         },
+        refresh_token: {
+          type: 'string',
+          example: 'a1b2c3d4e5f6...',
+        },
         user: {
           type: 'object',
           properties: {
@@ -93,7 +98,7 @@ export class AuthController {
   @Post('login')
   @ApiOperation({ summary: 'Login e geração de token JWT' })
   @ApiResponse({
-    status: 200,
+    status: 201,
     description: 'Login realizado com sucesso',
     schema: {
       type: 'object',
@@ -101,6 +106,10 @@ export class AuthController {
         access_token: {
           type: 'string',
           example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+        },
+        refresh_token: {
+          type: 'string',
+          example: 'a1b2c3d4e5f6...',
         },
         user: {
           type: 'object',
@@ -120,11 +129,62 @@ export class AuthController {
   })
   @ApiResponse({ status: 401, description: 'Email ou senha inválidos' })
   async login(@Body() loginDto: LoginDto) {
-    console.log('[LOGIN] Dados recebidos do front:', {
-      email: loginDto.email,
-      password: loginDto.password,
-    });
     return this.authService.login(loginDto.email, loginDto.password);
+  }
+
+  /**
+   * POST /api/auth/refresh
+   * Exchange refresh token for new access + refresh tokens
+   */
+  @Public()
+  @ThrottleStrict()
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Renovar access token usando refresh token' })
+  @ApiResponse({
+    status: 200,
+    description: 'Tokens renovados com sucesso',
+    schema: {
+      type: 'object',
+      properties: {
+        access_token: { type: 'string' },
+        refresh_token: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({ status: 401, description: 'Refresh token inválido ou expirado' })
+  async refresh(@Body() dto: RefreshTokenDto) {
+    return this.authService.refreshAccessToken(dto.refreshToken);
+  }
+
+  /**
+   * POST /api/auth/logout
+   * Revoke the provided refresh token
+   */
+  @Public()
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Revogar refresh token (logout)' })
+  @ApiResponse({ status: 200, description: 'Logout realizado com sucesso' })
+  async logout(@Body() dto: RefreshTokenDto) {
+    await this.authService.revokeRefreshToken(dto.refreshToken);
+    return { message: 'Logout realizado com sucesso' };
+  }
+
+  /**
+   * POST /api/auth/logout-all
+   * Revoke all refresh tokens for the authenticated user
+   */
+  @UseGuards(JwtAuthGuard)
+  @Post('logout-all')
+  @HttpCode(HttpStatus.OK)
+  @ApiBearerAuth('JWT-auth')
+  @ApiOperation({ summary: 'Revogar todos os refresh tokens (logout de todos os dispositivos)' })
+  @ApiResponse({ status: 200, description: 'Logout de todos os dispositivos realizado com sucesso' })
+  @ApiResponse({ status: 401, description: 'Não autenticado' })
+  async logoutAll(@CurrentUser() user: UserFromJwt) {
+    await this.authService.revokeAllUserTokens(user.id);
+    return { message: 'Logout de todos os dispositivos realizado com sucesso' };
   }
 
   @UseGuards(JwtAuthGuard)

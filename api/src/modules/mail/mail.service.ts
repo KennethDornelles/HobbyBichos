@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { MailerService } from '@nestjs-modules/mailer';
+import { ConfigService } from '@nestjs/config';
+import { Resend } from 'resend';
+import * as ejs from 'ejs';
+import * as path from 'path';
+import * as fs from 'fs';
 
 export interface AppointmentMailData {
   clientName: string;
@@ -9,19 +13,38 @@ export interface AppointmentMailData {
 
 @Injectable()
 export class MailService {
-  constructor(private readonly mailerService: MailerService) {}
+  private resend: Resend;
+
+  constructor(private readonly configService: ConfigService) {
+    const apiKey = this.configService.get<string>('RESEND_API_KEY');
+    if (!apiKey) {
+      console.warn('RESEND_API_KEY not found. MailService will not send emails.');
+    }
+    this.resend = new Resend(apiKey);
+  }
 
   private sanitizeEmail(email: string): string {
-    // Remove espaços e converte para lowercase
     return email.trim().toLowerCase();
   }
 
   private validateEmailDomain(email: string): boolean {
-    let allowedDomains = process.env.ALLOWED_EMAIL_DOMAINS?.split(',') || [];
+    const allowedDomainsEnv = this.configService.get<string>('ALLOWED_EMAIL_DOMAINS');
+    let allowedDomains = allowedDomainsEnv?.split(',') || [];
     allowedDomains = allowedDomains.filter((d) => d.trim() !== '');
     if (allowedDomains.length === 0) return true;
     const domain = email.split('@')[1];
     return allowedDomains.includes(domain);
+  }
+
+  private async renderTemplate(templateName: string, context: any): Promise<string> {
+    const templatePath = path.join(__dirname, 'templates', `${templateName}.ejs`);
+    try {
+      const template = fs.readFileSync(templatePath, 'utf8');
+      return ejs.render(template, context);
+    } catch (error) {
+      console.error(`Error rendering template ${templateName}:`, error);
+      throw error;
+    }
   }
 
   async sendAppointmentConfirmation(
@@ -33,15 +56,18 @@ export class MailService {
     if (!this.validateEmailDomain(sanitizedTo)) {
       throw new Error(`Domínio não permitido: ${sanitizedTo}`);
     }
+
     try {
-      await this.mailerService.sendMail({
+      const html = await this.renderTemplate('appointment-confirmation', {
+        storeName,
+        appointmentData,
+      });
+
+      await this.resend.emails.send({
+        from: 'Hobby Bichos <onboarding@resend.dev>', // Update this to your verified domain later
         to: sanitizedTo,
         subject: 'Confirmação de Agendamento',
-        template: 'appointment-confirmation',
-        context: {
-          storeName,
-          appointmentData,
-        },
+        html,
       });
     } catch (error) {
       console.error('Erro ao enviar email:', error);
@@ -58,20 +84,22 @@ export class MailService {
     if (!this.validateEmailDomain(sanitizedTo)) {
       throw new Error(`Domínio não permitido: ${sanitizedTo}`);
     }
+
     try {
-      await this.mailerService.sendMail({
+      const html = await this.renderTemplate('24h-reminder', {
+        storeName,
+        appointmentData,
+      });
+
+      await this.resend.emails.send({
+        from: 'Hobby Bichos <onboarding@resend.dev>',
         to: sanitizedTo,
         subject: 'Lembrete: Seu agendamento é amanhã!',
-        template: '24h-reminder',
-        context: {
-          storeName,
-          appointmentData,
-        },
+        html,
       });
     } catch (error) {
       console.error('Erro ao enviar email:', error);
       if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
-        // Em ambiente de teste, apenas loga o erro e não lança
         return;
       }
       throw error;
@@ -88,19 +116,20 @@ export class MailService {
       throw new Error(`Domínio não permitido: ${sanitizedTo}`);
     }
     try {
-      await this.mailerService.sendMail({
+      const html = await this.renderTemplate('pet-ready', {
+        storeName,
+        appointmentData,
+      });
+
+      await this.resend.emails.send({
+        from: 'Hobby Bichos <onboarding@resend.dev>',
         to: sanitizedTo,
         subject: 'Seu pet está pronto!',
-        template: 'pet-ready',
-        context: {
-          storeName,
-          appointmentData,
-        },
+        html,
       });
     } catch (error) {
       console.error('Erro ao enviar email:', error);
       if (process.env.NODE_ENV === 'test' || process.env.JEST_WORKER_ID) {
-        // Em ambiente de teste, apenas loga o erro e não lança
         return;
       }
       throw error;
@@ -121,16 +150,18 @@ export class MailService {
       throw new Error(`Domínio não permitido: ${sanitizedTo}`);
     }
     try {
-      await this.mailerService.sendMail({
+      const html = await this.renderTemplate('appointment-completed', {
+        clientName: appointmentData.clientName,
+        petName: appointmentData.petName || 'seu pet',
+        serviceName: appointmentData.serviceName || 'o serviço',
+        storeName: appointmentData.storeName || 'Hobby Bichos',
+      });
+
+      await this.resend.emails.send({
+        from: 'Hobby Bichos <onboarding@resend.dev>',
         to: sanitizedTo,
         subject: 'Serviço Concluído - Obrigado!',
-        template: 'appointment-completed',
-        context: {
-          clientName: appointmentData.clientName,
-          petName: appointmentData.petName || 'seu pet',
-          serviceName: appointmentData.serviceName || 'o serviço',
-          storeName: appointmentData.storeName || 'Hobby Bichos',
-        },
+        html,
       });
     } catch (error) {
       console.error('Erro ao enviar email de conclusão:', error);

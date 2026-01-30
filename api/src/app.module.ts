@@ -1,9 +1,8 @@
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
 import { BullModule } from '@nestjs/bullmq';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { EjsAdapter } from '@nestjs-modules/mailer/dist/adapters/ejs.adapter';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { join } from 'path';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -18,15 +17,29 @@ import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { MailModule } from './modules/mail/mail.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
-import { OrdersModule } from './modules/orders/orders.module'; // ← ADICIONE ESTA LINHA
+import { OrdersModule } from './modules/orders/orders.module';
 import { CartModule } from './modules/cart/cart.module';
 import { LoyaltyModule } from './modules/loyalty/loyalty.module';
 import { ManagerModule } from './modules/manager/manager.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 
+import { validate } from './common/config/env.validation';
+
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      validate,
+    }),
+    // Rate Limiting: Default 100 requests per minute
+    ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ([{
+        ttl: parseInt(config.get('THROTTLE_TTL') || '60000', 10),
+        limit: parseInt(config.get('THROTTLE_LIMIT') || '100', 10),
+      }]),
+    }),
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -34,30 +47,6 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
           host: configService.get('REDIS_HOST') || 'redis',
           port: Number(configService.get('REDIS_PORT')) || 6379,
           password: configService.get('REDIS_PASSWORD'),
-        },
-      }),
-      inject: [ConfigService],
-    }),
-    MailerModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: (config: ConfigService) => ({
-        transport: {
-          host: config.get('MAIL_HOST'),
-          port: config.get('MAIL_PORT'),
-          auth: {
-            user: config.get('MAIL_USER'),
-            pass: config.get('MAIL_PASS'),
-          },
-        },
-        defaults: {
-          from: 'Hobby Bichos <no-reply@hobbybichos.com>',
-        },
-        template: {
-          dir: join(__dirname, 'modules', 'mail', 'templates'),
-          adapter: new EjsAdapter(),
-          options: {
-            strict: false,
-          },
         },
       }),
       inject: [ConfigService],
@@ -73,13 +62,20 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     AnalyticsModule,
     MailModule,
     ReviewsModule,
-    OrdersModule, // ← ADICIONE ESTA LINHA
+    OrdersModule,
     CartModule,
     LoyaltyModule,
     ManagerModule,
     NotificationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // Enable rate limiting globally
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

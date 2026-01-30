@@ -1,19 +1,30 @@
 // ...existing code...
 import { Injectable, Logger } from '@nestjs/common';
-import * as nodemailer from 'nodemailer';
 import { ConfigService } from '@nestjs/config';
+import { Resend } from 'resend';
 
 @Injectable()
 export class BrevoService {
+  private readonly logger = new Logger(BrevoService.name);
+  private resend: Resend;
+
+  constructor(private readonly configService: ConfigService) {
+    const apiKey = this.configService.get<string>('RESEND_API_KEY');
+    if (!apiKey) {
+      this.logger.warn('RESEND_API_KEY not found. BrevoService will not send emails.');
+    }
+    this.resend = new Resend(apiKey);
+  }
+
   /**
    * Envia email de boas-vindas após registro
    */
   async sendWelcomeEmail(email: string): Promise<void> {
     try {
-      await this.transporter.sendMail({
+      await this.resend.emails.send({
         from:
           this.configService.get('BREVO_FROM_EMAIL') ||
-          'noreply@hobbybichos.com',
+          'Hobby Bichos <onboarding@resend.dev>',
         to: email,
         subject: 'Bem-vindo ao Hobby Bichos! 🐾',
         html: `
@@ -28,42 +39,6 @@ export class BrevoService {
       // Não lança erro para não bloquear o registro
     }
   }
-  private readonly logger = new Logger(BrevoService.name);
-  private transporter: nodemailer.Transporter;
-
-  constructor(private readonly configService: ConfigService) {
-    // Configuração CORRETA para Gmail
-    this.transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 587,
-      secure: false, // true para 465, false para outras portas
-      auth: {
-        user: this.configService.get<string>('SMTP_USER'),
-        pass: this.configService.get<string>('SMTP_PASS'), // Precisa ser senha de app
-      },
-      tls: {
-        rejectUnauthorized: false,
-      },
-    });
-
-    // Verifica se a configuração está correta (sem bloquear o construtor)
-    void this.verifyConnection();
-  }
-
-  /**
-   * Verifica a conexão com o servidor SMTP
-   */
-  private async verifyConnection() {
-    try {
-      await this.transporter.verify();
-      this.logger.log('✅ Servidor SMTP conectado e pronto para enviar emails');
-    } catch (error) {
-      this.logger.error('❌ Erro na configuração SMTP:', error.message);
-      this.logger.error(
-        'Verifique suas credenciais SMTP_USER e SMTP_PASS no .env',
-      );
-    }
-  }
 
   /**
    * Envia código de recuperação de senha por e-mail
@@ -74,33 +49,26 @@ export class BrevoService {
     try {
       this.logger.log(`📧 Enviando código de recuperação para: ${email}`);
 
-      const info = await this.transporter.sendMail({
-        from: `"Hobby Bichos" <${this.configService.get<string>('SMTP_USER')}>`,
+      const response = await this.resend.emails.send({
+        from: `"Hobby Bichos" <${this.configService.get('BREVO_FROM_EMAIL') || 'onboarding@resend.dev'}>`,
         to: email,
         subject: 'Seu código de recuperação - Hobby Bichos',
         html: html,
         text: `Olá ${name}, seu código de recuperação é: ${code}. Ele expira em 15 minutos.`,
       });
 
+      if (response.error) {
+        this.logger.error('❌ Erro ao enviar email:', response.error);
+        throw new Error(response.error.message);
+      }
+
       this.logger.log('✅ Email enviado com sucesso!');
-      this.logger.log(`Message ID: ${info.messageId}`);
-      this.logger.log(`Response: ${info.response}`);
+      this.logger.log(`Response ID: ${response.data?.id}`);
 
-      if (info.accepted && info.accepted.length > 0) {
-        this.logger.log(`✅ Aceito por: ${info.accepted.join(', ')}`);
-      }
-
-      if (info.rejected && info.rejected.length > 0) {
-        this.logger.warn(`⚠️ Rejeitado por: ${info.rejected.join(', ')}`);
-      }
-
-      return info;
+      return response.data;
     } catch (error) {
       this.logger.error('❌ Erro ao enviar código:', {
         message: error.message,
-        code: error.code,
-        command: error.command,
-        response: error.response,
       });
       throw error;
     }

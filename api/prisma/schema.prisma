@@ -3,8 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  // URL configurada no prisma.config.ts (Prisma 7+)
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // --- Notificações Multicanal ---
@@ -179,6 +180,7 @@ model User {
   notifications Notification[]
   pushTokens PushToken[]
   userNotificationPreferences UserNotificationPreference[]
+  refreshTokens RefreshToken[]
 
   @@map("users")
 }
@@ -197,6 +199,20 @@ model RecoveryCode {
   @@index([userId])
   @@index([code])
   @@map("recovery_codes")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
 }
 
 model Pet {

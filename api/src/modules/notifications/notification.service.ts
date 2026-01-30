@@ -80,6 +80,24 @@ export class NotificationService {
         if (user?.storeId) storeId = user.storeId;
       }
 
+      // Deduplicação a nível de banco de dados (funciona com múltiplas instâncias)
+      const dedupWindowDate = new Date(timestamp - this.DEDUP_WINDOW_MS);
+      const existingNotification = await this.prisma.notification.findFirst({
+        where: {
+          userId: dto.userId,
+          category: dto.category as NotificationCategory,
+          title: dto.payload.title || 'Nova Notificação',
+          body: dto.payload.body || '',
+          createdAt: { gte: dedupWindowDate },
+        },
+        select: { id: true },
+      });
+
+      if (existingNotification) {
+        this.logger.warn(`⚠️ [${nowIso}] Notificação duplicada detectada no banco e ignorada | existingId=${existingNotification.id} | userId=${dto.userId} | category=${dto.category} | title="${dto.payload?.title}"`);
+        return;
+      }
+
       // Salva notificação no banco
       const notification = await this.prisma.notification.create({
         data: {

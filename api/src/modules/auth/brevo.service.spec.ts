@@ -1,26 +1,29 @@
-jest.mock('nodemailer');
+// jest.mock('nodemailer');
 import { Test, TestingModule } from '@nestjs/testing';
 import { BrevoService } from './brevo.service';
 import { ConfigService } from '@nestjs/config';
-import * as nodemailer from 'nodemailer';
+
+// Mock Resend
+const mockResend = {
+  emails: {
+    send: jest.fn(),
+  },
+};
+jest.mock('resend', () => ({
+  Resend: jest.fn().mockImplementation(() => mockResend),
+}));
 
 describe('BrevoService', () => {
   let service: BrevoService;
   let configService: ConfigService;
-  let sendMailMock: jest.Mock;
-  let verifyMock: jest.Mock;
 
   beforeEach(async () => {
-    sendMailMock = jest.fn().mockResolvedValue({
-      messageId: 'msgid',
-      response: 'OK',
-      accepted: ['a@a.com'],
-      rejected: [],
-    });
-    verifyMock = jest.fn().mockResolvedValue(true);
-    (nodemailer.createTransport as jest.Mock).mockReturnValue({
-      sendMail: sendMailMock,
-      verify: verifyMock,
+    jest.clearAllMocks();
+    
+    // Config padrão do mock, sucesso
+    mockResend.emails.send.mockResolvedValue({
+      data: { id: 'msgid' },
+      error: null,
     });
 
     configService = {
@@ -28,6 +31,7 @@ describe('BrevoService', () => {
         if (key === 'SMTP_USER') return 'smtp@hobbybichos.com';
         if (key === 'SMTP_PASS') return 'senha';
         if (key === 'BREVO_FROM_EMAIL') return 'noreply@hobbybichos.com';
+        if (key === 'RESEND_API_KEY') return 're_123';
         return undefined;
       }),
     } as any;
@@ -41,17 +45,16 @@ describe('BrevoService', () => {
     service = module.get<BrevoService>(BrevoService);
   });
 
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
   it('deve enviar email de boas-vindas sem lançar erro', async () => {
     await expect(service.sendWelcomeEmail('a@a.com')).resolves.toBeUndefined();
-    expect(sendMailMock).toHaveBeenCalled();
+    expect(mockResend.emails.send).toHaveBeenCalled();
   });
 
   it('deve logar erro mas não lançar ao falhar no email de boas-vindas', async () => {
-    sendMailMock.mockRejectedValueOnce(new Error('Falha SMTP'));
+    mockResend.emails.send.mockResolvedValue({
+      data: null,
+      error: { message: 'Falha API', name: 'error' },
+    });
     await expect(service.sendWelcomeEmail('a@a.com')).resolves.toBeUndefined();
   });
 
@@ -61,15 +64,18 @@ describe('BrevoService', () => {
       'Ana',
       '123456',
     );
-    expect(sendMailMock).toHaveBeenCalled();
-    expect(info).toHaveProperty('messageId');
+    expect(mockResend.emails.send).toHaveBeenCalled();
+    expect(info).toHaveProperty('id', 'msgid');
   });
 
   it('deve lançar erro ao falhar no envio de recuperação', async () => {
-    sendMailMock.mockRejectedValueOnce(new Error('Falha SMTP'));
+    mockResend.emails.send.mockResolvedValue({
+      data: null,
+      error: { message: 'Falha API', name: 'error' },
+    });
     await expect(
       service.sendRecoveryCodeEmail('a@a.com', 'Ana', '123456'),
-    ).rejects.toThrow('Falha SMTP');
+    ).rejects.toThrow('Falha API');
   });
 
   it('deve retornar template de email de recuperação', () => {
@@ -85,3 +91,4 @@ describe('BrevoService', () => {
     ).resolves.toBeUndefined();
   });
 });
+
