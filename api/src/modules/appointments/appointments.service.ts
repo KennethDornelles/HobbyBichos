@@ -3,9 +3,10 @@ import {
   ConflictException,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service';
+import { PrismaService } from '../../database/prisma.service'; // Mantido para StoreExclusion/BusinessHour
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { FilterAppointmentsDto } from './dto/filter-appointments.dto';
+import { AppointmentsRepository } from './appointments.repository';
 
 // Prisma não gera enum para status, pois é string no schema. Defina manualmente:
 export enum AppointmentStatus {
@@ -20,7 +21,8 @@ import { MailService } from '../mail/mail.service';
 @Injectable()
 export class AppointmentsService {
   constructor(
-    private readonly prisma: PrismaService,
+    private readonly prisma: PrismaService, // Ainda usado para infraestrutura (Loja/Horários)
+    private readonly appointmentsRepository: AppointmentsRepository,
     private readonly servicesService: ServicesService,
     private readonly mailService: MailService,
   ) {}
@@ -29,14 +31,12 @@ export class AppointmentsService {
     createDto: CreateAppointmentDto,
     user: { storeId?: string; userId?: string; id?: string },
   ) {
-    // CORREÇÃO: user pode ter 'id' ou 'userId' dependendo do contexto
     const userId = user.userId || user.id;
-
     if (!userId) {
       throw new ConflictException('Usuário não identificado');
     }
 
-    // Busca o serviço diretamente para obter seu storeId
+    // Busca o serviço
     const service = await this.prisma.service.findUnique({
       where: { id: createDto.serviceId },
     });
@@ -44,16 +44,58 @@ export class AppointmentsService {
 
     const storeId = service.storeId;
     const startsAt = new Date(createDto.startsAt);
-    const endsAt = new Date(startsAt.getTime() + service.durationMin * 60000);
+    const endsAt = this.calculateEndTime(startsAt, service.durationMin);
 
-    // 1. Verifica se é data de exclusão
+    // Validações
+    await this.validateStoreExclusion(storeId, startsAt);
+    await this.validateBusinessHours(storeId, startsAt, endsAt);
+    await this.validateSchedulingConflict(
+      createDto.employeeId,
+      createDto.petId,
+      startsAt,
+      endsAt,
+    );
+
+    // Criação via Repositório
+    const appointment = await this.appointmentsRepository.create(
+      {
+        pet: { connect: { id: createDto.petId } },
+        professional: { connect: { id: createDto.employeeId } },
+        service: { connect: { id: createDto.serviceId } },
+        startsAt,
+        store: { connect: { id: storeId } },
+        user: { connect: { id: userId } },
+        status: AppointmentStatus.SCHEDULED,
+        notes: '',
+      },
+      {
+        user: true,
+        store: true,
+      },
+    );
+
+    // Envia e-mail (não-bloqueante)
+    if (appointment.user?.email && appointment.store?.name) {
+      this.notifyAppointmentConfirmation(appointment);
+    }
+
+    return appointment;
+  }
+
+  // --- Métodos Privados de Lógica de Negócio ---
+
+  private calculateEndTime(startsAt: Date, durationMin: number): Date {
+    return new Date(startsAt.getTime() + durationMin * 60000);
+  }
+
+  private async validateStoreExclusion(storeId: string, date: Date) {
     const exclusion = await this.prisma.storeExclusion.findFirst({
       where: {
         storeId: storeId,
         date: {
-          gte: new Date(startsAt.toDateString()),
+          gte: new Date(date.toDateString()),
           lt: new Date(
-            new Date(startsAt.toDateString()).getTime() + 24 * 60 * 60 * 1000,
+            new Date(date.toDateString()).getTime() + 24 * 60 * 60 * 1000,
           ),
         },
       },
@@ -61,8 +103,13 @@ export class AppointmentsService {
     if (exclusion) {
       throw new ConflictException('A loja estará fechada nesta data.');
     }
+  }
 
-    // 2. Verifica horário de funcionamento
+  private async validateBusinessHours(
+    storeId: string,
+    startsAt: Date,
+    endsAt: Date,
+  ) {
     const weekday = startsAt.getDay();
     const businessHour = await this.prisma.storeBusinessHour.findFirst({
       where: {
@@ -73,70 +120,53 @@ export class AppointmentsService {
     if (!businessHour) {
       throw new ConflictException('A loja não possui expediente neste dia.');
     }
-    // Checa se horário está dentro do expediente
+
     const [openH, openM] = businessHour.openTime.split(':').map(Number);
     const [closeH, closeM] = businessHour.closeTime.split(':').map(Number);
     const openDate = new Date(startsAt);
     openDate.setHours(openH, openM, 0, 0);
     const closeDate = new Date(startsAt);
     closeDate.setHours(closeH, closeM, 0, 0);
+
     if (startsAt < openDate || endsAt > closeDate) {
       throw new ConflictException('Horário fora do expediente da loja.');
     }
+  }
 
-    // 3. Checa conflito de agendamento
-    const conflict = await this.prisma.appointment.findFirst({
-      where: {
-        OR: [
-          { professionalId: createDto.employeeId },
-          { petId: createDto.petId },
-        ],
-        startsAt: { gte: startsAt, lt: endsAt },
-        status: {
-          in: [AppointmentStatus.SCHEDULED, AppointmentStatus.COMPLETED],
-        },
+  private async validateSchedulingConflict(
+    employeeId: string,
+    petId: string,
+    start: Date,
+    end: Date,
+  ) {
+    const conflict = await this.appointmentsRepository.findFirst({
+      OR: [{ professionalId: employeeId }, { petId: petId }],
+      startsAt: { gte: start, lt: end },
+      status: {
+        in: [AppointmentStatus.SCHEDULED, AppointmentStatus.COMPLETED],
       },
     });
     if (conflict) {
       throw new ConflictException('Horário já agendado');
     }
-
-    // CORREÇÃO: usar userId extraído corretamente
-    const appointment = await this.prisma.appointment.create({
-      data: {
-        petId: createDto.petId,
-        professionalId: createDto.employeeId,
-        serviceId: createDto.serviceId,
-        startsAt,
-        storeId: storeId, // Usar storeId do serviço
-        userId: userId, // CORRIGIDO: usar a variável extraída
-        status: AppointmentStatus.SCHEDULED,
-      },
-      include: {
-        user: true,
-        store: true,
-      },
-    });
-
-    // Envia e-mail de confirmação para o cliente (não-bloqueante)
-    if (appointment.user?.email && appointment.store?.name) {
-      try {
-        await this.mailService.sendAppointmentConfirmation(
-          appointment.user.email,
-          appointment.store.name,
-          {
-            clientName: appointment.user.name,
-            date: appointment.startsAt.toLocaleString('pt-BR'),
-          },
-        );
-      } catch (emailError) {
-        console.error('Erro ao enviar email de confirmação:', emailError);
-        // Não lança exceção - o agendamento já foi criado com sucesso
-      }
-    }
-
-    return appointment;
   }
+
+  private async notifyAppointmentConfirmation(appointment: any) {
+    try {
+      await this.mailService.sendAppointmentConfirmation(
+        appointment.user.email,
+        appointment.store.name,
+        {
+          clientName: appointment.user.name,
+          date: appointment.startsAt.toLocaleString('pt-BR'),
+        },
+      );
+    } catch (emailError) {
+      console.error('Erro ao enviar email de confirmação:', emailError);
+    }
+  }
+
+  // --- Fim Métodos Privados ---
 
   async findAllByStore(
     filter: FilterAppointmentsDto,
@@ -144,23 +174,14 @@ export class AppointmentsService {
   ) {
     const userId = user.userId || user.id;
 
-    // Se o usuário for CLIENT, busca os appointments dele
-    // Se for STORE/ADMIN, busca os appointments da loja
-    const where: {
-      userId?: string;
-      storeId?: string;
-      startsAt?: { gte: Date; lt: Date };
-    } = {};
+    const where: any = {};
 
     if (user.role === 'CLIENT') {
-      // Cliente vê apenas seus próprios agendamentos
       where.userId = userId;
     } else if (user.storeId) {
-      // Store/Admin vê os agendamentos da loja
       const storeId = filter.storeId || user.storeId;
       where.storeId = storeId;
     } else {
-      // Se não tem role CLIENT nem storeId, retorna vazio
       return [];
     }
 
@@ -171,34 +192,13 @@ export class AppointmentsService {
       where.startsAt = { gte: date, lt: nextDay };
     }
 
-    return this.prisma.appointment.findMany({
+    return this.appointmentsRepository.findMany({
       where,
       include: {
-        store: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        pet: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        service: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-          },
-        },
-        professional: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+        store: { select: { id: true, name: true } },
+        pet: { select: { id: true, name: true } },
+        service: { select: { id: true, name: true, price: true } },
+        professional: { select: { id: true, name: true } },
       },
       orderBy: {
         startsAt: 'desc',
@@ -212,42 +212,20 @@ export class AppointmentsService {
   ) {
     const userId = user.userId || user.id;
 
-    const appointment = await this.prisma.appointment.findUnique({
-      where: { id },
-      include: {
-        store: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        pet: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        service: {
-          select: {
-            id: true,
-            name: true,
-            price: true,
-          },
-        },
-        professional: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
+    const appointment = await this.appointmentsRepository.findUnique(
+      { id },
+      {
+        store: { select: { id: true, name: true } },
+        pet: { select: { id: true, name: true } },
+        service: { select: { id: true, name: true, price: true } },
+        professional: { select: { id: true, name: true } },
       },
-    });
+    );
 
     if (!appointment) {
       throw new NotFoundException('Agendamento não encontrado');
     }
 
-    // Verifica permissões: CLIENT vê apenas seus próprios, STORE/ADMIN vê os da loja
     if (user.role === 'CLIENT' && appointment.userId !== userId) {
       throw new NotFoundException('Agendamento não encontrado');
     } else if (user.storeId && appointment.storeId !== user.storeId) {
@@ -257,10 +235,6 @@ export class AppointmentsService {
     return appointment;
   }
 
-  /**
-   * Obtém o dashboard de agendamentos para um employee
-   * Retorna agendamentos de hoje e próximos agendamentos
-   */
   async getEmployeeDashboard(user: {
     storeId?: string;
     userId?: string;
@@ -278,18 +252,15 @@ export class AppointmentsService {
       throw new ConflictException('Employee não possui loja associada');
     }
 
-    // Data de hoje
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
-
-    // Próximos 7 dias
     const nextWeek = new Date(today);
     nextWeek.setDate(today.getDate() + 7);
 
-    // Agendamentos de hoje
-    const todayAppointments = await this.prisma.appointment.findMany({
+    // Agendamentos de hoje via Repository
+    const todayAppointments = await this.appointmentsRepository.findMany({
       where: {
         storeId: user.storeId,
         startsAt: { gte: today, lt: tomorrow },
@@ -300,15 +271,13 @@ export class AppointmentsService {
       include: {
         pet: true,
         service: true,
-        user: {
-          select: { id: true, name: true },
-        },
+        user: { select: { id: true, name: true } },
       },
       orderBy: { startsAt: 'asc' },
     });
 
-    // Próximos agendamentos (excluindo hoje)
-    const upcomingAppointments = await this.prisma.appointment.findMany({
+    // Próximos agendamentos via Repository
+    const upcomingAppointments = await this.appointmentsRepository.findMany({
       where: {
         storeId: user.storeId,
         startsAt: { gte: tomorrow, lte: nextWeek },
@@ -319,9 +288,7 @@ export class AppointmentsService {
       include: {
         pet: true,
         service: true,
-        user: {
-          select: { id: true, name: true },
-        },
+        user: { select: { id: true, name: true } },
       },
       orderBy: { startsAt: 'asc' },
       take: 10,
@@ -358,52 +325,38 @@ export class AppointmentsService {
     };
   }
 
-  /**
-   * Atualiza o status de um agendamento
-   * Apenas o employee pode atualizar agendamentos
-   */
   async updateAppointmentStatus(
     appointmentId: string,
     updateStatusDto: { status: string; notes?: string },
     user: { storeId?: string; userId?: string; id?: string; role?: string },
   ) {
-    const userId = user.userId || user.id;
-
-    // Verifica se o usuário é EMPLOYEE
     if (user.role !== 'EMPLOYEE') {
       throw new ConflictException(
         'Apenas employees podem atualizar agendamentos',
       );
     }
 
-    // Busca o agendamento
-    const appointment = await this.prisma.appointment.findUnique({
-      where: { id: appointmentId },
-      include: {
+    const appointment = await this.appointmentsRepository.findUnique(
+      { id: appointmentId },
+      {
         pet: true,
         service: true,
-        user: {
-          select: { id: true, name: true, email: true },
-        },
-        store: {
-          select: { id: true, name: true },
-        },
+        user: { select: { id: true, name: true, email: true } },
+        store: { select: { id: true, name: true } },
       },
-    });
+    );
 
     if (!appointment) {
       throw new NotFoundException('Agendamento não encontrado');
     }
 
-    // Verifica se o agendamento pertence à loja do employee
     if (appointment.storeId !== user.storeId) {
       throw new ConflictException(
         'Sem permissão para atualizar este agendamento',
       );
     }
 
-    // Atualiza o agendamento
-    const updatedAppointment = await this.prisma.appointment.update({
+    const updatedAppointment = await this.appointmentsRepository.update({
       where: { id: appointmentId },
       data: {
         status: updateStatusDto.status,
@@ -413,16 +366,11 @@ export class AppointmentsService {
       include: {
         pet: true,
         service: true,
-        user: {
-          select: { id: true, name: true, email: true },
-        },
-        store: {
-          select: { id: true, name: true },
-        },
+        user: { select: { id: true, name: true, email: true } },
+        store: { select: { id: true, name: true } },
       },
     });
 
-    // Envia notificação por email ao cliente
     if (
       appointment.user?.email &&
       updateStatusDto.status === AppointmentStatus.COMPLETED
