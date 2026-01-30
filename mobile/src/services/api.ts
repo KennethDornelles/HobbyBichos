@@ -51,7 +51,8 @@ api.interceptors.response.use(
       console.error('Erro na API:', error.message);
     }
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    //ignora tentativas de refresh se o erro for no login
+    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/auth/login')) {
       if (isRefreshing) {
         return new Promise(function(resolve, reject) {
           failedQueue.push({ resolve, reject });
