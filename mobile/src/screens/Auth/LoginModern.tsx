@@ -43,12 +43,13 @@ const LoginScreen: React.FC = () => {
         try {
             console.log('🔓 Tentando login com:', formData.email);
 
-            const response = await api.post<{ access_token: string }>('/auth/login', {
+            const response = await api.post<{ access_token: string; refresh_token: string }>('/auth/login', {
                 email: formData.email,
                 password: formData.password,
             });
 
-            const token = response.data.access_token;
+            const { access_token: token, refresh_token: refreshToken } = response.data;
+
             if (!token || typeof token !== 'string') {
                 throw new Error('Token inválido recebido do servidor');
             }
@@ -60,7 +61,7 @@ const LoginScreen: React.FC = () => {
             const userData = userResponse.data;
 
             // Salvar usuário e token no AuthContext (e AsyncStorage)
-            await authLogin(userData, token);
+            await authLogin(userData, token, refreshToken);
             console.log('✅ Login e sessão salvos:', userData.name, userData.role);
 
             // Navegar para home

@@ -17,7 +17,7 @@ interface AuthContextType {
     signOut: () => Promise<void>;
     isLoading: boolean;
     token: string | null;
-    login: (userData: User, authToken: string) => Promise<void>;
+    login: (userData: User, authToken: string, refreshToken?: string) => Promise<void>;
     updateUser: (userData: User) => Promise<void>;
 }
 
@@ -40,7 +40,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             setIsLoading(true);
             const [savedToken, savedUser] = await Promise.all([
-                AsyncStorage.getItem(TOKEN_KEY),
+                SecureStore.getItemAsync('authToken'),
                 AsyncStorage.getItem(USER_KEY),
             ]);
 
@@ -61,14 +61,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
     };
 
-    const login = async (userData: User, authToken: string) => {
+    const login = async (userData: User, authToken: string, refreshToken?: string) => {
         try {
             setIsLoading(true);
-            await Promise.all([
-                AsyncStorage.setItem(TOKEN_KEY, authToken),
+            const promises = [
                 AsyncStorage.setItem(USER_KEY, JSON.stringify(userData)),
                 SecureStore.setItemAsync('authToken', authToken),
-            ]);
+            ];
+
+            if (refreshToken) {
+                promises.push(SecureStore.setItemAsync('refreshToken', refreshToken));
+            }
+
+            await Promise.all(promises);
+
             setToken(authToken);
             setUser(userData);
             console.log('✅ Login realizado:', userData.name, 'Role:', userData.role);
@@ -89,9 +95,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         try {
             setIsLoading(true);
             await Promise.all([
-                AsyncStorage.removeItem(TOKEN_KEY),
                 AsyncStorage.removeItem(USER_KEY),
                 SecureStore.deleteItemAsync('authToken'),
+                SecureStore.deleteItemAsync('refreshToken'),
             ]);
             setUser(null);
             setToken(null);

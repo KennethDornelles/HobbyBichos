@@ -58,6 +58,20 @@ interface AuthUserWithAvatar {
     avatarUrl?: string;
 }
 
+const getRoleLabel = (role?: string): string => {
+    const roleLabels: Record<string, string> = {
+        CLIENT: 'Cliente',
+        EMPLOYEE: 'Funcionário',
+        MANAGER: 'Gerente',
+        OWNER: 'Proprietário',
+        SUPER_ADMIN: 'Super Admin',
+        // Legacy roles
+        ADMIN: 'Administrador',
+        BARBER: 'Barbeiro',
+    };
+    return roleLabels[role || ''] || 'Cliente';
+};
+
 export const SideMenu: React.FC<SideMenuProps> = ({
     visible,
     onClose,
@@ -169,7 +183,7 @@ export const SideMenu: React.FC<SideMenuProps> = ({
                     </View>
                     <View style={styles.userInfo}>
                         <Text style={styles.userName} numberOfLines={1}>{safeUser?.name || "Bem-vindo"}</Text>
-                        <Text style={styles.userRole}>{safeUser?.role === "ADMIN" ? "Administrador" : safeUser?.role === "BARBER" ? "Barbeiro" : "Cliente"}</Text>
+                        <Text style={styles.userRole}>{getRoleLabel(safeUser?.role)}</Text>
                         <Text style={styles.editLink}>Ver perfil</Text>
                     </View>
                     <Ionicons name="chevron-forward" size={20} color={COLORS.grey_steel} />

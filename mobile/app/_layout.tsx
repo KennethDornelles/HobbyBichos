@@ -16,22 +16,31 @@ import { useCartAutoSync } from '../src/hooks/useCartAutoSync';
 function RootLayoutContent() {
   useCartAutoSync();
   const { isDark } = useTheme();
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Poppins_400Regular,
     Poppins_600SemiBold,
     Poppins_700Bold,
   });
 
   useEffect(() => {
-    if (fontsLoaded) {
+    // Ocultar splash quando fontes carregarem OU se houver erro
+    if (fontsLoaded || fontError) {
       SplashScreen.hideAsync();
       // Configurar status bar translúcido
       setStatusBarTranslucent(true);
       setStatusBarStyle(isDark ? "light" : "dark");
     }
-  }, [fontsLoaded, isDark]);
+  }, [fontsLoaded, fontError, isDark]);
 
-  if (!fontsLoaded) {
+  // Timeout de segurança: ocultar splash após 5 segundos mesmo se fontes não carregarem
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      SplashScreen.hideAsync();
+    }, 5000);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  if (!fontsLoaded && !fontError) {
     return null;
   }
 

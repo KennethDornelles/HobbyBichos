@@ -19,9 +19,11 @@ import CustomInput from '../../components/CustomInput';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 import * as SecureStore from 'expo-secure-store';
+import { useAuth } from '../../context/AuthContext';
 
 const SignupScreen: React.FC = () => {
     const { isDark } = useTheme();
+    const { login } = useAuth(); // Use AuthContext
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -42,39 +44,32 @@ const SignupScreen: React.FC = () => {
         try {
             console.log('📝 Criando conta com:', { name: formData.name, email: formData.email, phone: formData.phone });
 
-            // 1. Criar usuário
-            const signupRes = await api.post<{ user: { id: string; email: string } }>('/auth/register', {
+            // 1. Criar usuário e obter tokens
+            const response = await api.post<{
+                user: { id: string; email: string; name: string; role: string };
+                access_token: string;
+                refresh_token: string;
+            }>('/auth/register', {
                 name: formData.name,
                 email: formData.email,
                 password: formData.password,
                 phone: formData.phone,
             });
 
-            console.log('✅ Usuário criado:', signupRes.data.user.email);
+            const { user, access_token, refresh_token } = response.data;
 
-            // 2. Fazer login automático
-            const loginRes = await api.post<{ access_token: string }>('/auth/login', {
-                email: formData.email,
-                password: formData.password,
-            });
+            console.log('✅ Conta criada e logada:', user.email);
 
-            console.log('📦 Resposta do login:', JSON.stringify(loginRes.data, null, 2));
-
-            const token = loginRes.data.access_token;
-            console.log('🔑 Token recebido:', typeof token, token ? 'presente' : 'ausente');
-
-            if (!token || typeof token !== 'string') {
-                console.error('❌ Token inválido:', { token, type: typeof token, data: loginRes.data });
+            if (!access_token || typeof access_token !== 'string') {
                 throw new Error('Token inválido recebido do servidor');
             }
 
+            // 2. Salvar sessão usando AuthContext
+            await login(user as any, access_token, refresh_token);
+
             console.log('✅ Login automático realizado');
 
-            // 3. Salvar token
-            await SecureStore.setItemAsync('authToken', token);
-            console.log('✅ Token salvo em SecureStore');
-
-            // 4. Navegar para home
+            // 3. Navegar para home
             Alert.alert('Sucesso', 'Conta criada com sucesso!');
             router.replace('/home');
         } catch (error: any) {
