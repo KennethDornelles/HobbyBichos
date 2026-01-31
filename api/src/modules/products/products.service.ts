@@ -12,11 +12,16 @@ export class ProductsService {
   }
 
   async findAll() {
-    return this.prisma.product.findMany();
+    return this.prisma.product.findMany({
+      include: { stocks: true },
+    });
   }
 
   async findOne(id: string) {
-    return this.prisma.product.findUnique({ where: { id } });
+    return this.prisma.product.findUnique({
+      where: { id },
+      include: { stocks: true },
+    });
   }
 
   async update(id: string, data: UpdateProductDto) {
@@ -39,13 +44,10 @@ export class ProductsService {
     });
   }
 
-  async findAllByStore(storeId: string) {
+  async findAllByStore(_storeId: string) {
+    // Retorna todos os produtos com estoque de todas as lojas
+    // (Regra de Estoque Compartilhado: Loja 1 vê estoque da Loja 2, etc.)
     return this.prisma.product.findMany({
-      where: {
-        stocks: {
-          some: { storeId },
-        },
-      },
       include: { stocks: true },
     });
   }
