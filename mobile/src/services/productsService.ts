@@ -9,7 +9,7 @@ export const productsService = {
     try {
       // Endpoint que lista produtos da loja do usuário autenticado
       // Se necessário, ajustar para '/products' se for listagem pública
-      const response = await api.get<any[]>('/products/store');
+      const response = await api.get<any[]>('/products');
       
       return response.data.map((p) => ({
         id: p.id,

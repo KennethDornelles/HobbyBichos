@@ -1,11 +1,13 @@
-import React from 'react';
-import { View, Text, ScrollView, Pressable } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, ScrollView, Pressable, RefreshControl, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Award, Gift, Sparkles, Heart } from 'lucide-react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useUserStore } from '../../store/userStore';
+import { api } from '../../../api'; // Importar API helper
+import { StampCard } from '../../components/StampCard';
 
 interface Reward {
     id: string;
@@ -53,24 +55,70 @@ const REWARDS: Reward[] = [
 
 export default function LoyaltyScreen() {
     const router = useRouter();
-    const { points, name } = useUserStore();
-    const userId = `USER${Date.now()}`; // Gerar ID único para QR Code
+    const { points, name, setPoints } = useUserStore(); // Assumindo que setPoints existe
+    const userId = `USER${Date.now()}`;
     const insets = useSafeAreaInsets();
+    const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
+
+    // Calcular selos (Ex: 1 selo a cada 50 pontos)
+    // Se o backend enviar essa lógica, melhor. Por enquanto, hardcoded.
+    const POINTS_PER_STAMP = 50;
+    const filledSlots = Math.floor(points / POINTS_PER_STAMP);
+    const totalSlots = 10;
+    const pointsToNext = POINTS_PER_STAMP - (points % POINTS_PER_STAMP);
+
+    const fetchLoyaltyData = async () => {
+        try {
+            // Se já tivermos dados, não bloqueia a tela com loading, só refresh
+            if (!points && !refreshing) setLoading(true);
+
+            // TODO: Ajustar endpoint conforme implementado na API
+            const response = await api.get('/loyalty/account');
+            if (response.data && response.data.currentPoints !== undefined) {
+                setPoints(response.data.currentPoints);
+            }
+        } catch (error) {
+            console.error('Erro ao buscar dados de fidelidade:', error);
+        } finally {
+            setLoading(false);
+            setRefreshing(false);
+        }
+    };
+
+    useEffect(() => {
+        // Busca inicial
+        fetchLoyaltyData();
+    }, []);
+
+    const onRefresh = () => {
+        setRefreshing(true);
+        fetchLoyaltyData();
+    };
 
     return (
-        <View className="flex-1 bg-primary-dark">
+        <View className="flex-1 bg-gray-50">
             {/* Header com botão voltar */}
-            <SafeAreaView edges={['top']} className="bg-primary-dark">
-                <View className="px-4 py-4 flex-row items-center">
-                    <Pressable
-                        onPress={() => router.back()}
-                        className="mr-4 active:opacity-70"
-                    >
-                        <ArrowLeft size={24} color="#FFD600" />
-                    </Pressable>
-                    <Text className="text-white font-bold text-2xl">
-                        Hobby Club
-                    </Text>
+            <SafeAreaView edges={['top']} className="bg-primary-dark z-10">
+                <View className="px-4 py-4 flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                        <Pressable
+                            onPress={() => router.back()}
+                            className="mr-4 active:opacity-70"
+                        >
+                            <ArrowLeft size={24} color="#FFD600" />
+                        </Pressable>
+                        <View>
+                            <Text className="text-white font-bold text-xl">Hobby Club</Text>
+                            <Text className="text-gray-400 text-xs">Seu clube de vantagens</Text>
+                        </View>
+                    </View>
+
+                    <View className="bg-white/10 px-3 py-1 rounded-full">
+                        <Text className="text-primary-yellow font-bold text-sm">
+                            {points} pts
+                        </Text>
+                    </View>
                 </View>
             </SafeAreaView>
 
@@ -78,36 +126,38 @@ export default function LoyaltyScreen() {
                 className="flex-1"
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C4DFF" />
+                }
             >
-                {/* Card de Pontos com Gradiente */}
-                <View className="px-4 py-6">
-                    <LinearGradient
-                        colors={['#FFD600', '#FFAA00', '#FF8A65']}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={{ borderRadius: 30 }}
-                        className="p-8 items-center"
-                    >
-                        <Text className="text-primary-dark text-lg mb-2">
-                            Seus Pontos
+                {/* Background Decorativo Superior */}
+                <View className="bg-primary-dark h-24 w-full absolute top-0" />
+
+                {/* Área do Cartão (Sobreposta) */}
+                <View className="px-4 pt-2 mb-6">
+                    <StampCard
+                        totalSlots={totalSlots}
+                        filledSlots={filledSlots}
+                        rewardName="Banho Grátis (500 pts)"
+                    />
+
+                    <View className="mt-2 items-center">
+                        <Text className="text-gray-500 text-xs">
+                            Faltam {pointsToNext} pontos para o próximo selo!
                         </Text>
-                        <Text className="text-primary-dark font-bold text-6xl">
-                            {points}
-                        </Text>
-                        <View className="flex-row items-center mt-3">
-                            <Sparkles size={20} color="#10142D" />
-                            <Text className="text-primary-dark font-semibold text-base ml-2">
-                                Continue acumulando!
-                            </Text>
-                        </View>
-                    </LinearGradient>
+                    </View>
                 </View>
 
                 {/* Seção de Recompensas */}
                 <View className="px-4 pb-6">
-                    <Text className="text-white font-bold text-xl mb-4">
-                        Resgatar Recompensas
-                    </Text>
+                    <View className="flex-row justify-between items-center mb-4">
+                        <Text className="text-primary-dark font-bold text-lg">
+                            Recompensas
+                        </Text>
+                        <Text className="text-primary-purple text-sm font-semibold">
+                            Ver todas
+                        </Text>
+                    </View>
 
                     {REWARDS.map((reward) => (
                         <RewardCard
@@ -118,35 +168,23 @@ export default function LoyaltyScreen() {
                     ))}
                 </View>
 
-                {/* QR Code dentro do ScrollView */}
-                <View className="px-4 pb-6">
-                    <LinearGradient
-                        colors={['#FFD600', '#FFF176']}
-                        style={{
-                            borderRadius: 30,
-                            shadowColor: "#000",
-                            shadowOffset: { width: 0, height: 4 },
-                            shadowOpacity: 0.3,
-                            shadowRadius: 8,
-                            elevation: 8,
-                        }}
-                        className="p-6 items-center"
-                    >
-                        <Text className="text-primary-dark font-bold text-lg mb-3">
-                            Apresente na Loja
-                        </Text>
-                        <View className="bg-white p-4 rounded-2xl">
-                            <QRCode
-                                value={userId}
-                                size={120}
-                                color="#10142D"
-                                backgroundColor="white"
-                            />
-                        </View>
-                        <Text className="text-primary-dark text-sm mt-3">
-                            Válido em todas as 6 unidades
-                        </Text>
-                    </LinearGradient>
+                {/* QR Code */}
+                <View className="mx-4 mb-6 bg-white p-6 rounded-3xl shadow-sm items-center border border-gray-100">
+                    <Text className="text-primary-dark font-bold text-lg mb-2">
+                        Seu Cartão Digital
+                    </Text>
+                    <Text className="text-gray-500 text-sm mb-4 text-center">
+                        Apresente este QR Code no caixa para pontuar
+                    </Text>
+                    <QRCode
+                        value={userId}
+                        size={150}
+                        color="#10142D"
+                        backgroundColor="white"
+                    />
+                    <Text className="text-gray-400 text-xs mt-4">
+                        ID: {userId}
+                    </Text>
                 </View>
             </ScrollView>
         </View>

@@ -10,6 +10,7 @@ interface UserState {
   points: number;
   loading: boolean;
   setUser: (id: string, name: string, email: string, points: number, role?: string) => void;
+  setPoints: (points: number) => void;
   loadUserProfile: () => Promise<void>;
   reset: () => void;
 }
@@ -22,6 +23,7 @@ export const useUserStore = create<UserState>((set) => ({
   points: 0,
   loading: false,
   setUser: (id, name, email, points, role) => set({ id, name, email, points, role }),
+  setPoints: (points) => set({ points }),
   
   loadUserProfile: async () => {
     // Verificar se usuário está autenticado antes de carregar
@@ -62,6 +64,5 @@ export const useUserStore = create<UserState>((set) => ({
     }
   },
   
-  reset: () => set({ name: 'Visitante', email: '', role: undefined, points: 0 }),
   reset: () => set({ id: '', name: 'Visitante', email: '', role: undefined, points: 0 }),
 }));
