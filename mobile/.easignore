@@ -13,7 +13,6 @@ web-build/
 
 # Generated files
 generate-icons.js
-google-services.json
 
 # Node modules
 node_modules/
