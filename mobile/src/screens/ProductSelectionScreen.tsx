@@ -14,7 +14,7 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import api from '@/services/api';
+import { productsService } from '@/services/productsService';
 import { HomeHeader } from '@/components/HomeHeader';
 import { SideMenu } from '@/components/SideMenu';
 import { Product, ProductCategory } from '@/types/product';
@@ -177,15 +177,8 @@ const ProductSelectionScreen = (): React.ReactElement => {
         const loadProducts = async () => {
             try {
                 setLoading(true);
-                const response = await api.get<any[]>('/products');
-                const apiProducts: Product[] = response.data.map((p) => ({
-                    id: p.id,
-                    name: p.name || 'Produto sem nome',
-                    category: (p.category || 'Todos') as ProductCategory,
-                    price: Number(p.basePrice) || 0,
-                    imageUrl: p.images?.[0] || 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400',
-                }));
-                setProducts(apiProducts);
+                const data = await productsService.getProducts();
+                setProducts(data);
             } catch (error) {
                 console.error('Erro ao carregar produtos:', error);
                 Alert.alert('Erro', 'Não foi possível carregar os produtos');
