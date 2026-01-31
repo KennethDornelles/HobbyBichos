@@ -4,21 +4,35 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 
-export function usePushNotifications(userId: string, deviceId: string) {
+export function usePushNotifications(userId: string, deviceId: string | null) {
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [notification, setNotification] = useState<Notifications.Notification | null>(null);
-  const notificationListener = useRef<any>();
-  const responseListener = useRef<any>();
+  const notificationListener = useRef<Notifications.Subscription | undefined>(undefined);
+  const responseListener = useRef<Notifications.Subscription | undefined>(undefined);
 
   useEffect(() => {
+    // Aguardar até ter userId e deviceId válidos
+    if (!userId || !deviceId) {
+      console.log('📱 Push: Aguardando userId/deviceId...', { userId, deviceId });
+      return;
+    }
+
+    console.log('📱 Push: Iniciando registro de token...');
+    console.log('📱 Push: userId:', userId);
+    console.log('📱 Push: deviceId:', deviceId);
+
     registerForPushNotificationsAsync().then(token => {
+      console.log('📱 Push: Token obtido:', token);
       setExpoPushToken(token);
-      if (token && userId && deviceId) {
+      if (token) {
+        console.log('📱 Push: Enviando token para API...');
         api.post('/notifications/register-token', {
           userId,
           deviceId,
           expoToken: token,
-        });
+        })
+        .then(res => console.log('📱 Push: Token registrado com sucesso!', res.data))
+        .catch(err => console.error('📱 Push: Erro ao registrar token:', err.message));
       }
     });
 
@@ -31,8 +45,8 @@ export function usePushNotifications(userId: string, deviceId: string) {
     });
 
     return () => {
-      Notifications.removeNotificationSubscription(notificationListener.current);
-      Notifications.removeNotificationSubscription(responseListener.current);
+      notificationListener.current && notificationListener.current.remove();
+      responseListener.current && responseListener.current.remove();
     };
   }, [userId, deviceId]);
 

@@ -1,18 +1,35 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, SafeAreaView, StatusBar, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { useUserNotifications } from '../../hooks/useUserNotifications';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useUserStore } from '../../store/userStore';
-import Constants from 'expo-constants';
+import * as Application from 'expo-application';
 
 export default function NotificationsScreen() {
   const { id: userId } = useUserStore();
-  const deviceId = Constants.installationId; // ID único da instalação do Expo
+  const [deviceId, setDeviceId] = useState<string>('');
   const { notification } = usePushNotifications(userId, deviceId);
-  const { notifications, loading } = useUserNotifications(userId, undefined); // storeId não está disponível no store
+  const { notifications, loading } = useUserNotifications(userId, undefined);
   const router = useRouter();
+
+  useEffect(() => {
+    // Obter ID único do dispositivo
+    const getDeviceId = async () => {
+      try {
+        const androidId = await Application.getAndroidId();
+        if (androidId) {
+          setDeviceId(androidId);
+        } else {
+          setDeviceId(Application.applicationId || 'device-fallback');
+        }
+      } catch {
+        setDeviceId(Application.applicationId || 'device-fallback');
+      }
+    };
+    getDeviceId();
+  }, []);
 
   useEffect(() => {
     if (notification) {
@@ -23,11 +40,11 @@ export default function NotificationsScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <Text style={styles.header}>Notifications center</Text>
+      <Text style={styles.header}>Central de Notificações</Text>
       <View style={styles.tabs}>
-        <Text style={[styles.tab, styles.tabActive]}>New</Text>
-        <Text style={styles.tab}>Notificaces</Text>
-        <Text style={styles.tab}>Earlier</Text>
+        <Text style={[styles.tab, styles.tabActive]}>Novas</Text>
+        <Text style={styles.tab}>Notificações</Text>
+        <Text style={styles.tab}>Anteriores</Text>
       </View>
       {loading ? (
         <ActivityIndicator color="#FFD600" style={{ marginTop: 32 }} />
