@@ -4,14 +4,14 @@ import { usePushNotifications } from '../../hooks/usePushNotifications';
 import { useUserNotifications } from '../../hooks/useUserNotifications';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useUserStore } from '../../store/userStore';
+import Constants from 'expo-constants';
 
 export default function NotificationsScreen() {
-  // Substitua por dados reais do usuário/dispositivo
-  const userId = 'USER_ID';
-  const storeId = 'STORE_ID';
-  const deviceId = 'DEVICE_ID';
+  const { id: userId } = useUserStore();
+  const deviceId = Constants.installationId; // ID único da instalação do Expo
   const { notification } = usePushNotifications(userId, deviceId);
-  const { notifications, loading } = useUserNotifications(userId, storeId);
+  const { notifications, loading } = useUserNotifications(userId, undefined); // storeId não está disponível no store
   const router = useRouter();
 
   useEffect(() => {

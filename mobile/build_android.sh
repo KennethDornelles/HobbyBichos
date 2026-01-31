@@ -87,6 +87,22 @@ else
 fi
 print_success "Prebuild concluído"
 
+# PATCH: Fix hermesEnabled error in build.gradle
+print_step "[2.5] Aplicando fix do Hermes no build.gradle..."
+BUILD_GRADLE="$APP_DIR/build.gradle"
+if [ -f "$BUILD_GRADLE" ]; then
+    if ! grep -q "def hermesEnabled" "$BUILD_GRADLE"; then
+        # Create a temp file to avoid sed issues on different platforms
+        awk '/def projectRoot =/ { print; print "def hermesEnabled = (findProperty(\"react.enableHermes\") ?: \"true\").toBoolean()"; next }1' "$BUILD_GRADLE" > "$BUILD_GRADLE.tmp" && mv "$BUILD_GRADLE.tmp" "$BUILD_GRADLE"
+        print_success "Fix do Hermes aplicado com sucesso"
+    else
+        print_success "Fix do Hermes já estava presente"
+    fi
+else
+    print_error "Arquivo build.gradle não encontrado em $BUILD_GRADLE"
+    exit 1
+fi
+
 # Network Security Config
 print_step "[3/6] Criando network_security_config.xml..."
 mkdir -p "$XML_DIR"
@@ -112,57 +128,54 @@ fi
 
 # Keystore
 print_step "[4/6] Verificando keystore..."
+KEY_PASS=""
 if [ -f "$KEYSTORE" ]; then
 	print_success "Keystore encontrado: $KEYSTORE"
+	# Tentar ler a senha do gradle.properties existente se houver
+	if [ -f "$GRADLE_PROPS" ]; then
+		KEY_PASS=$(grep "MYAPP_UPLOAD_STORE_PASSWORD" "$GRADLE_PROPS" | cut -d'=' -f2)
+	fi
 else
 	print_warning "Keystore não encontrado. Será criado um novo."
+	# Gerar senha aleatória se não existir
+	KEY_PASS=$(openssl rand -base64 12)
+	
 	keytool -genkeypair -v -storetype PKCS12 \
 		-keystore "$KEYSTORE" \
 		-alias hobbybichos-key \
 		-keyalg RSA \
 		-keysize 2048 \
-		-validity 10000
+		-validity 10000 \
+		-storepass "$KEY_PASS" \
+		-keypass "$KEY_PASS" \
+		-dname "CN=HobbyBichos, OU=Mobile, O=HobbyBichos, L=SaoPaulo, S=SP, C=BR"
 	print_success "Keystore criado: $KEYSTORE"
+	echo "Senha gerada: $KEY_PASS"
 fi
 
 # gradle.properties
 print_step "[5/6] Configurando gradle.properties..."
-if [ ! -f "$GRADLE_PROPS_EXAMPLE" ]; then
-	cat > "$GRADLE_PROPS_EXAMPLE" << 'EOF'
+
+# Se não temos senha ainda (caso keystore já existisse mas sem gradle.properties), pedir ou gerar erro
+if [ -z "$KEY_PASS" ]; then
+    print_warning "ATENÇÃO: Keystore existe mas não consegui recuperar a senha."
+    print_warning "Você precisará configurar manualmente o android/gradle.properties com a senha correta."
+else
+    # Adicionar configuração de assinatura ao gradle.properties existente
+    echo "" >> "$GRADLE_PROPS"
+    cat >> "$GRADLE_PROPS" << EOF
 # ========================================
 # CONFIGURAÇÃO DE ASSINATURA DO APK
 # ========================================
-# IMPORTANTE: Copie este arquivo para gradle.properties
-# e preencha com suas senhas reais
+# Adicionado automaticamente por build_android.sh
 
-# Caminho do keystore
 MYAPP_UPLOAD_STORE_FILE=hobbybichos-release-key.keystore
-
-# Alias da chave (definido ao criar keystore)
 MYAPP_UPLOAD_KEY_ALIAS=hobbybichos-key
-
-# Senhas (NUNCA COMMITE ESTE ARQUIVO!)
-MYAPP_UPLOAD_STORE_PASSWORD=SUA_SENHA_AQUI
-MYAPP_UPLOAD_KEY_PASSWORD=SUA_SENHA_AQUI
-
-# Outras configurações do Gradle
-android.useAndroidX=true
-android.enableJetifier=true
-org.gradle.jvmargs=-Xmx2048m -XX:MaxPermSize=512m -XX:+HeapDumpOnOutOfMemoryError -Dfile.encoding=UTF-8
+MYAPP_UPLOAD_STORE_PASSWORD=$KEY_PASS
+MYAPP_UPLOAD_KEY_PASSWORD=$KEY_PASS
 EOF
-	print_success "gradle.properties.example criado"
+    print_success "gradle.properties atualizado com configurações de assinatura"
 fi
-if [ ! -f "$GRADLE_PROPS" ]; then
-	print_error "gradle.properties não encontrado!"
-	echo "Copie o exemplo: cp android/gradle.properties.example android/gradle.properties"
-	exit 1
-fi
-if grep -q "SUA_SENHA_AQUI" "$GRADLE_PROPS"; then
-	print_error "Senhas não foram configuradas no gradle.properties!"
-	echo "Edite o arquivo e substitua 'SUA_SENHA_AQUI' pela senha real."
-	exit 1
-fi
-print_success "gradle.properties configurado"
 
 # Build APK
 print_step "[6/6] Compilando APK ($BUILD_TYPE)..."
