@@ -15,7 +15,7 @@ export enum AppointmentStatus {
   CANCELLED = 'CANCELLED',
 }
 
-import { ServicesService } from '../services/services.service';
+
 import { MailService } from '../mail/mail.service';
 
 @Injectable()
@@ -23,7 +23,6 @@ export class AppointmentsService {
   constructor(
     private readonly prisma: PrismaService, // Ainda usado para infraestrutura (Loja/Horários)
     private readonly appointmentsRepository: AppointmentsRepository,
-    private readonly servicesService: ServicesService,
     private readonly mailService: MailService,
   ) {}
 

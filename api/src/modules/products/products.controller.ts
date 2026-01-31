@@ -41,6 +41,17 @@ export class ProductsController {
     return this.productsService.findAll();
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Get('store')
+  @ApiOperation({
+    summary: 'Lista todos os produtos da loja do usuário autenticado',
+  })
+  @ApiResponse({ status: 200, description: 'Produtos retornados com sucesso.' })
+  async findAllByStore(@Req() req: { user: { storeId: string } }) {
+    const storeId: string = req.user.storeId;
+    return this.productsService.findAllByStore(storeId);
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Busca um produto pelo ID' })
   @ApiResponse({ status: 200, description: 'Produto encontrado.' })
@@ -63,16 +74,5 @@ export class ProductsController {
   @ApiResponse({ status: 404, description: 'Produto não encontrado.' })
   remove(@Param('id') id: string) {
     return this.productsService.remove(id);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Get('store')
-  @ApiOperation({
-    summary: 'Lista todos os produtos da loja do usuário autenticado',
-  })
-  @ApiResponse({ status: 200, description: 'Produtos retornados com sucesso.' })
-  async findAllByStore(@Req() req: { user: { storeId: string } }) {
-    const storeId: string = req.user.storeId;
-    return this.productsService.findAllByStore(storeId);
   }
 }

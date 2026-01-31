@@ -2,7 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../../database/prisma.service';
 import { LoyaltyService } from '../services/loyalty.service';
-import { TransactionType } from '@prisma/client';
+import { NotificationService } from '../../notifications/notification.service';
+import { TransactionType, NotificationCategory } from '@prisma/client';
 
 @Injectable()
 export class PointsExpirationJob {
@@ -14,6 +15,7 @@ export class PointsExpirationJob {
   constructor(
     private readonly prisma: PrismaService,
     private readonly loyaltyService: LoyaltyService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   @Cron('0 1 * * *')
@@ -65,22 +67,17 @@ export class PointsExpirationJob {
 
         for (const transaction of batch) {
           totalProcessed++;
-          const pointsToExpire = Math.abs(transaction.points);
+          const originalPointsToExpire = Math.abs(transaction.points);
 
           try {
-            // Validar saldo antes de expirar
-            if (transaction.account.currentPoints < pointsToExpire) {
-              this.logger.warn({
-                job: 'PointsExpirationJob',
-                action: 'skipped_insufficient_balance',
-                transactionId: transaction.id,
-                accountId: transaction.accountId,
-                currentPoints: transaction.account.currentPoints,
-                pointsToExpire,
-              });
-              skippedCount++;
-              continue;
-            }
+            // FIX: Em vez de pular, calculamos o máximo que podemos debitar.
+            // Se o usuário tem menos pontos do que vai expirar, é porque ele já gastou
+            // os pontos "velhos" (sistema FIFO implícito).
+            // Debitamos apenas o que sobrou (se houver) e marcamos como expirado.
+            const pointsToDebit = Math.min(
+              transaction.account.currentPoints,
+              originalPointsToExpire,
+            );
 
             if (isDryRun) {
               this.logger.debug({
@@ -88,29 +85,30 @@ export class PointsExpirationJob {
                 action: 'dry_run',
                 transactionId: transaction.id,
                 accountId: transaction.accountId,
-                pointsToExpire,
+                pointsToDebit,
+                originalPointsToExpire,
               });
               successCount++;
-              totalPointsExpired += pointsToExpire;
+              if (pointsToDebit > 0) totalPointsExpired += pointsToDebit;
               continue;
             }
 
             // Tentar expirar com retry logic
             const success = await this.expireTransactionWithRetry(
               transaction,
-              pointsToExpire,
+              pointsToDebit,
             );
 
             if (success) {
               successCount++;
-              totalPointsExpired += pointsToExpire;
+              if (pointsToDebit > 0) totalPointsExpired += pointsToDebit;
               this.logger.debug({
                 job: 'PointsExpirationJob',
                 action: 'expired',
                 transactionId: transaction.id,
                 accountId: transaction.accountId,
                 userId: transaction.account.userId,
-                points: pointsToExpire,
+                pointsDebited: pointsToDebit,
               });
             } else {
               failureCount++;
@@ -168,31 +166,42 @@ export class PointsExpirationJob {
 
   private async expireTransactionWithRetry(
     transaction: { id: string; accountId: string; description: string },
-    pointsToExpire: number,
+    pointsToDebit: number,
   ): Promise<boolean> {
     for (let attempt = 1; attempt <= this.MAX_RETRIES; attempt++) {
       try {
-        await this.prisma.$transaction([
-          this.prisma.loyaltyTransaction.create({
-            data: {
-              accountId: transaction.accountId,
-              points: -pointsToExpire,
-              type: TransactionType.EXPIRATION,
-              description: `Expiração de pontos (${transaction.description})`,
-              referenceId: transaction.id,
-            },
-          }),
+        const operations: any[] = [
+          // 1. Marca a transação original como expirada para não processar de novo
           this.prisma.loyaltyTransaction.update({
             where: { id: transaction.id },
             data: { expired: true },
           }),
-          this.prisma.loyaltyAccount.update({
-            where: { id: transaction.accountId },
-            data: {
-              currentPoints: { decrement: pointsToExpire },
-            },
-          }),
-        ]);
+        ];
+
+        // 2. Se houver pontos a debitar, cria a transação de débito e atualiza o saldo
+        if (pointsToDebit > 0) {
+          operations.push(
+            this.prisma.loyaltyTransaction.create({
+              data: {
+                accountId: transaction.accountId,
+                points: -pointsToDebit,
+                type: TransactionType.EXPIRATION,
+                description: `Expiração de pontos (${transaction.description})`,
+                referenceId: transaction.id,
+              },
+            }),
+          );
+          operations.push(
+            this.prisma.loyaltyAccount.update({
+              where: { id: transaction.accountId },
+              data: {
+                currentPoints: { decrement: pointsToDebit },
+              },
+            }),
+          );
+        }
+
+        await this.prisma.$transaction(operations);
         return true;
       } catch (error) {
         if (attempt < this.MAX_RETRIES) {
@@ -226,6 +235,8 @@ export class PointsExpirationJob {
     try {
       const thirtyDaysFromNow = new Date();
       thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+      // Ajuste para pegar o fim do dia para garantir cobertura
+      thirtyDaysFromNow.setHours(23, 59, 59, 999);
 
       this.logger.log({
         job: 'PointsExpirationJob',
@@ -269,7 +280,17 @@ export class PointsExpirationJob {
 
       for (const [userId, points] of userMap.entries()) {
         try {
-          // TODO: Implementar serviço de notificação (email/push)
+          // Envia notificação Push
+          await this.notificationService.enqueueNotification({
+            userId,
+            category: NotificationCategory.MARKETING, // Categoria apropriada para lembretes
+            payload: {
+              title: '⏳ Seus pontos vão expirar!',
+              body: `Você tem ${points} pontos vencendo nos próximos 30 dias. Use-os agora!`,
+              data: { type: 'points_expiration', points },
+            },
+          });
+
           this.logger.debug({
             job: 'PointsExpirationJob',
             action: 'notify_user',

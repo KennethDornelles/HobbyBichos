@@ -17,6 +17,7 @@ import { PointsExpirationJob } from './jobs/points-expiration.job';
 import { TierRenewalJob } from './jobs/tier-renewal.job';
 
 import { OrderCompletedListener } from './listeners/order-completed.listener';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { OrderCompletedListener } from './listeners/order-completed.listener';
     ConfigModule,
     ScheduleModule.forRoot(),
     EventEmitterModule.forRoot(),
+    NotificationsModule,
   ],
   controllers: [LoyaltyController, LoyaltyAdminController],
   providers: [

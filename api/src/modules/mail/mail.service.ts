@@ -13,7 +13,7 @@ export interface AppointmentMailData {
 
 @Injectable()
 export class MailService {
-  private resend: Resend;
+  private resend?: Resend;
   private from: string;
 
   constructor(private readonly configService: ConfigService) {
@@ -21,8 +21,9 @@ export class MailService {
     this.from = this.configService.get<string>('MAIL_FROM') || 'Hobby Bichos <onboarding@resend.dev>';
     if (!apiKey) {
       console.warn('RESEND_API_KEY not found. MailService will not send emails.');
+    } else {
+      this.resend = new Resend(apiKey);
     }
-    this.resend = new Resend(apiKey);
   }
 
   private sanitizeEmail(email: string): string {
@@ -65,6 +66,11 @@ export class MailService {
         appointmentData,
       });
 
+      if (!this.resend) {
+        console.warn('Email skipped (no API key): Confirmação de Agendamento');
+        return;
+      }
+
       await this.resend.emails.send({
         from: this.from,
         to: sanitizedTo,
@@ -92,6 +98,11 @@ export class MailService {
         storeName,
         appointmentData,
       });
+
+      if (!this.resend) {
+        console.warn('Email skipped (no API key): Lembrete 24h');
+        return;
+      }
 
       await this.resend.emails.send({
         from: this.from,
@@ -122,6 +133,11 @@ export class MailService {
         storeName,
         appointmentData,
       });
+
+      if (!this.resend) {
+        console.warn('Email skipped (no API key): Pet Pronto');
+        return;
+      }
 
       await this.resend.emails.send({
         from: this.from,
@@ -158,6 +174,11 @@ export class MailService {
         serviceName: appointmentData.serviceName || 'o serviço',
         storeName: appointmentData.storeName || 'Hobby Bichos',
       });
+
+      if (!this.resend) {
+        console.warn('Email skipped (no API key): Serviço Concluído');
+        return;
+      }
 
       await this.resend.emails.send({
         from: this.from,

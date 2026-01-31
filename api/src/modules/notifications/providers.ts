@@ -50,17 +50,25 @@ export class SmsProvider {
 }
 
 export class EmailProvider {
-  private resend: Resend;
+  private resend?: Resend;
   private from: string;
 
-  constructor(apiKey: string, from: string) {
-    this.resend = new Resend(apiKey);
+  constructor(apiKey: string | undefined, from: string) {
+    if (apiKey) {
+      this.resend = new Resend(apiKey);
+    } else {
+      console.warn('RESEND_API_KEY missing for EmailProvider');
+    }
     this.from = from;
   }
 
   async send(email: string, subject: string, body: string): Promise<boolean> {
     try {
       if (!email) return false;
+      if (!this.resend) {
+        console.warn('Email skipped (no API key) in EmailProvider');
+        return false;
+      }
 
       await this.resend.emails.send({
         from: this.from,

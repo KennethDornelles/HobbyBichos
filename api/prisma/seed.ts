@@ -230,6 +230,18 @@ async function main(): Promise<void> {
         basePrice: 22.5,
         category: 'Ração',
       },
+      {
+        name: 'Ração Premier Raças Específicas - 12kg',
+        barcode: '7890021',
+        basePrice: 210.0,
+        category: 'Ração',
+      },
+      {
+        name: 'Ração Biofresh Super Premium - 10kg',
+        barcode: '7890022',
+        basePrice: 280.9,
+        category: 'Ração',
+      },
 
       // Higiene
       {
@@ -254,6 +266,18 @@ async function main(): Promise<void> {
         name: 'Escova Desembarante - Aço',
         barcode: '7890008',
         basePrice: 32.0,
+        category: 'Higiene',
+      },
+      {
+        name: 'Lenços Umedecidos Pet - 75un',
+        barcode: '7890023',
+        basePrice: 18.9,
+        category: 'Higiene',
+      },
+      {
+        name: 'Perfume Pet Macho/Fêmea - 100ml',
+        barcode: '7890024',
+        basePrice: 55.0,
         category: 'Higiene',
       },
 
@@ -282,6 +306,18 @@ async function main(): Promise<void> {
         basePrice: 24.9,
         category: 'Brinquedos',
       },
+      {
+        name: 'Pelúcia com Apito - Formato Osso',
+        barcode: '7890025',
+        basePrice: 35.9,
+        category: 'Brinquedos',
+      },
+      {
+        name: 'Mordedor de Nylon Sabor Carne',
+        barcode: '7890026',
+        basePrice: 49.9,
+        category: 'Brinquedos',
+      },
 
       // Acessórios
       {
@@ -308,6 +344,18 @@ async function main(): Promise<void> {
         basePrice: 58.0,
         category: 'Acessórios',
       },
+      {
+        name: 'Cama Nuvem Confort - M',
+        barcode: '7890027',
+        basePrice: 149.9,
+        category: 'Acessórios',
+      },
+      {
+        name: 'Bebedouro Automático Fonte - 2L',
+        barcode: '7890028',
+        basePrice: 199.9,
+        category: 'Acessórios',
+      },
 
       // Medicamentos
       {
@@ -332,6 +380,18 @@ async function main(): Promise<void> {
         name: 'Suplemento Ômega 3 - 60 cápsulas',
         barcode: '7890020',
         basePrice: 52.0,
+        category: 'Medicamentos',
+      },
+      {
+        name: 'Antibiótico Veterinário - 150mg',
+        barcode: '7890029',
+        basePrice: 68.5,
+        category: 'Medicamentos',
+      },
+      {
+        name: 'Colírio Lubrificante Pet - 10ml',
+        barcode: '7890030',
+        basePrice: 45.0,
         category: 'Medicamentos',
       },
     ];
