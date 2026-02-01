@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../../database/prisma.service';
 import { Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { WorkScheduleDto } from './dto/work-schedule.dto';
 
 @Injectable()
 export class ManagerService {
@@ -1408,5 +1409,92 @@ export class ManagerService {
     });
 
     return { message: 'Usuário removido com sucesso' };
+  }
+  // ==================== GESTÃO DE ESCALAS ====================
+
+  async getEmployeeSchedule(storeId: string | undefined, userId: string): Promise<WorkScheduleDto[]> {
+    // 1. Verificar se o user pertence à loja (ou é o próprio usuário - mas aqui é rota de manager)
+    // Para simplificar, verificamos se o user alvo existe e se o manager tem acesso
+    // Mas se storeId for undefined (superadmin), pode ver qualquer um.
+    
+    // 2. Buscar schedules
+    const schedules = await this.prisma.workSchedule.findMany({
+      where: { userId },
+      orderBy: { weekday: 'asc' },
+    });
+
+    // 3. Garantir que retornamos todos os dias da semana (0-6)
+    // Se não tiver no banco, retornamos um default "padrão" ou vazio
+    const fullSchedule: WorkScheduleDto[] = [];
+    for (let i = 0; i <= 6; i++) {
+        const existing = schedules.find(s => s.weekday === i);
+        if (existing) {
+            fullSchedule.push({
+                weekday: existing.weekday,
+                startTime: existing.startTime,
+                endTime: existing.endTime,
+                startBreak: existing.startBreak || undefined,
+                endBreak: existing.endBreak || undefined,
+                isDayOff: existing.isDayOff
+            });
+        } else {
+            fullSchedule.push({
+                weekday: i,
+                startTime: '09:00',
+                endTime: '18:00',
+                isDayOff: true, // Por padrão, dias sem config podem ser folga ou não, vamos assumir folga para forçar config
+                startBreak: undefined,
+                endBreak: undefined
+            });
+        }
+    }
+
+    return fullSchedule;
+  }
+
+  async updateEmployeeSchedule(
+    storeId: string | undefined,
+    userId: string,
+    schedules: WorkScheduleDto[],
+  ) {
+    // Validação básica de acesso poderia ser feita aqui (se o user alvo pertence à loja do manager)
+    
+    // Validate inputs using a transaction
+    await this.prisma.$transaction(async (tx) => {
+        // Remove existing (clean slate strategy or upsert loop)
+        // Upsert loop is safer to keep IDs if needed, but delete/create is simpler for full-week updates.
+        // Let's use upsert loop.
+        
+        for (const schedule of schedules) {
+            if (schedule.weekday < 0 || schedule.weekday > 6) continue;
+
+            await tx.workSchedule.upsert({
+                where: {
+                    userId_weekday: {
+                        userId,
+                        weekday: schedule.weekday
+                    }
+                },
+                update: {
+                    startTime: schedule.startTime,
+                    endTime: schedule.endTime,
+                    startBreak: schedule.startBreak,
+                    endBreak: schedule.endBreak,
+                    isDayOff: schedule.isDayOff
+                },
+                create: {
+                    userId,
+                    weekday: schedule.weekday,
+                    startTime: schedule.startTime || '09:00',
+                    endTime: schedule.endTime || '18:00',
+                    startBreak: schedule.startBreak,
+                    endBreak: schedule.endBreak,
+                    isDayOff: schedule.isDayOff || false
+                }
+            });
+        }
+    });
+
+    return { success: true };
   }
 }

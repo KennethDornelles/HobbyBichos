@@ -188,8 +188,27 @@ model User {
   pushTokens PushToken[]
   userNotificationPreferences UserNotificationPreference[]
   refreshTokens RefreshToken[]
+  workSchedules WorkSchedule[]
 
   @@map("users")
+}
+
+model WorkSchedule {
+  id         String   @id @default(uuid())
+  userId     String
+  weekday    Int // 0=Domingo, 6=Sábado
+  startTime  String   @default("09:00") // HH:mm
+  endTime    String   @default("18:00") // HH:mm
+  startBreak String?  // HH:mm
+  endBreak   String?  // HH:mm
+  isDayOff   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, weekday])
+  @@map("work_schedules")
 }
 
 model RecoveryCode {

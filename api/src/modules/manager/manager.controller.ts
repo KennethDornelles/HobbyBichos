@@ -18,6 +18,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { ManagerService } from './manager.service';
+import { WorkScheduleDto } from './dto/work-schedule.dto';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -409,5 +410,38 @@ export class ManagerController {
     );
     const userRole = req.user.role;
     return this.managerService.deleteUser(storeId, userRole, id);
+  }
+
+  // ==================== GESTÃO DE ESCALAS ====================
+
+  @Get('users/:id/schedule')
+  @ApiOperation({ summary: 'Consultar escala de trabalho do funcionário' })
+  @ApiQuery({ name: 'storeId', required: false, type: String })
+  async getEmployeeSchedule(
+    @Req() req: AuthRequest,
+    @Param('id') id: string,
+    @Query('storeId') queryStoreId?: string,
+  ) {
+    const storeId = await this.managerService.getEffectiveStoreId(
+        req.user,
+        queryStoreId,
+    );
+    return this.managerService.getEmployeeSchedule(storeId, id);
+  }
+
+  @Put('users/:id/schedule')
+  @ApiOperation({ summary: 'Atualizar escala de trabalho do funcionário' })
+  @ApiQuery({ name: 'storeId', required: false, type: String })
+  async updateEmployeeSchedule(
+    @Req() req: AuthRequest,
+    @Param('id') id: string,
+    @Body() schedules: WorkScheduleDto[],
+    @Query('storeId') queryStoreId?: string,
+  ) {
+    const storeId = await this.managerService.getEffectiveStoreId(
+        req.user,
+        queryStoreId,
+    );
+    return this.managerService.updateEmployeeSchedule(storeId, id, schedules);
   }
 }
