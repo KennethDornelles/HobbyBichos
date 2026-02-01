@@ -5,10 +5,10 @@ import { PrismaService } from '../../database/prisma.service';
 export class AnalyticsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getRevenueSummary(storeId: string, startDate: Date, endDate: Date) {
+  async getRevenueSummary(storeId: string | undefined, startDate: Date, endDate: Date) {
     const result = await this.prisma.order.aggregate({
       where: {
-        storeId,
+        ...(storeId ? { storeId } : {}),
         status: 'PAID',
         createdAt: {
           gte: startDate,
@@ -20,11 +20,11 @@ export class AnalyticsService {
     return { revenue: Number(result._sum.total || 0) };
   }
 
-  async getSalesAnalytics(storeId: string, startDate: Date, endDate: Date) {
+  async getSalesAnalytics(storeId: string | undefined, startDate: Date, endDate: Date) {
     // Período atual
     const currentOrders = await this.prisma.order.findMany({
       where: {
-        storeId,
+        ...(storeId ? { storeId } : {}),
         status: 'PAID',
         createdAt: { gte: startDate, lte: endDate },
       },
@@ -40,7 +40,7 @@ export class AnalyticsService {
 
     const prevOrders = await this.prisma.order.aggregate({
       where: {
-        storeId,
+        ...(storeId ? { storeId } : {}),
         status: 'PAID',
         createdAt: { gte: prevStartDate, lte: prevEndDate },
       },
@@ -65,11 +65,11 @@ export class AnalyticsService {
     };
   }
 
-  async getProductPerformance(storeId: string, startDate: Date, endDate: Date) {
+  async getProductPerformance(storeId: string | undefined, startDate: Date, endDate: Date) {
     const items = await this.prisma.orderItem.findMany({
       where: {
         order: {
-          storeId,
+          ...(storeId ? { storeId } : {}),
           status: 'PAID',
           createdAt: { gte: startDate, lte: endDate },
         },
@@ -97,10 +97,10 @@ export class AnalyticsService {
     return Object.values(performance).sort((a, b) => b.revenue - a.revenue);
   }
 
-  async getAppointmentInDepth(storeId: string, startDate: Date, endDate: Date) {
+  async getAppointmentInDepth(storeId: string | undefined, startDate: Date, endDate: Date) {
     const appointments = await this.prisma.appointment.findMany({
       where: {
-        storeId,
+        ...(storeId ? { storeId } : {}),
         startsAt: { gte: startDate, lte: endDate },
       },
     });
@@ -129,10 +129,10 @@ export class AnalyticsService {
     };
   }
 
-  async getCustomerMetrics(storeId: string, startDate: Date, endDate: Date) {
+  async getCustomerMetrics(storeId: string | undefined, startDate: Date, endDate: Date) {
     const orders = await this.prisma.order.findMany({
       where: {
-        storeId,
+        ...(storeId ? { storeId } : {}),
         status: 'PAID',
         createdAt: { gte: startDate, lte: endDate },
       },
@@ -140,32 +140,43 @@ export class AnalyticsService {
     });
 
     const totalRevenue = orders.reduce((sum, o) => sum + Number(o.total), 0);
-    const uniqueCustomers = new Set(orders.map((o) => o.userId)).size;
+    const uniqueCustomers = new Set(orders.map((o) => o.userId));
+    const totalCustomers = uniqueCustomers.size;
+
+    // Cálculo simplificado de retenção: clientes com > 1 pedido no período
+    const customerOrderCounts: Record<string, number> = {};
+    orders.forEach(o => {
+      customerOrderCounts[o.userId] = (customerOrderCounts[o.userId] || 0) + 1;
+    });
+    const recurrentCustomers = Object.values(customerOrderCounts).filter(count => count > 1).length;
+    const retentionRate = totalCustomers > 0 ? (recurrentCustomers / totalCustomers) * 100 : 0;
 
     // Ticket Médio
     const averageTicket = orders.length > 0 ? totalRevenue / orders.length : 0;
 
     return {
-      uniqueCustomers,
+      totalCustomers,
+      recurrentCustomers,
+      retentionRate,
       totalOrders: orders.length,
       revenue: totalRevenue,
       averageTicket: Number(averageTicket.toFixed(2)),
     };
   }
 
-  async getAppointmentStats(storeId: string) {
+  async getAppointmentStats(storeId: string | undefined) {
     const stats = await this.prisma.appointment.groupBy({
       by: ['status'],
-      where: { storeId },
+      where: { ...(storeId ? { storeId } : {}) },
       _count: { status: true },
     });
     return stats.map((s) => ({ status: s.status, count: s._count.status }));
   }
 
-  async getTopServices(storeId: string) {
+  async getTopServices(storeId: string | undefined) {
     const top = await this.prisma.appointment.groupBy({
       by: ['serviceId'],
-      where: { storeId, status: 'COMPLETED' },
+      where: { ...(storeId ? { storeId } : {}), status: 'COMPLETED' },
       _count: { serviceId: true },
       orderBy: { _count: { serviceId: 'desc' } },
       take: 5,
@@ -173,10 +184,10 @@ export class AnalyticsService {
     return top;
   }
 
-  async getEmployeePerformance(storeId: string) {
+  async getEmployeePerformance(storeId: string | undefined) {
     const perf = await this.prisma.appointment.groupBy({
       by: ['professionalId'],
-      where: { storeId, status: 'COMPLETED', professionalId: { not: null } },
+      where: { ...(storeId ? { storeId } : {}), status: 'COMPLETED', professionalId: { not: null } },
       _count: { professionalId: true },
       orderBy: { _count: { professionalId: 'desc' } },
     });

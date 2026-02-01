@@ -19,11 +19,11 @@ interface AuthRequest {
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
-  private getEffectiveStoreId(user: AuthRequest['user'], queryStoreId?: string): string {
+  private getEffectiveStoreId(user: AuthRequest['user'], queryStoreId?: string): string | undefined {
     if (user.role === Role.SUPER_ADMIN || user.role === Role.OWNER) {
       if (queryStoreId) return queryStoreId;
       if (user.storeId) return user.storeId;
-      throw new ForbiddenException('Informe o storeId para consulta administrativa');
+      return undefined; // Global View
     }
     
     if (!user.storeId) {
