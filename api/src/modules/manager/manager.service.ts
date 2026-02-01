@@ -13,9 +13,40 @@ import * as bcrypt from 'bcrypt';
 export class ManagerService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Resolve o storeId efetivo. Se for SUPER_ADMIN e não tiver storeId,
+   * tenta pegar do query ou o primeiro da loja do banco.
+   */
+  async getEffectiveStoreId(
+    user: { id: string; storeId: string | null; role: string },
+    queryStoreId?: string,
+  ): Promise<string | undefined> {
+    const isNetworkAdmin = user.role === 'SUPER_ADMIN' || user.role === 'OWNER';
+
+    // 1. Prioridade para o storeId passado na query (para administradores da rede)
+    if (isNetworkAdmin && queryStoreId) {
+      if (queryStoreId === 'all') return undefined;
+      return queryStoreId;
+    }
+
+    // 2. Se o user já tem storeId fixo (MANAGER/EMPLOYEE), usa ele
+    if (user.storeId) {
+      return user.storeId;
+    }
+
+    // 3. Se for admin da rede sem storeId na query, retorna undefined (Vista Global)
+    if (isNetworkAdmin) {
+      return undefined;
+    }
+
+    throw new ForbiddenException(
+      'Usuário não está associado a nenhuma loja e não possui privilégios administrativos.',
+    );
+  }
+
   // ==================== DASHBOARD ====================
 
-  async getDashboard(storeId: string) {
+  async getDashboard(storeId?: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -24,10 +55,12 @@ export class ManagerService {
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
+    const filter = storeId ? { storeId } : {};
+
     // Agendamentos de hoje
     const todayAppointments = await this.prisma.appointment.count({
       where: {
-        storeId,
+        ...filter,
         startsAt: {
           gte: today,
           lt: tomorrow,
@@ -37,7 +70,7 @@ export class ManagerService {
 
     const completedToday = await this.prisma.appointment.count({
       where: {
-        storeId,
+        ...filter,
         startsAt: {
           gte: today,
           lt: tomorrow,
@@ -49,7 +82,7 @@ export class ManagerService {
     // Pedidos do mês
     const monthOrders = await this.prisma.order.count({
       where: {
-        storeId,
+        ...filter,
         createdAt: {
           gte: startOfMonth,
           lte: endOfMonth,
@@ -61,7 +94,7 @@ export class ManagerService {
     // Receita do mês
     const monthRevenue = await this.prisma.order.aggregate({
       where: {
-        storeId,
+        ...filter,
         createdAt: {
           gte: startOfMonth,
           lte: endOfMonth,
@@ -76,7 +109,7 @@ export class ManagerService {
     // Serviços ativos
     const activeServices = await this.prisma.service.count({
       where: {
-        storeId,
+        ...filter,
         isActive: true,
       },
     });
@@ -84,7 +117,7 @@ export class ManagerService {
     // Funcionários
     const employees = await this.prisma.user.count({
       where: {
-        storeId,
+        ...filter,
         role: { in: ['EMPLOYEE', 'MANAGER'] },
       },
     });
@@ -92,7 +125,7 @@ export class ManagerService {
     // Pedidos abertos (PENDING)
     const openOrders = await this.prisma.order.count({
       where: {
-        storeId,
+        ...filter,
         status: 'PENDING',
       },
     });
@@ -100,7 +133,7 @@ export class ManagerService {
     // Estudo de Estoque Crítico (quantity <= minStock)
     const lowStockItems = await this.prisma.productStock.findMany({
       where: {
-        storeId,
+        ...filter,
       },
       include: {
         product: {
@@ -110,6 +143,11 @@ export class ManagerService {
             sku: true,
           },
         },
+        store: {
+          select: {
+            name: true
+          }
+        }
       },
     });
 
@@ -121,7 +159,7 @@ export class ManagerService {
     // Próximos agendamentos
     const upcomingAppointments = await this.prisma.appointment.findMany({
       where: {
-        storeId,
+        ...filter,
         startsAt: {
           gte: new Date(),
         },
@@ -150,10 +188,16 @@ export class ManagerService {
             species: true,
           },
         },
+        store: {
+            select: {
+                name: true
+            }
+        }
       },
     });
 
     return {
+      isGlobal: !storeId,
       summary: {
         todayAppointments,
         completedToday,
@@ -172,12 +216,13 @@ export class ManagerService {
         sku: s.product.sku,
         quantity: s.quantity,
         minStock: s.minStock,
+        storeName: s.store?.name
       })),
     };
   }
 
   async getFinancialDashboard(
-    storeId: string,
+    storeId?: string,
     startDate?: Date,
     endDate?: Date,
   ) {
@@ -185,10 +230,13 @@ export class ManagerService {
       startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const end = endDate || new Date();
 
+    const filter = storeId ? { storeId } : {};
+    const storeFilterSql = storeId ? `AND "storeId" = '${storeId}'` : '';
+
     // Receita total
     const totalRevenue = await this.prisma.order.aggregate({
       where: {
-        storeId,
+        ...filter,
         createdAt: {
           gte: start,
           lte: end,
@@ -202,44 +250,44 @@ export class ManagerService {
     });
 
     // Receita por dia
-    const dailyRevenue = await this.prisma.$queryRaw<
+    const dailyRevenue = await this.prisma.$queryRawUnsafe<
       Array<{ date: Date; total: number; count: number }>
-    >`
+    >(`
       SELECT 
         DATE("createdAt") as date,
         SUM(total::numeric) as total,
         COUNT(*) as count
       FROM orders
-      WHERE "storeId" = ${storeId}
-        AND "createdAt" >= ${start}
-        AND "createdAt" <= ${end}
+      WHERE "createdAt" >= $1
+        AND "createdAt" <= $2
         AND status = 'PAID'
+        ${storeFilterSql}
       GROUP BY DATE("createdAt")
       ORDER BY date DESC
-    `;
+    `, start, end);
 
     // Receita por categoria de produto
-    const revenueByCategory = await this.prisma.$queryRaw<
+    const revenueByCategory = await this.prisma.$queryRawUnsafe<
       Array<{ category: string; total: number }>
-    >`
+    >(`
       SELECT 
         p.category,
         SUM(oi.price::numeric * oi.quantity) as total
       FROM order_items oi
       INNER JOIN orders o ON o.id = oi."orderId"
       INNER JOIN products p ON p.id = oi."productId"
-      WHERE o."storeId" = ${storeId}
-        AND o."createdAt" >= ${start}
-        AND o."createdAt" <= ${end}
+      WHERE o."createdAt" >= $1
+        AND o."createdAt" <= $2
         AND o.status = 'PAID'
+        ${storeId ? `AND o."storeId" = '${storeId}'` : ''}
       GROUP BY p.category
       ORDER BY total DESC
-    `;
+    `, start, end);
 
     // Receita por serviços
-    const revenueByService = await this.prisma.$queryRaw<
+    const revenueByService = await this.prisma.$queryRawUnsafe<
       Array<{ service: string; total: number; count: number }>
-    >`
+    >(`
       SELECT 
         s.name as service,
         SUM(oi.price::numeric) as total,
@@ -247,16 +295,17 @@ export class ManagerService {
       FROM order_items oi
       INNER JOIN orders o ON o.id = oi."orderId"
       INNER JOIN services s ON s.id = oi."serviceId"
-      WHERE o."storeId" = ${storeId}
-        AND o."createdAt" >= ${start}
-        AND o."createdAt" <= ${end}
+      WHERE o."createdAt" >= $1
+        AND o."createdAt" <= $2
         AND o.status = 'PAID'
         AND oi."serviceId" IS NOT NULL
+        ${storeId ? `AND o."storeId" = '${storeId}'` : ''}
       GROUP BY s.name
       ORDER BY total DESC
-    `;
+    `, start, end);
 
     return {
+      isGlobal: !storeId,
       period: {
         start,
         end,
@@ -282,11 +331,11 @@ export class ManagerService {
 
   // ==================== GESTÃO DE SERVIÇOS ====================
 
-  async getServices(storeId: string) {
+  async getServices(storeId?: string) {
+    const filter = storeId ? { storeId } : {};
+
     const services = await this.prisma.service.findMany({
-      where: {
-        storeId,
-      },
+      where: filter,
       orderBy: {
         name: 'asc',
       },
@@ -298,6 +347,7 @@ export class ManagerService {
         const appointmentCount = await this.prisma.appointment.count({
           where: {
             serviceId: service.id,
+            ...filter,
           },
         });
 
@@ -305,7 +355,7 @@ export class ManagerService {
           where: {
             serviceId: service.id,
             order: {
-              storeId,
+              ...filter,
               status: 'PAID',
             },
           },
@@ -327,11 +377,13 @@ export class ManagerService {
     return servicesWithStats;
   }
 
-  async getServiceById(storeId: string, serviceId: string) {
+  async getServiceById(storeId: string | undefined, serviceId: string) {
+    const filter = storeId ? { storeId } : {};
+
     const service = await this.prisma.service.findFirst({
       where: {
         id: serviceId,
-        storeId,
+        ...filter,
       },
     });
 
@@ -347,10 +399,18 @@ export class ManagerService {
     };
   }
 
-  createService(storeId: string, data: any) {
+  createService(storeId: string | undefined, data: any) {
+    const finalStoreId = data.storeId || storeId;
+
+    if (!finalStoreId) {
+      throw new ForbiddenException(
+        'Informe a loja para a criação deste serviço.',
+      );
+    }
+
     return this.prisma.service.create({
       data: {
-        storeId,
+        storeId: finalStoreId,
         name: data.name,
         price: data.price,
         durationMin: data.durationMin || 30,
@@ -359,12 +419,18 @@ export class ManagerService {
     });
   }
 
-  async updateService(storeId: string, serviceId: string, data: any) {
+  async updateService(
+    storeId: string | undefined,
+    serviceId: string,
+    data: any,
+  ) {
+    const filter = storeId ? { storeId } : {};
+
     // Verificar se o serviço pertence à loja
     const service = await this.prisma.service.findFirst({
       where: {
         id: serviceId,
-        storeId,
+        ...filter,
       },
     });
 
@@ -385,12 +451,14 @@ export class ManagerService {
     });
   }
 
-  async deactivateService(storeId: string, serviceId: string) {
+  async deactivateService(storeId: string | undefined, serviceId: string) {
+    const filter = storeId ? { storeId } : {};
+
     // Verificar se o serviço pertence à loja
     const service = await this.prisma.service.findFirst({
       where: {
         id: serviceId,
-        storeId,
+        ...filter,
       },
     });
 
@@ -408,18 +476,20 @@ export class ManagerService {
     });
   }
 
-  async getServiceStats(storeId: string, serviceId: string) {
+  async getServiceStats(storeId: string | undefined, serviceId: string) {
+    const filter = storeId ? { storeId } : {};
+
     const totalAppointments = await this.prisma.appointment.count({
       where: {
         serviceId,
-        storeId,
+        ...filter,
       },
     });
 
     const completedAppointments = await this.prisma.appointment.count({
       where: {
         serviceId,
-        storeId,
+        ...filter,
         status: 'COMPLETED',
       },
     });
@@ -427,7 +497,7 @@ export class ManagerService {
     const cancelledAppointments = await this.prisma.appointment.count({
       where: {
         serviceId,
-        storeId,
+        ...filter,
         status: 'CANCELLED',
       },
     });
@@ -436,7 +506,7 @@ export class ManagerService {
       where: {
         serviceId,
         order: {
-          storeId,
+          ...filter,
           status: 'PAID',
         },
       },
@@ -510,12 +580,13 @@ export class ManagerService {
     return { start, end };
   }
 
-  async getRevenue(storeId: string, period: string) {
+  async getRevenue(storeId: string | undefined, period: string) {
     const { start, end } = this.getPeriodDates(period);
+    const filter = storeId ? { storeId } : {};
 
     const revenue = await this.prisma.order.aggregate({
       where: {
-        storeId,
+        ...filter,
         createdAt: {
           gte: start,
           lte: end,
@@ -535,7 +606,7 @@ export class ManagerService {
 
     const previousRevenue = await this.prisma.order.aggregate({
       where: {
-        storeId,
+        ...filter,
         createdAt: {
           gte: previousPeriodStart,
           lt: previousPeriodEnd,
@@ -565,12 +636,13 @@ export class ManagerService {
     };
   }
 
-  async getOrders(storeId: string, period: string) {
+  async getOrders(storeId: string | undefined, period: string) {
     const { start, end } = this.getPeriodDates(period);
+    const filter = storeId ? { storeId } : {};
 
     const orders = await this.prisma.order.findMany({
       where: {
-        storeId,
+        ...filter,
         createdAt: {
           gte: start,
           lte: end,
@@ -607,7 +679,7 @@ export class ManagerService {
     const summary = await this.prisma.order.groupBy({
       by: ['status'],
       where: {
-        storeId,
+        ...filter,
         createdAt: {
           gte: start,
           lte: end,
@@ -630,12 +702,13 @@ export class ManagerService {
     };
   }
 
-  async getAppointments(storeId: string, period: string) {
+  async getAppointments(storeId: string | undefined, period: string) {
     const { start, end } = this.getPeriodDates(period);
+    const filter = storeId ? { storeId } : {};
 
     const appointments = await this.prisma.appointment.findMany({
       where: {
-        storeId,
+        ...filter,
         startsAt: {
           gte: start,
           lte: end,
@@ -674,7 +747,7 @@ export class ManagerService {
     const summary = await this.prisma.appointment.groupBy({
       by: ['status'],
       where: {
-        storeId,
+        ...filter,
         startsAt: {
           gte: start,
           lte: end,
@@ -693,15 +766,16 @@ export class ManagerService {
     };
   }
 
-  async getTopProducts(storeId: string, limit: number = 10) {
-    const topProducts = await this.prisma.$queryRaw<
+  async getTopProducts(storeId: string | undefined, limit: number = 10) {
+    const storeFilterSql = storeId ? `AND o."storeId" = '${storeId}'` : '';
+    const topProducts = await this.prisma.$queryRawUnsafe<
       Array<{
         product_id: string;
         product_name: string;
         total_sold: number;
         revenue: number;
       }>
-    >`
+    >(`
       SELECT 
         p.id as product_id,
         p.name as product_name,
@@ -710,13 +784,13 @@ export class ManagerService {
       FROM order_items oi
       INNER JOIN orders o ON o.id = oi."orderId"
       INNER JOIN products p ON p.id = oi."productId"
-      WHERE o."storeId" = ${storeId}
-        AND o.status = 'PAID'
+      WHERE o.status = 'PAID'
         AND oi."productId" IS NOT NULL
+        ${storeFilterSql}
       GROUP BY p.id, p.name
       ORDER BY revenue DESC
-      LIMIT ${limit}
-    `;
+      LIMIT $1
+    `, limit);
 
     return topProducts.map((p) => ({
       productId: p.product_id,
@@ -726,15 +800,16 @@ export class ManagerService {
     }));
   }
 
-  async getTopServices(storeId: string, limit: number = 10) {
-    const topServices = await this.prisma.$queryRaw<
+  async getTopServices(storeId: string | undefined, limit: number = 10) {
+    const storeFilterSql = storeId ? `AND o."storeId" = '${storeId}'` : '';
+    const topServices = await this.prisma.$queryRawUnsafe<
       Array<{
         service_id: string;
         service_name: string;
         total_appointments: number;
         revenue: number;
       }>
-    >`
+    >(`
       SELECT 
         s.id as service_id,
         s.name as service_name,
@@ -743,13 +818,13 @@ export class ManagerService {
       FROM order_items oi
       INNER JOIN orders o ON o.id = oi."orderId"
       INNER JOIN services s ON s.id = oi."serviceId"
-      WHERE o."storeId" = ${storeId}
-        AND o.status = 'PAID'
+      WHERE o.status = 'PAID'
         AND oi."serviceId" IS NOT NULL
+        ${storeFilterSql}
       GROUP BY s.id, s.name
       ORDER BY revenue DESC
-      LIMIT ${limit}
-    `;
+      LIMIT $1
+    `, limit);
 
     return topServices.map((s) => ({
       serviceId: s.service_id,
@@ -761,15 +836,17 @@ export class ManagerService {
 
   // ==================== RELATÓRIOS ====================
 
-  async getDailyReport(storeId: string, date: Date) {
+  async getDailyReport(storeId: string | undefined, date: Date) {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
+    const filter = storeId ? { storeId } : {};
+
     const appointments = await this.prisma.appointment.findMany({
       where: {
-        storeId,
+        ...filter,
         startsAt: {
           gte: startOfDay,
           lte: endOfDay,
@@ -787,7 +864,7 @@ export class ManagerService {
 
     const orders = await this.prisma.order.findMany({
       where: {
-        storeId,
+        ...filter,
         createdAt: {
           gte: startOfDay,
           lte: endOfDay,
@@ -828,7 +905,7 @@ export class ManagerService {
   }
 
   async getEmployeePerformance(
-    storeId: string,
+    storeId: string | undefined,
     startDate?: Date,
     endDate?: Date,
   ) {
@@ -836,9 +913,11 @@ export class ManagerService {
       startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const end = endDate || new Date();
 
+    const filter = storeId ? { storeId } : {};
+
     const employees = await this.prisma.user.findMany({
       where: {
-        storeId,
+        ...filter,
         role: { in: ['EMPLOYEE', 'MANAGER'] },
       },
       select: {
@@ -925,7 +1004,11 @@ export class ManagerService {
     return false;
   }
 
-  async getUsers(storeId: string, managerRole: string, roleFilter?: string) {
+  async getUsers(
+    storeId: string | undefined,
+    managerRole: string,
+    roleFilter?: string,
+  ) {
     let allowedRoles: Role[];
 
     if (managerRole === 'MANAGER') {
@@ -934,9 +1017,16 @@ export class ManagerService {
       allowedRoles = [Role.CLIENT, Role.EMPLOYEE, Role.MANAGER, Role.OWNER];
     }
 
-    const where: any = {
-      OR: [{ storeId }, { role: Role.CLIENT }],
-    };
+    const where: any = {};
+    const isNetworkAdmin = ['OWNER', 'SUPER_ADMIN'].includes(managerRole);
+
+    if (storeId) {
+      where.OR = [{ storeId }, { role: Role.CLIENT }];
+    } else if (!isNetworkAdmin) {
+      // Se não for admin de rede e não tiver storeId (não deve acontecer pelo controller/guard), 
+      // limita drasticamente
+      where.storeId = 'NONE';
+    }
 
     if (roleFilter) {
       where.role = roleFilter as Role;
@@ -968,7 +1058,11 @@ export class ManagerService {
     return users;
   }
 
-  async getUserById(storeId: string, managerRole: string, userId: string) {
+  async getUserById(
+    storeId: string | undefined,
+    managerRole: string,
+    userId: string,
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
@@ -994,20 +1088,39 @@ export class ManagerService {
       );
     }
 
-    // Validar que o usuário pertence à loja (exceto CLIENTs)
-    if (user.role !== 'CLIENT' && user.storeId !== storeId) {
+    const isNetworkAdmin = ['OWNER', 'SUPER_ADMIN'].includes(managerRole);
+
+    // Validar que o usuário pertence à loja (exceto CLIENTs e para administradores de rede)
+    if (
+      !isNetworkAdmin &&
+      user.role !== 'CLIENT' &&
+      user.storeId !== storeId
+    ) {
       throw new ForbiddenException('Usuário não pertence a esta loja');
     }
 
     return user;
   }
 
-  async createUser(storeId: string, managerRole: string, data: any) {
+  async createUser(
+    storeId: string | undefined,
+    managerRole: string,
+    data: any,
+  ) {
     const targetRole = data.role as string;
 
     if (!this.canManageRole(managerRole, targetRole)) {
       throw new ForbiddenException(
         'Você não tem permissão para criar usuários com este papel',
+      );
+    }
+
+    const isNetworkAdmin = ['OWNER', 'SUPER_ADMIN'].includes(managerRole);
+    const finalStoreId = isNetworkAdmin && data.storeId ? data.storeId : storeId;
+
+    if (targetRole !== 'CLIENT' && !finalStoreId) {
+      throw new ForbiddenException(
+        'Informe a loja para a criação deste usuário.',
       );
     }
 
@@ -1031,7 +1144,7 @@ export class ManagerService {
         phone: data.phone,
         password: hashedPassword,
         role: targetRole as Role,
-        storeId: targetRole === 'CLIENT' ? null : storeId,
+        storeId: targetRole === 'CLIENT' ? null : finalStoreId,
         birthDate: data.birthDate ? new Date(data.birthDate) : null,
       },
       select: {
@@ -1049,7 +1162,7 @@ export class ManagerService {
   }
 
   async updateUser(
-    storeId: string,
+    storeId: string | undefined,
     managerRole: string,
     userId: string,
     data: any,
@@ -1068,8 +1181,14 @@ export class ManagerService {
       );
     }
 
-    // Validar que o usuário pertence à loja (exceto CLIENTs)
-    if (user.role !== 'CLIENT' && user.storeId !== storeId) {
+    const isNetworkAdmin = ['OWNER', 'SUPER_ADMIN'].includes(managerRole);
+
+    // Validar que o usuário pertence à loja (exceto CLIENTs e para administradores de rede)
+    if (
+      !isNetworkAdmin &&
+      user.role !== 'CLIENT' &&
+      user.storeId !== storeId
+    ) {
       throw new ForbiddenException('Usuário não pertence a esta loja');
     }
 
@@ -1128,7 +1247,11 @@ export class ManagerService {
     return updated;
   }
 
-  async deleteUser(storeId: string, managerRole: string, userId: string) {
+  async deleteUser(
+    storeId: string | undefined,
+    managerRole: string,
+    userId: string,
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -1143,8 +1266,14 @@ export class ManagerService {
       );
     }
 
-    // Validar que o usuário pertence à loja (exceto CLIENTs)
-    if (user.role !== 'CLIENT' && user.storeId !== storeId) {
+    const isNetworkAdmin = ['OWNER', 'SUPER_ADMIN'].includes(managerRole);
+
+    // Validar que o usuário pertence à loja (exceto CLIENTs e para administradores de rede)
+    if (
+      !isNetworkAdmin &&
+      user.role !== 'CLIENT' &&
+      user.storeId !== storeId
+    ) {
       throw new ForbiddenException('Usuário não pertence a esta loja');
     }
 

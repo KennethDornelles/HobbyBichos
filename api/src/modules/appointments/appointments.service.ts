@@ -242,9 +242,10 @@ export class AppointmentsService {
     role?: string;
   }) {
     const userId = user.userId || user.id;
+    const allowedRoles = ['EMPLOYEE', 'MANAGER', 'OWNER', 'SUPER_ADMIN'];
 
-    if (!userId || user.role !== 'EMPLOYEE') {
-      throw new ConflictException('Apenas employees podem acessar o dashboard');
+    if (!userId || !allowedRoles.includes(user.role || '')) {
+      throw new ConflictException('Acesso negado ao dashboard');
     }
 
     if (!user.storeId) {
@@ -329,9 +330,10 @@ export class AppointmentsService {
     updateStatusDto: { status: string; notes?: string },
     user: { storeId?: string; userId?: string; id?: string; role?: string },
   ) {
-    if (user.role !== 'EMPLOYEE') {
+    const allowedRoles = ['EMPLOYEE', 'MANAGER', 'OWNER', 'SUPER_ADMIN'];
+    if (!allowedRoles.includes(user.role || '')) {
       throw new ConflictException(
-        'Apenas employees podem atualizar agendamentos',
+        'Sem permissão para atualizar agendamentos',
       );
     }
 
