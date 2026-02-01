@@ -148,10 +148,10 @@ export class OrdersService {
 
     const message =
       `🛒 *PEDIDO HOBBY BICHOS*\n\n` +
-      `📦 Número de Rastreamento: #${shortOrderId}\n` +
+      `📦 Pedido: ${shortOrderId}\n` +
       `💰 Total: ${totalFormatted}\n\n` +
-      `Olá! Fiz meu pedido e gostaria de finalizar o pagamento via PIX.\n\n` +
-      `ID Completo: ${order.id}`;
+      `Olá! Gostaria de *finalizar o pagamento* do pedido via PIX.\n\n` +
+      `🆔 ID Completo: ${order.id}`;
 
     console.log('📝 Mensagem antes do encode:', message);
 
@@ -365,7 +365,7 @@ export class OrdersService {
         currency: 'BRL',
       });
       const text = encodeURIComponent(
-        `Olá! Fiz o pedido #${order.id} na Hobby Bichos. Total: ${totalFormatted}. Segue meu pedido para pagamento via PIX.`,
+        `Olá! Gostaria de *finalizar o pagamento* do pedido ${order.id} na Hobby Bichos. Total: ${totalFormatted}.`,
       );
       whatsappLink = `https://wa.me/${store.whatsappNumber}?text=${text}`;
     }
