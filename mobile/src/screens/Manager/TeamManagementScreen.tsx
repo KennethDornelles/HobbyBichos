@@ -9,8 +9,10 @@ import {
     Alert,
     TextInput,
     Modal,
+    Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
@@ -33,7 +35,9 @@ export default function TeamManagementScreen() {
         phone: '',
         password: '',
         role: 'EMPLOYEE',
+        birthDate: '',
     });
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     // Cores e estilos
     const textColor = isDark ? '#E0E0E0' : '#1F2937';
@@ -110,6 +114,7 @@ export default function TeamManagementScreen() {
             phone: '',
             password: '123456',
             role: 'EMPLOYEE',
+            birthDate: '',
         });
         setModalVisible(true);
     };
@@ -121,6 +126,7 @@ export default function TeamManagementScreen() {
             phone: userItem.phone,
             password: '',
             role: userItem.role as any,
+            birthDate: userItem.birthDate || '',
         });
         setModalVisible(true);
     };
@@ -157,6 +163,19 @@ export default function TeamManagementScreen() {
         } catch (error: any) {
             Alert.alert('Erro', error.message || 'Erro ao salvar usuário');
         }
+    };
+
+    const onDateChange = (event: any, selectedDate?: Date) => {
+        setShowDatePicker(Platform.OS === 'ios');
+        if (selectedDate) {
+            setFormData({ ...formData, birthDate: selectedDate.toISOString() });
+        }
+    };
+
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR');
     };
 
     const handleDelete = (userItem: UserData) => {
@@ -384,6 +403,37 @@ export default function TeamManagementScreen() {
                                 keyboardType="phone-pad"
                             />
 
+                            <Text style={{ fontSize: 14, color: '#8B92A9', marginBottom: 8 }}>Data de Nascimento</Text>
+                            <Pressable
+                                onPress={() => setShowDatePicker(true)}
+                                style={{
+                                    backgroundColor: inputBgColor,
+                                    borderWidth: 1,
+                                    borderColor,
+                                    borderRadius: 8,
+                                    padding: 12,
+                                    marginBottom: 16,
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <Text style={{ color: formData.birthDate ? textColor : '#8B92A9' }}>
+                                    {formData.birthDate ? formatDate(formData.birthDate) : 'Selecionar data'}
+                                </Text>
+                                <Ionicons name="calendar-outline" size={20} color="#8B92A9" />
+                            </Pressable>
+
+                            {showDatePicker && (
+                                <DateTimePicker
+                                    value={formData.birthDate ? new Date(formData.birthDate) : new Date(2000, 0, 1)}
+                                    mode="date"
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    onChange={onDateChange}
+                                    maximumDate={new Date()}
+                                />
+                            )}
+
                             {/* Seleção de Papel - Apenas na criação para OWNER/SUPER_ADMIN */}
                             {!editingUser && canManageAllRoles && (
                                 <>
@@ -462,7 +512,7 @@ export default function TeamManagementScreen() {
                                                     borderColor: formData.role === r ? '#FF6B35' : borderColor,
                                                 }}
                                             >
-                                               <Text
+                                                <Text
                                                     style={{
                                                         textAlign: 'center',
                                                         fontWeight: '600',

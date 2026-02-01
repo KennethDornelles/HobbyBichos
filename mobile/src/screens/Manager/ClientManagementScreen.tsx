@@ -9,8 +9,10 @@ import {
     Alert,
     TextInput,
     Modal,
+    Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { userManagementService, UserData, CreateUserDto, UpdateUserDto } from '../../services/userManagementService';
@@ -31,7 +33,9 @@ export default function ClientManagementScreen() {
         phone: '',
         password: '',
         role: 'CLIENT',
+        birthDate: '',
     });
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     useEffect(() => {
         if (user && user.role && !['MANAGER', 'OWNER', 'SUPER_ADMIN'].includes(user.role)) {
@@ -63,7 +67,7 @@ export default function ClientManagementScreen() {
 
     const openCreateModal = () => {
         setEditingClient(null);
-        setFormData({ name: '', email: '', phone: '', password: '123456', role: 'CLIENT' });
+        setFormData({ name: '', email: '', phone: '', password: '123456', role: 'CLIENT', birthDate: '' });
         setModalVisible(true);
     };
 
@@ -73,6 +77,7 @@ export default function ClientManagementScreen() {
             name: client.name,
             phone: client.phone,
             password: '',
+            birthDate: client.birthDate || '',
         });
         setModalVisible(true);
     };
@@ -120,6 +125,19 @@ export default function ClientManagementScreen() {
                 },
             },
         ]);
+    };
+
+    const onDateChange = (event: any, selectedDate?: Date) => {
+        setShowDatePicker(Platform.OS === 'ios');
+        if (selectedDate) {
+            setFormData({ ...formData, birthDate: selectedDate.toISOString() });
+        }
+    };
+
+    const formatDate = (dateString?: string) => {
+        if (!dateString) return '';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('pt-BR');
     };
 
     const textColor = isDark ? '#E0E0E0' : '#1F2937';
@@ -260,6 +278,37 @@ export default function ClientManagementScreen() {
                                 placeholderTextColor="#8B92A9"
                                 keyboardType="phone-pad"
                             />
+
+                            <Text style={{ fontSize: 14, color: '#8B92A9', marginBottom: 8 }}>Data de Nascimento</Text>
+                            <Pressable
+                                onPress={() => setShowDatePicker(true)}
+                                style={{
+                                    backgroundColor: inputBgColor,
+                                    borderWidth: 1,
+                                    borderColor,
+                                    borderRadius: 8,
+                                    padding: 12,
+                                    marginBottom: 16,
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <Text style={{ color: formData.birthDate ? textColor : '#8B92A9' }}>
+                                    {formData.birthDate ? formatDate(formData.birthDate) : 'Selecionar data'}
+                                </Text>
+                                <Ionicons name="calendar-outline" size={20} color="#8B92A9" />
+                            </Pressable>
+
+                            {showDatePicker && (
+                                <DateTimePicker
+                                    value={formData.birthDate ? new Date(formData.birthDate) : new Date(2000, 0, 1)}
+                                    mode="date"
+                                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                                    onChange={onDateChange}
+                                    maximumDate={new Date()}
+                                />
+                            )}
 
                             <Text style={{ fontSize: 14, color: '#8B92A9', marginBottom: 8 }}>
                                 Senha {editingClient ? '(deixe em branco para manter)' : '*'}

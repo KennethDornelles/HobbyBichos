@@ -114,7 +114,8 @@ export default function ManagerHomeScreen() {
             const data = await managerService.getDashboard();
             setSummary(data.summary);
         } catch (error: any) {
-            // Opcional: exibir alerta
+            console.error('Erro ao carregar resumo:', error);
+            Alert.alert('Erro', 'Não foi possível carregar o resumo gerencial. Verifique sua conexão.');
         } finally {
             setLoading(false);
         }
@@ -205,42 +206,56 @@ export default function ManagerHomeScreen() {
                     </View>
 
                     {!loading && summary && (
-                        <FlatList
-                            scrollEnabled={false}
-                            data={[
+                        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginHorizontal: -6 }}>
+                            {[
                                 { id: '1', icon: Calendar, label: 'Agendamentos Hoje', value: summary.todayAppointments, color: '#3B82F6' },
                                 { id: '2', icon: Calendar, label: 'Concluídos Hoje', value: summary.completedToday ?? 0, color: '#2563EB' },
-                                { id: '3', icon: Wallet, label: 'Receita do Mês', value: summary.monthRevenue, color: '#10B981' },
+                                { id: '3', icon: Wallet, label: 'Receita do Mês', value: `R$ ${Number(summary.monthRevenue).toFixed(2)}`, color: '#10B981' },
                                 { id: '4', icon: BarChart4, label: 'Pedidos do Mês', value: summary.monthOrders ?? 0, color: '#22C55E' },
                                 { id: '5', icon: Wrench, label: 'Serviços Ativos', value: summary.activeServices, color: '#8B5CF6' },
                                 { id: '6', icon: Users, label: 'Funcionários', value: summary.employees, color: '#F59E0B' },
                                 { id: '7', icon: BarChart4, label: 'Pedidos Abertos', value: summary.openOrders ?? 0, color: '#F97316' },
                                 { id: '8', icon: Package, label: 'Sem Estoque', value: summary.outOfStockProducts ?? 0, color: '#EF4444' },
                                 { id: '9', icon: AlertTriangle, label: 'Estoque Baixo', value: summary.lowStockProducts ?? 0, color: '#EAB308' },
-                            ]}
-                            numColumns={2}
-                            columnWrapperStyle={{ gap: 12 }}
-                            contentContainerStyle={{ gap: 12 }}
-                            keyExtractor={(item) => item.id}
-                            renderItem={({ item }) => (
+                            ].map((item) => (
                                 <View
-                                    className="flex-1 p-4 rounded-lg"
-                                    style={{ backgroundColor: colors.bgCard, borderLeftWidth: 4, borderLeftColor: item.color }}
+                                    key={item.id}
+                                    style={{
+                                        width: '50%',
+                                        padding: 6,
+                                    }}
                                 >
-                                    <View className="flex-row items-center justify-between">
-                                        <View className="flex-1">
-                                            <Text style={{ color: colors.textSecondary }} className="text-xs font-medium">
-                                                {item.label}
-                                            </Text>
-                                            <Text style={{ color: item.color }} className="text-2xl font-bold mt-2">
-                                                {item.value}
-                                            </Text>
+                                    <View
+                                        className="p-4 rounded-lg"
+                                        style={{
+                                            backgroundColor: colors.bgCard,
+                                            borderLeftWidth: 4,
+                                            borderLeftColor: item.color,
+                                            minHeight: 80,
+                                        }}
+                                    >
+                                        <View className="flex-row items-center justify-between">
+                                            <View className="flex-1">
+                                                <Text style={{ color: colors.textSecondary }} className="text-[10px] font-medium uppercase">
+                                                    {item.label}
+                                                </Text>
+                                                <Text
+                                                    style={{ color: item.color }}
+                                                    className="text-xl font-bold mt-1"
+                                                    numberOfLines={1}
+                                                    adjustsFontSizeToFit
+                                                >
+                                                    {item.value}
+                                                </Text>
+                                            </View>
+                                            <View style={{ marginLeft: 4 }}>
+                                                <item.icon size={20} color={item.color} opacity={0.3} />
+                                            </View>
                                         </View>
-                                        <item.icon size={24} color={item.color} opacity={0.3} />
                                     </View>
                                 </View>
-                            )}
-                        />
+                            ))}
+                        </View>
                     )}
                 </View>
             </ScrollView>

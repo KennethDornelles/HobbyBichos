@@ -11,7 +11,7 @@ import {
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { managerService, ManagerDashboard } from '../../services/managerService';
+import { managerService, ManagerDashboard, LowStockItem } from '../../services/managerService';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function ManagerDashboardScreen() {
@@ -152,7 +152,7 @@ export default function ManagerDashboardScreen() {
                                         <Text style={{ color: '#DC2626', fontSize: 12, fontWeight: 'bold' }}>CRÍTICO</Text>
                                     </Pressable>
                                 </View>
-                                {dashboard.lowStockItems.map((item) => (
+                                {dashboard.lowStockItems.map((item: LowStockItem) => (
                                     <View
                                         key={item.id}
                                         style={{

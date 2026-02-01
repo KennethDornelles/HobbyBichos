@@ -74,12 +74,14 @@ export default function EmployeeHomeScreen() {
     const [menuVisible, setMenuVisible] = useState(false);
     const insets = useSafeAreaInsets();
 
-    // Verificar se é realmente employee antes de fazer requisições
+    // Verificar se o usuário tem permissão para acessar esta tela (compartilhada entre funcionários e gestores)
     useEffect(() => {
-        if (role && role !== 'EMPLOYEE') {
+        const allowedRoles = ['EMPLOYEE', 'MANAGER', 'OWNER', 'SUPER_ADMIN'];
+        // Se o perfil já carregou e o role não é permitido, redireciona
+        if (role && !allowedRoles.includes(role)) {
             Alert.alert(
-                'Acesso Negado',
-                'Apenas funcionários podem acessar esta tela.',
+                'Acesso Restrito',
+                'Esta área é destinada apenas para funcionários e gestores.',
                 [{ text: 'OK', onPress: () => router.replace('/home') }]
             );
         }
@@ -97,7 +99,7 @@ export default function EmployeeHomeScreen() {
                 id: '',
                 name,
                 email: '',
-                role,
+                role: role || 'EMPLOYEE',
             });
         }
     }, [name, role, setUser]);
@@ -159,7 +161,7 @@ export default function EmployeeHomeScreen() {
                         Olá, {name?.split(' ')[0]}
                     </Text>
                     <Text style={{ color: colors.textSecondary }} className="text-sm mt-2">
-                        Dashboard de serviços do dia
+                        Painel de atendimentos e serviços
                     </Text>
                 </View>
 

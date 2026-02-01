@@ -95,7 +95,8 @@ export const SideMenu: React.FC<SideMenuProps> = ({
             if (user.role === "CLIENT") {
                 items.push({ icon: "attach-money", label: "Meus Gastos" });
             }
-            if (user.role === "EMPLOYEE") {
+            const isServiceRole = ["EMPLOYEE", "MANAGER", "OWNER", "SUPER_ADMIN"].includes(user.role || '');
+            if (isServiceRole) {
                 items.push({ icon: "dashboard", label: "Dashboard" });
                 items.push({ icon: "event-available", label: "Agendamentos" });
             }

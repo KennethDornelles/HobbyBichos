@@ -7,6 +7,9 @@ export interface DashboardSummary {
   monthRevenue: number;
   activeServices: number;
   employees: number;
+  openOrders?: number;
+  outOfStockProducts?: number;
+  lowStockProducts?: number;
 }
 
 export interface UpcomingAppointment {
@@ -26,9 +29,19 @@ export interface UpcomingAppointment {
   };
 }
 
+export interface LowStockItem {
+  id: string;
+  name: string;
+  sku: string | null;
+  quantity: number;
+  minStock: number;
+  storeName?: string;
+}
+
 export interface ManagerDashboard {
   summary: DashboardSummary;
   upcomingAppointments: UpcomingAppointment[];
+  lowStockItems: LowStockItem[];
 }
 
 export interface ServiceWithStats {
