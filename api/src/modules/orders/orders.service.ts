@@ -180,10 +180,11 @@ export class OrdersService {
       throw new NotFoundException('Pedido não encontrado');
     }
 
-    // Apenas OWNER/MANAGER podem finalizar pedidos
-    if (user.role && !['OWNER', 'MANAGER'].includes(user.role)) {
+    // Apenas OWNER/MANAGER/EMPLOYEE/SUPER_ADMIN podem finalizar pedidos
+    const allowedRoles = ['OWNER', 'MANAGER', 'EMPLOYEE', 'SUPER_ADMIN'];
+    if (user.role && !allowedRoles.includes(user.role)) {
       throw new ForbiddenException(
-        'Apenas administradores podem finalizar o pagamento.',
+        'Você não tem permissão para finalizar o pagamento deste pedido.',
       );
     }
 
