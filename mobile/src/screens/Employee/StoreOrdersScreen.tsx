@@ -13,6 +13,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { Package, ShoppingBag } from 'lucide-react-native';
 import api from '../../services/api';
 import { useThemeColors } from '../../hooks/useThemeColors';
+import { EmptyState } from '../../components/EmptyState';
 
 interface Order {
     id: string;
@@ -158,7 +159,7 @@ export default function StoreOrdersScreen() {
     const renderOrderItem = ({ item }: { item: Order }) => {
         const statusInfo = getStatusInfo(item.status);
         const actionButton = getActionButton(item.status);
-        const canFinish = item.status === 'PROCESSING' || item.status === 'PAID';
+        const canFinish = item.status === 'PENDING' || item.status === 'WAITING_PAYMENT';
 
         return (
             <View style={{ backgroundColor: colors.bgCard }} className="rounded-2xl p-4 mb-3 shadow-sm">
@@ -207,15 +208,11 @@ export default function StoreOrdersScreen() {
 
     // Empty state
     const renderEmptyState = () => (
-        <View className="flex-1 items-center justify-center p-8">
-            <ShoppingBag size={72} color={colors.textMuted} />
-            <Text style={{ color: colors.textMain }} className="text-xl font-bold mt-6 text-center">
-                Nenhum pedido na loja
-            </Text>
-            <Text style={{ color: colors.textSecondary }} className="text-center mt-2 mb-8 leading-5">
-                Os pedidos aparecerão aqui quando os clientes fizerem compras
-            </Text>
-        </View>
+        <EmptyState
+            title="Nenhum pedido na loja"
+            description="Os pedidos aparecerão aqui quando os clientes fizerem compras."
+            icon={ShoppingBag}
+        />
     );
 
     if (loading && !refreshing) {
@@ -238,25 +235,25 @@ export default function StoreOrdersScreen() {
             </View>
 
             {/* Lista de pedidos */}
-            {orders.length > 0 ? (
+            {error && (
+                <View className="px-4 py-8">
+                    <EmptyState
+                        title="Erro ao carregar pedidos"
+                        description={error}
+                        icon={Package}
+                        actionLabel="Tentar Novamente"
+                        onAction={loadOrders}
+                    />
+                </View>
+            )}
+
+            {!error && (
                 <FlatList
                     data={orders}
                     renderItem={renderOrderItem}
                     keyExtractor={(item) => item.id}
                     contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 16 }}
                     showsVerticalScrollIndicator={false}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            colors={[colors.accentYellow]}
-                        />
-                    }
-                />
-            ) : (
-                <FlatList
-                    data={[]}
-                    renderItem={renderOrderItem}
                     ListEmptyComponent={renderEmptyState}
                     refreshControl={
                         <RefreshControl

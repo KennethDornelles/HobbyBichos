@@ -19,6 +19,7 @@ import { useUserStore } from '../../store/userStore';
 import { useThemeColors } from '../../hooks/useThemeColors';
 import { useDashboard } from '../../hooks/useDashboard';
 import { useAuth } from '../../context/AuthContext';
+import { EmptyState } from '../../components/EmptyState';
 
 interface QuickActionItem {
     id: string;
@@ -215,11 +216,22 @@ export default function EmployeeHomeScreen() {
 
                     {/* Error state */}
                     {error && !loading && (
-                        <View style={{ backgroundColor: colors.bgCard }} className="p-3 rounded-lg mb-3">
-                            <Text style={{ color: '#EF4444' }} className="text-sm">
-                                ⚠️ Erro ao carregar dados: {error}
-                            </Text>
-                        </View>
+                        <EmptyState
+                            title="Erro ao carregar dados"
+                            description={error}
+                            icon={AlertCircle}
+                            actionLabel="Tentar Novamente"
+                            onAction={refetch}
+                        />
+                    )}
+
+                    {/* Empty state (no dashboard data) */}
+                    {!loading && !error && !dashboard && (
+                        <EmptyState
+                            title="Nenhum dado disponível"
+                            description="Não há estatísticas disponíveis para visualização no momento."
+                            icon={Package}
+                        />
                     )}
 
                     {/* Stats Cards */}

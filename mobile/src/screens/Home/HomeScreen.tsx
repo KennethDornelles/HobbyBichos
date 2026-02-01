@@ -21,6 +21,7 @@ import { UserGreeting } from '../../components/UserGreeting';
 import { QuickAction } from '../../components/QuickAction';
 import { ActionCard } from '../../components/ActionCard';
 import { SideMenu } from '../../components/SideMenu';
+import { EmptyState } from '../../components/EmptyState';
 import { useUserStore } from '../../store/userStore';
 import { useCartStore } from '../../store/cartStore';
 import { useThemeColors } from '../../hooks/useThemeColors';
@@ -91,11 +92,11 @@ export default function ClientHomeScreen() {
     useEffect(() => {
         if (name && name !== 'Visitante') {
             setUser({
-                id,
+                id: id || '',
                 name,
-                email,
+                email: email || '',
                 points,
-                role,
+                role: role || 'CLIENT',
             });
         }
     }, [id, name, email, points, role, setUser]);
@@ -259,11 +260,11 @@ export default function ClientHomeScreen() {
 
                     {/* Empty state */}
                     {!shopsLoading && shops.length === 0 && !shopsError && (
-                        <View style={{ backgroundColor: colors.bgCard }} className="p-4 rounded-lg items-center">
-                            <Text style={{ color: colors.textSecondary }} className="text-sm">
-                                Nenhuma loja encontrada
-                            </Text>
-                        </View>
+                        <EmptyState
+                            title="Nenhuma loja encontrada"
+                            description="Não encontramos pet shops próximos a você no momento. Tente novamente mais tarde."
+                            icon={MapPin}
+                        />
                     )}
                 </View>
             </ScrollView>

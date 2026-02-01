@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, TextInputProps, TouchableOpacity } from 'react-native';
+import { View, TextInput, TextInputProps, TouchableOpacity, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface CustomInputProps extends TextInputProps {
@@ -11,6 +11,7 @@ interface CustomInputProps extends TextInputProps {
     isDark?: boolean;
     iconName?: string;
     rightIcon?: React.ReactNode;
+    error?: string;
 }
 
 const CustomInput: React.FC<CustomInputProps> = ({
@@ -22,6 +23,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
     isDark = true,
     iconName,
     rightIcon,
+    error,
     ...props
 }) => {
     const inputRef = React.useRef<TextInput>(null);
@@ -55,9 +57,9 @@ const CustomInput: React.FC<CustomInputProps> = ({
             borderRadius: 24,
             paddingHorizontal: 16,
             height: 56,
-            marginBottom: 8,
-            borderWidth: isDark ? 0 : 1,
-            borderColor: borderColor,
+            marginBottom: error ? 4 : 8,
+            borderWidth: isDark ? (error ? 1 : 0) : 1,
+            borderColor: error ? '#EF4444' : borderColor,
         }}>
             <Icon name={getIconName()} size={22} color="#FFD600" style={{ marginRight: 12 }} />
             <TextInput
@@ -87,6 +89,13 @@ const CustomInput: React.FC<CustomInputProps> = ({
             {rightIcon && !secureTextEntry && (
                 <View style={{ marginLeft: 8 }}>
                     {rightIcon}
+                </View>
+            )}
+            {error && (
+                <View style={{ position: 'absolute', bottom: -20, left: 16 }}>
+                    <Text style={{ color: '#EF4444', fontSize: 11, fontWeight: '500' }}>
+                        {error}
+                    </Text>
                 </View>
             )}
         </View>

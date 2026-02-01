@@ -6,6 +6,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useUserStore } from '../../store/userStore';
 import * as Application from 'expo-application';
+import { EmptyState } from '../../components/EmptyState';
+import { Bell } from 'lucide-react-native';
 
 export default function NotificationsScreen() {
   const { id: userId } = useUserStore();
@@ -70,6 +72,15 @@ export default function NotificationsScreen() {
             </TouchableOpacity>
           )}
           contentContainerStyle={{ paddingBottom: 32 }}
+          ListEmptyComponent={
+            <View style={{ padding: 24 }}>
+              <EmptyState
+                title="Nenhuma notificação"
+                description="Suas notificações e alertas aparecerão aqui."
+                icon={Bell}
+              />
+            </View>
+          }
         />
       )}
     </SafeAreaView>
