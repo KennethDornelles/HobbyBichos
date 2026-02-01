@@ -36,9 +36,14 @@ type OrderWithRelations = Order & {
   store?: StoreWithPayment;
 };
 
+import { EventEmitter2 } from '@nestjs/event-emitter';
+
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly eventEmitter: EventEmitter2,
+  ) {}
 
   async create(createOrderDto: CreateOrderDto, user: AuthUser) {
     // Validação: pedido deve ter pelo menos 1 item
@@ -221,13 +226,23 @@ export class OrdersService {
       }
     }
 
-    return this.prisma.order.update({
+    const updatedOrder = await this.prisma.order.update({
       where: { id: orderId },
       data: { status: 'PAID' },
       include: {
         orderItems: true,
       },
     });
+
+    // Emitir evento para processamento assíncrono (ex: monitor de estoque, fidelidade)
+    this.eventEmitter.emit('order.completed', {
+      orderId: updatedOrder.id,
+      storeId: updatedOrder.storeId,
+      userId: updatedOrder.userId,
+      total: Number(updatedOrder.total),
+    });
+
+    return updatedOrder;
   }
 
   async findAll(user: AuthUser) {

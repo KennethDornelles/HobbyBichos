@@ -97,21 +97,26 @@ export class ManagerService {
       },
     });
 
-    // Produtos sem estoque (quantity = 0)
-    const outOfStockProducts = await this.prisma.productStock.count({
+    // Estudo de Estoque Crítico (quantity <= minStock)
+    const lowStockItems = await this.prisma.productStock.findMany({
       where: {
         storeId,
-        quantity: 0,
+      },
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            sku: true,
+          },
+        },
       },
     });
 
-    // Produtos com estoque baixo (<= 3)
-    const lowStockProducts = await this.prisma.productStock.count({
-      where: {
-        storeId,
-        quantity: { lte: 3 },
-      },
-    });
+    const criticalStock = lowStockItems.filter(
+      (item: any) => item.quantity <= item.minStock,
+    );
+    const outOfStock = criticalStock.filter((item: any) => item.quantity === 0);
 
     // Próximos agendamentos
     const upcomingAppointments = await this.prisma.appointment.findMany({
@@ -157,10 +162,17 @@ export class ManagerService {
         activeServices,
         employees,
         openOrders,
-        outOfStockProducts,
-        lowStockProducts,
+        outOfStockProducts: outOfStock.length,
+        lowStockProducts: criticalStock.length,
       },
       upcomingAppointments,
+      lowStockItems: criticalStock.map((s: any) => ({
+        id: s.productId,
+        name: s.product.name,
+        sku: s.product.sku,
+        quantity: s.quantity,
+        minStock: s.minStock,
+      })),
     };
   }
 
