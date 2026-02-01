@@ -134,12 +134,9 @@ export default function OrderDetailsScreen() {
             return;
         }
         try {
-            const supported = await Linking.canOpenURL(order.paymentAction.whatsappLink);
-            if (supported) {
-                await Linking.openURL(order.paymentAction.whatsappLink);
-            } else {
-                Alert.alert('Erro', 'Não foi possível abrir o WhatsApp');
-            }
+            // Android 11+ visibility rules often block canOpenURL for unlisted schemes.
+            // Direct openURL works by letting the OS handle the intent resolution.
+            await Linking.openURL(order.paymentAction.whatsappLink);
         } catch (error) {
             console.error('Erro ao abrir WhatsApp:', error);
             Alert.alert('Erro', 'Não foi possível abrir o WhatsApp');

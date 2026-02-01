@@ -50,12 +50,9 @@ export default function OrderCreatedScreen() {
         console.log('📝 Mensagem decodificada:', decodeURIComponent(whatsappLink));
 
         try {
-            const supported = await Linking.canOpenURL(whatsappLink);
-            if (supported) {
-                await Linking.openURL(whatsappLink);
-            } else {
-                Alert.alert('Erro', 'Não foi possível abrir o WhatsApp');
-            }
+            // Android 11+ visibility rules often block canOpenURL for unlisted schemes.
+            // Direct openURL works by letting the OS handle the intent resolution.
+            await Linking.openURL(whatsappLink);
         } catch (error) {
             console.error('Erro ao abrir WhatsApp:', error);
             Alert.alert('Erro', 'Não foi possível abrir o WhatsApp');
