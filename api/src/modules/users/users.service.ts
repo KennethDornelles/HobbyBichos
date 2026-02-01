@@ -44,6 +44,7 @@ export class UsersService {
           phone: dto.phone ?? '',
           role: dto.role,
           storeId: dto.storeId,
+          birthDate: dto.birthDate ? new Date(dto.birthDate) : null,
         },
       });
     } catch (err) {

@@ -6,6 +6,7 @@ import {
   IsEnum,
   IsEmail,
   IsPhoneNumber,
+  IsDateString,
 } from 'class-validator';
 import { Role } from '../../../common/enums/role.enum';
 
@@ -50,4 +51,13 @@ export class CreateUserDto {
   })
   @IsOptional()
   storeId?: string;
+
+  @ApiProperty({
+    example: '1990-01-01',
+    description: 'Data de nascimento do usuário',
+    required: false,
+  })
+  @IsOptional()
+  @IsDateString()
+  birthDate?: string;
 }

@@ -16,6 +16,7 @@ import { BirthdayPointsJob } from './jobs/birthday-points.job';
 import { PointsExpirationJob } from './jobs/points-expiration.job';
 import { TierRenewalJob } from './jobs/tier-renewal.job';
 
+import { LoyaltyNotificationListener } from './listeners/loyalty-notification.listener';
 import { OrderCompletedListener } from './listeners/order-completed.listener';
 import { NotificationsModule } from '../notifications/notifications.module';
 
@@ -37,6 +38,7 @@ import { NotificationsModule } from '../notifications/notifications.module';
     PointsExpirationJob,
     TierRenewalJob,
     OrderCompletedListener,
+    LoyaltyNotificationListener,
   ],
   exports: [LoyaltyService],
 })
