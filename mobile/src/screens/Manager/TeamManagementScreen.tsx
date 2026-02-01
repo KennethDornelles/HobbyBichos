@@ -25,6 +25,9 @@ export default function TeamManagementScreen() {
     const { user, isLoading: authLoading, updateUser } = useAuth();
     const router = useRouter();
 
+    // Guard contra renderização sem usuário
+    if (!user && !authLoading) return null;
+
     const [users, setUsers] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);

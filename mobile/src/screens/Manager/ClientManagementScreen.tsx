@@ -23,6 +23,9 @@ export default function ClientManagementScreen() {
     const { isDark } = useTheme();
     const { user } = useAuth();
     const router = useRouter();
+
+    // Guard contra renderização sem usuário
+    if (!user) return null;
     const [clients, setClients] = useState<UserData[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -39,7 +42,8 @@ export default function ClientManagementScreen() {
     const [showDatePicker, setShowDatePicker] = useState(false);
 
     useEffect(() => {
-        if (user && user.role && !['MANAGER', 'OWNER', 'SUPER_ADMIN'].includes(user.role)) {
+        if (!user) return;
+        if (user.role && !['MANAGER', 'OWNER', 'SUPER_ADMIN'].includes(user.role)) {
             Alert.alert('Acesso Negado', 'Apenas gerentes, proprietários e administradores podem acessar esta área.', [
                 { text: 'OK', onPress: () => router.replace('/home') },
             ]);

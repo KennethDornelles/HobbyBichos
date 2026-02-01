@@ -19,13 +19,17 @@ export default function ManagerReportsScreen() {
     const { isDark } = useTheme();
     const { user } = useAuth();
     const router = useRouter();
+
+    // Guard contra renderização sem usuário (evita crash no logout)
+    if (!user) return null;
     const [performance, setPerformance] = useState<EmployeePerformance[]>([]);
     const [appointmentDepth, setAppointmentDepth] = useState<AppointmentInDepth | null>(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
-        if (user && user.role && !['MANAGER', 'OWNER', 'SUPER_ADMIN'].includes(user.role)) {
+        if (!user) return;
+        if (user.role && !['MANAGER', 'OWNER', 'SUPER_ADMIN'].includes(user.role)) {
             Alert.alert('Acesso Negado', 'Apenas gerentes, proprietários e administradores podem acessar esta área.', [
                 { text: 'OK', onPress: () => router.replace('/home') },
             ]);
@@ -170,7 +174,7 @@ export default function ManagerReportsScreen() {
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                                         <Text style={{ color: '#8B92A9' }}>Taxa de Conclusão</Text>
                                         <Text style={{ fontWeight: '600', color: textColor }}>
-                                            {emp.stats.completionRate.toFixed(1)}%
+                                            {(emp.stats.completionRate || 0).toFixed(1)}%
                                         </Text>
                                     </View>
                                     <View
@@ -187,7 +191,7 @@ export default function ManagerReportsScreen() {
                                             <Text style={{ color: '#8B92A9' }}>Avaliação Média</Text>
                                         </View>
                                         <Text style={{ fontWeight: '600', color: textColor }}>
-                                            {emp.stats.averageRating.toFixed(1)} ({emp.stats.totalReviews} avaliações)
+                                            {(emp.stats.averageRating || 0).toFixed(1)} ({emp.stats.totalReviews || 0} avaliações)
                                         </Text>
                                     </View>
                                 </View>

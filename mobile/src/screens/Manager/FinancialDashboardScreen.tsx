@@ -23,6 +23,9 @@ export default function FinancialDashboardScreen() {
     const { isDark } = useTheme();
     const { user } = useAuth();
     const router = useRouter();
+
+    // Guard contra renderização sem usuário (evita crash no logout)
+    if (!user) return null;
     const [selectedPeriod, setSelectedPeriod] = useState<'today' | 'week' | 'month' | 'year'>('month');
     const [revenue, setRevenue] = useState<RevenueData | null>(null);
     const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
@@ -32,7 +35,9 @@ export default function FinancialDashboardScreen() {
     const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
-        if (user && user.role && !['MANAGER', 'OWNER', 'SUPER_ADMIN'].includes(user.role)) {
+        if (!user) return;
+
+        if (user.role && !['MANAGER', 'OWNER', 'SUPER_ADMIN'].includes(user.role)) {
             Alert.alert('Acesso Negado', 'Apenas gerentes, proprietários e administradores podem acessar esta área.', [
                 { text: 'OK', onPress: () => router.replace('/home') },
             ]);
@@ -224,14 +229,14 @@ export default function FinancialDashboardScreen() {
                                     <View style={{ flex: 1, backgroundColor: cardBgColor, padding: 16, borderRadius: 12, borderWidth: 1, borderColor }}>
                                         <UsersIcon size={20} color="#8B5CF6" />
                                         <Text style={{ fontSize: 24, fontWeight: 'bold', color: textColor, marginTop: 8 }}>
-                                            {customerMetrics.totalCustomers}
+                                            {customerMetrics.totalCustomers || 0}
                                         </Text>
                                         <Text style={{ fontSize: 12, color: '#8B92A9' }}>Total de Clientes</Text>
                                     </View>
                                     <View style={{ flex: 1, backgroundColor: cardBgColor, padding: 16, borderRadius: 12, borderWidth: 1, borderColor }}>
                                         <TrendingUp size={20} color="#10B981" />
                                         <Text style={{ fontSize: 24, fontWeight: 'bold', color: textColor, marginTop: 8 }}>
-                                            {customerMetrics.retentionRate.toFixed(1)}%
+                                            {(customerMetrics.retentionRate || 0).toFixed(1)}%
                                         </Text>
                                         <Text style={{ fontSize: 12, color: '#8B92A9' }}>Taxa de Retenção</Text>
                                     </View>
