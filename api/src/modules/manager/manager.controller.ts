@@ -40,15 +40,19 @@ export class ManagerController {
   @Get('dashboard')
   @ApiOperation({ summary: 'Dashboard gerencial completo' })
   @ApiQuery({ name: 'storeId', required: false, type: String })
+  @ApiQuery({ name: 'city', required: false, type: String })
+  @ApiQuery({ name: 'state', required: false, type: String })
   async getDashboard(
     @Req() req: AuthRequest,
     @Query('storeId') queryStoreId?: string,
+    @Query('city') city?: string,
+    @Query('state') state?: string,
   ) {
     const storeId = await this.managerService.getEffectiveStoreId(
       req.user,
       queryStoreId,
     );
-    return this.managerService.getDashboard(storeId);
+    return this.managerService.getDashboard(storeId, city, state);
   }
 
   @Get('dashboard/financial')
@@ -56,11 +60,15 @@ export class ManagerController {
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
   @ApiQuery({ name: 'storeId', required: false, type: String })
+  @ApiQuery({ name: 'city', required: false, type: String })
+  @ApiQuery({ name: 'state', required: false, type: String })
   async getFinancialDashboard(
     @Req() req: AuthRequest,
     @Query('startDate') startDate?: string,
     @Query('endDate') endDate?: string,
     @Query('storeId') queryStoreId?: string,
+    @Query('city') city?: string,
+    @Query('state') state?: string,
   ) {
     const storeId = await this.managerService.getEffectiveStoreId(
       req.user,
@@ -68,7 +76,30 @@ export class ManagerController {
     );
     const start = startDate ? new Date(startDate) : undefined;
     const end = endDate ? new Date(endDate) : undefined;
-    return this.managerService.getFinancialDashboard(storeId, start, end);
+    return this.managerService.getFinancialDashboard(
+      storeId,
+      start,
+      end,
+      city,
+      state,
+    );
+  }
+
+  @Get('analytics/benchmarking')
+  @ApiOperation({ summary: 'Benchmarking entre lojas' })
+  @ApiQuery({ name: 'startDate', required: false, type: String })
+  @ApiQuery({ name: 'endDate', required: false, type: String })
+  @ApiQuery({ name: 'city', required: false, type: String })
+  @ApiQuery({ name: 'state', required: false, type: String })
+  async getBenchmarking(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('city') city?: string,
+    @Query('state') state?: string,
+  ) {
+    const start = startDate ? new Date(startDate) : undefined;
+    const end = endDate ? new Date(endDate) : undefined;
+    return this.managerService.getBenchmarking(start, end, city, state);
   }
 
   // ==================== GESTÃO DE SERVIÇOS ====================

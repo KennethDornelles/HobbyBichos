@@ -46,7 +46,32 @@ export class ManagerService {
 
   // ==================== DASHBOARD ====================
 
-  async getDashboard(storeId?: string) {
+  // ==================== HELPERS ====================
+
+  private buildStoreFilter(
+    storeId?: string,
+    city?: string,
+    state?: string,
+  ): any {
+    if (storeId) {
+      return { storeId };
+    }
+
+    if (city || state) {
+      return {
+        store: {
+          ...(city ? { city: { contains: city, mode: 'insensitive' } } : {}),
+          ...(state ? { state: { contains: state, mode: 'insensitive' } } : {}),
+        },
+      };
+    }
+
+    return {};
+  }
+
+  // ==================== DASHBOARD ====================
+
+  async getDashboard(storeId?: string, city?: string, state?: string) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -55,7 +80,7 @@ export class ManagerService {
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
-    const filter = storeId ? { storeId } : {};
+    const filter = this.buildStoreFilter(storeId, city, state);
 
     // Agendamentos de hoje
     const todayAppointments = await this.prisma.appointment.count({
@@ -145,9 +170,9 @@ export class ManagerService {
         },
         store: {
           select: {
-            name: true
-          }
-        }
+            name: true,
+          },
+        },
       },
     });
 
@@ -189,10 +214,10 @@ export class ManagerService {
           },
         },
         store: {
-            select: {
-                name: true
-            }
-        }
+          select: {
+            name: true,
+          },
+        },
       },
     });
 
@@ -216,7 +241,7 @@ export class ManagerService {
         sku: s.product.sku,
         quantity: s.quantity,
         minStock: s.minStock,
-        storeName: s.store?.name
+        storeName: s.store?.name,
       })),
     };
   }
@@ -225,15 +250,52 @@ export class ManagerService {
     storeId?: string,
     startDate?: Date,
     endDate?: Date,
+    city?: string,
+    state?: string,
   ) {
     const start =
       startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
     const end = endDate || new Date();
 
-    const filter = storeId ? { storeId } : {};
-    const storeFilterSql = storeId ? `AND "storeId" = '${storeId}'` : '';
+    const filter = this.buildStoreFilter(storeId, city, state);
 
-    // Receita total
+    // Construção de filtro SQL seguro seria ideal, mas para brevidade/complexidade aqui com raw query:
+    // Se tiver city/state, precisamos fazer join com stores.
+    // Vamos simplificar: Se tiver filtro regional, buscamos os IDs das stores primeiro.
+    let regionalStoreIds: string[] = [];
+    if (!storeId && (city || state)) {
+        const stores = await this.prisma.store.findMany({
+            where: {
+                ...(city ? { city: { contains: city, mode: 'insensitive' } } : {}),
+                ...(state ? { state: { contains: state, mode: 'insensitive' } } : {}),
+            },
+            select: { id: true }
+        });
+        regionalStoreIds = stores.map(s => s.id);
+        
+        // Se não achou nenhuma loja com o filtro, retorna vazio
+        if (regionalStoreIds.length === 0) {
+             return {
+                isGlobal: true,
+                period: { start, end },
+                totalRevenue: 0,
+                totalOrders: 0,
+                dailyRevenue: [],
+                revenueByCategory: [],
+                revenueByService: [],
+            };
+        }
+    }
+
+    let storeFilterSql = '';
+    if (storeId) {
+        storeFilterSql = `AND o."storeId" = '${storeId}'`;
+    } else if (regionalStoreIds.length > 0) {
+        const ids = regionalStoreIds.map(id => `'${id}'`).join(',');
+        storeFilterSql = `AND o."storeId" IN (${ids})`;
+    }
+
+    // Receita total (Prisma é mais fácil com o filter object)
     const totalRevenue = await this.prisma.order.aggregate({
       where: {
         ...filter,
@@ -257,14 +319,14 @@ export class ManagerService {
         DATE("createdAt") as date,
         SUM(total::numeric) as total,
         COUNT(*) as count
-      FROM orders
+      FROM orders o
       WHERE "createdAt" >= $1
         AND "createdAt" <= $2
         AND status = 'PAID'
         ${storeFilterSql}
       GROUP BY DATE("createdAt")
       ORDER BY date DESC
-    `, start, end);
+    `, start, end); // Use alias 'o' in query above to match the filter builder logic
 
     // Receita por categoria de produto
     const revenueByCategory = await this.prisma.$queryRawUnsafe<
@@ -279,7 +341,7 @@ export class ManagerService {
       WHERE o."createdAt" >= $1
         AND o."createdAt" <= $2
         AND o.status = 'PAID'
-        ${storeId ? `AND o."storeId" = '${storeId}'` : ''}
+        ${storeFilterSql}
       GROUP BY p.category
       ORDER BY total DESC
     `, start, end);
@@ -299,7 +361,7 @@ export class ManagerService {
         AND o."createdAt" <= $2
         AND o.status = 'PAID'
         AND oi."serviceId" IS NOT NULL
-        ${storeId ? `AND o."storeId" = '${storeId}'` : ''}
+        ${storeFilterSql}
       GROUP BY s.name
       ORDER BY total DESC
     `, start, end);
@@ -327,6 +389,68 @@ export class ManagerService {
         count: Number(r.count),
       })),
     };
+  }
+
+  async getBenchmarking(
+    startDate?: Date,
+    endDate?: Date,
+    city?: string,
+    state?: string,
+  ) {
+    const start =
+      startDate || new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    const end = endDate || new Date();
+
+    // 1. Buscar lojas (com filtro regional, se houver)
+    const storeWhere = {
+         ...(city ? { city: { contains: city, mode: 'insensitive' as any } } : {}),
+         ...(state ? { state: { contains: state, mode: 'insensitive' as any } } : {}),
+         isActive: true
+    };
+
+    const stores = await this.prisma.store.findMany({
+        where: storeWhere,
+        select: { id: true, name: true, city: true, state: true }
+    });
+
+    // 2. Calcular métricas para cada loja
+    const benchmarkData = await Promise.all(stores.map(async (store) => {
+        const orderStats = await this.prisma.order.aggregate({
+            where: {
+                storeId: store.id,
+                status: 'PAID',
+                createdAt: { gte: start, lte: end }
+            },
+            _sum: { total: true },
+            _count: true
+        });
+
+        const appointmentCount = await this.prisma.appointment.count({
+            where: {
+                storeId: store.id,
+                status: 'COMPLETED',
+                startsAt: { gte: start, lte: end }
+            }
+        });
+
+        const totalRevenue = Number(orderStats._sum.total || 0);
+        const orderCount = orderStats._count;
+        const averageTicket = orderCount > 0 ? totalRevenue / orderCount : 0;
+
+        return {
+            storeId: store.id,
+            storeName: store.name,
+            city: store.city,
+            state: store.state,
+            totalRevenue,
+            orderCount,
+            appointmentCount,
+            averageTicket
+        };
+    }));
+
+    // 3. Ordenar por receita decrescente
+    return benchmarkData.sort((a, b) => b.totalRevenue - a.totalRevenue);
   }
 
   // ==================== GESTÃO DE SERVIÇOS ====================
