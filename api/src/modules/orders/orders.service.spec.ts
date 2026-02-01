@@ -39,11 +39,12 @@ describe('OrdersService', () => {
 
   beforeEach(() => {
     prisma = mockDeep<PrismaClient>();
-    service = new OrdersService(prisma as unknown as PrismaService);
+    const eventEmitter = { emit: jest.fn() };
+    service = new OrdersService(prisma as unknown as PrismaService, eventEmitter as any);
   });
 
   describe('create', () => {
-    const user = { id: 'user1', storeId: 'store1' };
+    const user = { id: 'user1', storeId: 'store1', role: 'MANAGER' };
     const store: StoreWithWhatsapp = {
       id: 'store1',
       createdAt: new Date(),
@@ -54,6 +55,11 @@ describe('OrdersService', () => {
       isActive: true,
       whatsappNumber: '5511999999999',
       pixKey: 'pixkey',
+      address: 'av',
+      city: 'sp',
+      state: 'sp',
+      latitude: 0,
+      longitude: 0,
     };
     const items = [
       { productId: 'p1', price: 10, quantity: 2 },
@@ -240,6 +246,7 @@ describe('OrdersService', () => {
         updatedAt: new Date(),
         storeId: 'store1',
         productId: 'p1',
+        minStock: 5,
       };
 
       prisma.order.findUnique.mockResolvedValue(order);
@@ -258,6 +265,7 @@ describe('OrdersService', () => {
         updatedAt: new Date(),
         storeId: 'store1',
         productId: 'p1',
+        minStock: 5,
       };
 
       const paidOrder: OrderWithItems = {
@@ -276,4 +284,96 @@ describe('OrdersService', () => {
       expect(prisma.productStock.update).toHaveBeenCalled();
     });
   });
+
+  describe('findAll', () => {
+    it('deve filtrar por userId se for CLIENT', async () => {
+      const user = { id: 'client1', storeId: 'store1', role: 'CLIENT' };
+      prisma.order.findMany.mockResolvedValue([]);
+      
+      await service.findAll(user);
+      
+      expect(prisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ userId: 'client1' })
+        })
+      );
+    });
+
+    it('deve filtrar por storeId se for OWNER/MANAGER', async () => {
+      const user = { id: 'manager1', storeId: 'store1', role: 'MANAGER' };
+      prisma.order.findMany.mockResolvedValue([]);
+      
+      await service.findAll(user);
+      
+      expect(prisma.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ storeId: 'store1' })
+        })
+      );
+    });
+  });
+
+  describe('cancelOrder', () => {
+    const orderId = 'order1';
+    const mockOrder = { id: orderId, userId: 'client1', storeId: 'store1', status: 'PENDING' };
+
+    it('deve permitir cancelamento pelo cliente dono do pedido', async () => {
+      prisma.order.findUnique.mockResolvedValue(mockOrder as any);
+      prisma.order.update.mockResolvedValue({ ...mockOrder, status: 'CANCELLED' } as any);
+      
+      const result = await service.cancelOrder(orderId, { id: 'client1', storeId: 'store1', role: 'CLIENT' });
+      expect(result.status).toBe('CANCELLED');
+    });
+
+    it('deve negar cancelamento se for cliente diferente', async () => {
+      prisma.order.findUnique.mockResolvedValue(mockOrder as any);
+      await expect(service.cancelOrder(orderId, { id: 'other', storeId: 'store1', role: 'CLIENT' }))
+        .rejects.toThrow(ForbiddenException);
+    });
+
+    it('deve negar cancelamento se já estiver entregue', async () => {
+      prisma.order.findUnique.mockResolvedValue({ ...mockOrder, status: 'DELIVERED' } as any);
+      await expect(service.cancelOrder(orderId, { id: 'client1', storeId: 'store1', role: 'CLIENT' }))
+        .rejects.toThrow('Não é possível cancelar um pedido já entregue');
+    });
+  });
+
+  describe('findOne', () => {
+    const orderId = 'order1';
+    const mockOrder = { 
+      id: orderId, 
+      userId: 'client1', 
+      storeId: 'store1', 
+      total: new Prisma.Decimal(10),
+      store: { whatsappNumber: '5511999999999' } 
+    };
+
+    it('deve retornar pedido com paymentAction', async () => {
+      prisma.order.findFirst.mockResolvedValue(mockOrder as any);
+      const result = await service.findOne(orderId, { id: 'client1', storeId: 'store1' });
+      
+      expect(result.paymentAction).toBeDefined();
+      expect(result.paymentAction.whatsappLink).toContain('wa.me');
+    });
+  });
+
+  describe('testUpdateStatus', () => {
+    const orderId = 'order1';
+    const mockOrder = { id: orderId, userId: 'client1', storeId: 'store1' };
+
+    it('deve atualizar status arbitrário para testes', async () => {
+      prisma.order.findUnique.mockResolvedValue(mockOrder as any);
+      prisma.order.update.mockResolvedValue({ ...mockOrder, status: 'PROCESSING' } as any);
+      
+      const result = await service.testUpdateStatus(orderId, 'PROCESSING', { id: 'manager1', storeId: 'store1' });
+      expect(result.status).toBe('PROCESSING');
+    });
+
+    it('deve validar status permitidos', async () => {
+      prisma.order.findUnique.mockResolvedValue(mockOrder as any);
+      await expect(service.testUpdateStatus(orderId, 'INVALID', { id: 'manager1', storeId: 'store1' }))
+        .rejects.toThrow('Status inválido');
+    });
+  });
 });
+

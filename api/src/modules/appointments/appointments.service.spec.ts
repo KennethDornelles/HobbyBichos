@@ -28,7 +28,10 @@ describe('AppointmentsService', () => {
     };
 
     servicesService = { findOne: jest.fn() };
-    mailService = { sendAppointmentConfirmation: jest.fn() };
+    mailService = { 
+      sendAppointmentConfirmation: jest.fn(),
+      sendAppointmentCompleted: jest.fn(),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -53,7 +56,7 @@ describe('AppointmentsService', () => {
       petId: 'pet1',
       employeeId: 'emp1',
       serviceId: 'svc1',
-      startsAt: new Date().toISOString(),
+      startsAt: '2026-01-01T14:00:00', // Safer local time
     };
     const mockService = {
       id: 'svc1',
@@ -128,4 +131,144 @@ describe('AppointmentsService', () => {
       );
     });
   });
+
+  describe('findAllByStore', () => {
+    const filter = { storeId: 'store1', date: '2026-01-01' };
+
+    it('deve listar agendamentos do cliente', async () => {
+      const user = { id: 'client1', role: 'CLIENT', storeId: 'any' };
+      appointmentsRepository.findMany.mockResolvedValue([]);
+      
+      await service.findAllByStore(filter, user);
+      
+      expect(appointmentsRepository.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ userId: 'client1' })
+        })
+      );
+    });
+
+    it('deve listar agendamentos da loja para gestores', async () => {
+      const user = { storeId: 'store1', role: 'MANAGER' };
+      appointmentsRepository.findMany.mockResolvedValue([]);
+      
+      await service.findAllByStore(filter, user);
+      
+      expect(appointmentsRepository.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ storeId: 'store1' })
+        })
+      );
+    });
+
+    it('deve filtrar por data corretamente', async () => {
+      const user = { storeId: 'store1', role: 'OWNER' };
+      appointmentsRepository.findMany.mockResolvedValue([]);
+      
+      await service.findAllByStore({ ...filter, date: '2026-02-01' }, user);
+      
+      expect(appointmentsRepository.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            startsAt: {
+              gte: new Date('2026-02-01'),
+              lt: new Date('2026-02-02')
+            }
+          })
+        })
+      );
+    });
+  });
+
+  describe('findOne', () => {
+    const appointmentId = 'apt1';
+    const mockApt = { id: appointmentId, userId: 'client1', storeId: 'store1' };
+
+    beforeEach(() => {
+      appointmentsRepository.findUnique.mockResolvedValue(mockApt);
+    });
+
+    it('deve retornar agendamento se for do próprio cliente', async () => {
+      const result = await service.findOne(appointmentId, { id: 'client1', role: 'CLIENT' });
+      expect(result).toEqual(mockApt);
+    });
+
+    it('deve lançar NotFound se cliente tentar ver agendamento de outro', async () => {
+      await expect(service.findOne(appointmentId, { id: 'other', role: 'CLIENT' }))
+        .rejects.toThrow('Agendamento não encontrado');
+    });
+
+    it('deve retornar agendamento se gestor for da mesma loja', async () => {
+      const result = await service.findOne(appointmentId, { storeId: 'store1', role: 'MANAGER' });
+      expect(result).toEqual(mockApt);
+    });
+
+    it('deve lançar NotFound se agendamento não existir', async () => {
+      appointmentsRepository.findUnique.mockResolvedValue(null);
+      await expect(service.findOne('invalid', { role: 'OWNER' }))
+        .rejects.toThrow('Agendamento não encontrado');
+    });
+  });
+
+  describe('getEmployeeDashboard', () => {
+    const employee = { id: 'emp1', storeId: 'store1', role: 'EMPLOYEE', name: 'Func' };
+
+    it('deve retornar dados do dashboard com sucesso', async () => {
+      appointmentsRepository.findMany.mockResolvedValue([]);
+      const result = await service.getEmployeeDashboard(employee);
+      
+      expect(result).toBeDefined();
+      expect(result.employeeName).toBe('Func');
+      expect(appointmentsRepository.findMany).toHaveBeenCalledTimes(2); // Hoje e Próximos
+    });
+
+    it('deve lançar erro para papel não autorizado', async () => {
+      await expect(service.getEmployeeDashboard({ ...employee, role: 'CLIENT' }))
+        .rejects.toThrow('Acesso negado ao dashboard');
+    });
+
+    it('deve lançar erro se employee não tiver loja', async () => {
+      await expect(service.getEmployeeDashboard({ ...employee, storeId: undefined }))
+        .rejects.toThrow('Employee não possui loja associada');
+    });
+  });
+
+  describe('updateAppointmentStatus', () => {
+    const aptId = 'apt1';
+    const manager = { storeId: 'store1', role: 'MANAGER' };
+    const mockApt = { 
+      id: aptId, 
+      storeId: 'store1', 
+      user: { email: 'a@a.com', name: 'C' },
+      store: { name: 'L' } 
+    };
+
+    beforeEach(() => {
+      appointmentsRepository.findUnique.mockResolvedValue(mockApt);
+      appointmentsRepository.update.mockResolvedValue({ ...mockApt, status: 'PAID' });
+    });
+
+    it('deve atualizar status com sucesso', async () => {
+      const result = await service.updateAppointmentStatus(aptId, { status: 'COMPLETED' }, manager);
+      expect(result.status).toBeDefined();
+      expect(appointmentsRepository.update).toHaveBeenCalled();
+    });
+
+    it('deve enviar email quando status for COMPLETED', async () => {
+      mailService.sendAppointmentCompleted = jest.fn();
+      await service.updateAppointmentStatus(aptId, { status: 'COMPLETED' }, manager);
+      expect(mailService.sendAppointmentCompleted).toHaveBeenCalled();
+    });
+
+    it('deve negar atualização de agendamento de outra loja', async () => {
+      await expect(service.updateAppointmentStatus(aptId, { status: 'PAID' }, { ...manager, storeId: 'outra' }))
+        .rejects.toThrow('Sem permissão para atualizar este agendamento');
+    });
+
+    it('deve negar acesso para CLIENT', async () => {
+      await expect(service.updateAppointmentStatus(aptId, { status: 'PAID' }, { role: 'CLIENT' }))
+        .rejects.toThrow('Sem permissão para atualizar agendamentos');
+    });
+  });
 });
+

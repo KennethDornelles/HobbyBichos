@@ -1,0 +1,118 @@
+  console.log
+    🆔 Order ID completo: 1
+
+      at OrdersService.generateWhatsAppLink (src/modules/orders/orders.service.ts:150:13)
+
+  console.log
+    📦 Short Order ID: 1
+
+      at OrdersService.generateWhatsAppLink (src/modules/orders/orders.service.ts:151:13)
+
+  console.log
+    💰 Total formatado: R$ 25,00
+
+      at OrdersService.generateWhatsAppLink (src/modules/orders/orders.service.ts:152:13)
+
+  console.log
+    📝 Mensagem antes do encode: 🛒 *PEDIDO HOBBY BICHOS*
+    
+    📦 Pedido: 1
+    💰 Total: R$ 25,00
+    
+    Olá! Gostaria de *finalizar o pagamento* do pedido via PIX.
+    
+    🆔 ID Completo: 1
+
+      at OrdersService.generateWhatsAppLink (src/modules/orders/orders.service.ts:161:13)
+
+  console.log
+    📱 WhatsApp Link gerado: https://wa.me/5511999999999?text=%F0%9F%9B%92%20*PEDIDO%20HOBBY%20BICHOS*%0A%0A%F0%9F%93%A6%20Pedido%3A%201%0A%F0%9F%92%B0%20Total%3A%20R%24%C2%A025%2C00%0A%0AOl%C3%A1!%20Gostaria%20de%20*finalizar%20o%20pagamento*%20do%20pedido%20via%20PIX.%0A%0A%F0%9F%86%94%20ID%20Completo%3A%201
+
+      at OrdersService.generateWhatsAppLink (src/modules/orders/orders.service.ts:166:13)
+
+  console.log
+    🆔 Order ID completo: 1
+
+      at OrdersService.generateWhatsAppLink (src/modules/orders/orders.service.ts:150:13)
+
+  console.log
+    📦 Short Order ID: 1
+
+      at OrdersService.generateWhatsAppLink (src/modules/orders/orders.service.ts:151:13)
+
+  console.log
+    💰 Total formatado: R$ 25,00
+
+      at OrdersService.generateWhatsAppLink (src/modules/orders/orders.service.ts:152:13)
+
+  console.log
+    📝 Mensagem antes do encode: 🛒 *PEDIDO HOBBY BICHOS*
+    
+    📦 Pedido: 1
+    💰 Total: R$ 25,00
+    
+    Olá! Gostaria de *finalizar o pagamento* do pedido via PIX.
+    
+    🆔 ID Completo: 1
+
+      at OrdersService.generateWhatsAppLink (src/modules/orders/orders.service.ts:161:13)
+
+  console.log
+    📱 WhatsApp Link gerado: https://wa.me/5511999999999?text=%F0%9F%9B%92%20*PEDIDO%20HOBBY%20BICHOS*%0A%0A%F0%9F%93%A6%20Pedido%3A%201%0A%F0%9F%92%B0%20Total%3A%20R%24%C2%A025%2C00%0A%0AOl%C3%A1!%20Gostaria%20de%20*finalizar%20o%20pagamento*%20do%20pedido%20via%20PIX.%0A%0A%F0%9F%86%94%20ID%20Completo%3A%201
+
+      at OrdersService.generateWhatsAppLink (src/modules/orders/orders.service.ts:166:13)
+
+FAIL src/modules/orders/orders.service.spec.ts
+  OrdersService
+    create
+      × deve lançar ForbiddenException se storeId for diferente (23 ms)
+      √ deve calcular o total corretamente (17 ms)
+      √ deve lançar erro se loja não tem whatsapp
+      √ deve gerar link do WhatsApp corretamente (2 ms)
+    finishOrder
+      √ deve lançar NotFoundException se pedido não existe (1 ms)
+      √ deve lançar ForbiddenException se storeId diferente
+      √ deve lançar ForbiddenException se já pago (1 ms)
+      √ deve lançar ForbiddenException se não for OWNER/MANAGER
+      √ deve lançar ForbiddenException se estoque insuficiente (1 ms)
+      √ deve finalizar pedido e atualizar estoque (1 ms)
+    findAll
+      √ deve filtrar por userId se for CLIENT (1 ms)
+      √ deve filtrar por storeId se for OWNER/MANAGER (1 ms)
+    cancelOrder
+      √ deve permitir cancelamento pelo cliente dono do pedido
+      √ deve negar cancelamento se for cliente diferente (1 ms)
+      √ deve negar cancelamento se já estiver entregue
+    findOne
+      √ deve retornar pedido com paymentAction (1 ms)
+    testUpdateStatus
+      √ deve atualizar status arbitrário para testes
+      √ deve validar status permitidos (1 ms)
+
+  ● OrdersService › create › deve lançar ForbiddenException se storeId for diferente
+
+    expect(received).rejects.toThrow(expected)
+
+    Expected constructor: ForbiddenException
+    Received constructor: NotFoundException
+
+    Received message: "Loja não encontrada"
+
+        [0m [90m 72 |[39m
+         [90m 73 |[39m     [36mif[39m ([33m![39mstore) {
+        [31m[1m>[22m[39m[90m 74 |[39m       [36mthrow[39m [36mnew[39m [33mNotFoundException[39m([32m'Loja não encontrada'[39m)[33m;[39m
+         [90m    |[39m             [31m[1m^[22m[39m
+         [90m 75 |[39m     }
+         [90m 76 |[39m
+         [90m 77 |[39m     [90m// Calcule o total do pedido[39m[0m
+
+      at OrdersService.create (src/modules/orders/orders.service.ts:74:13)
+      at Object.<anonymous> (src/modules/orders/orders.service.spec.ts:71:7)
+      at Object.toThrow (node_modules/expect/build/index.js:218:22)
+      at Object.<anonymous> (src/modules/orders/orders.service.spec.ts:73:17)
+
+Test Suites: 1 failed, 1 total
+Tests:       1 failed, 17 passed, 18 total
+Snapshots:   0 total
+Time:        1.156 s, estimated 6 s
+Ran all test suites matching /src\\modules\\orders\\orders.service.spec.ts/i.
