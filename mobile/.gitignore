@@ -51,3 +51,6 @@ coverage/
 
 # Misc
 .cache/
+
+#google service account
+fcm-key.json
