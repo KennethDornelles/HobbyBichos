@@ -9,7 +9,7 @@ import { SideMenu } from '../../src/components/SideMenu';
 import { useThemeColors } from '../../src/hooks/useThemeColors';
 import { useAuth } from '../../src/context/AuthContext';
 import { managerService } from '../../src/services/managerService';
-import { Calendar, BarChart4, Wrench, Wallet, Users, Package, AlertTriangle, UserCog } from 'lucide-react-native';
+import { Calendar, BarChart4, Wrench, Wallet, Users, Package, AlertTriangle, UserCog, ArrowLeftRight } from 'lucide-react-native';
 
 interface QuickActionItem {
     id: string;
@@ -32,6 +32,7 @@ const managerQuickActions: QuickActionItem[] = [
     { id: '3', icon: Wallet, label: 'Financeiro', route: '/manager/financial' },
     { id: '4', icon: Users, label: 'Equipe', route: '/manager/team' },
     { id: '5', icon: UserCog, label: 'Clientes', route: '/manager/clients' },
+    { id: '6', icon: ArrowLeftRight, label: 'Estoques', route: '/manager/stock-transfer' },
 ];
 
 const managerMainActions: ActionCardItem[] = [
@@ -76,6 +77,13 @@ const managerMainActions: ActionCardItem[] = [
         subtitle: 'Cadastro e edição',
         icon: UserCog,
         route: '/manager/clients',
+    },
+    {
+        id: '7',
+        title: 'Transferência de Estoque',
+        subtitle: 'Mover produtos entre lojas',
+        icon: ArrowLeftRight,
+        route: '/manager/stock-transfer',
     },
 ];
 

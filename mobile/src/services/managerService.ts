@@ -127,6 +127,7 @@ export interface SalesAnalytics {
 }
 
 export interface ProductPerformance {
+  productId: string;
   name: string;
   category: string;
   quantity: number;
@@ -146,6 +147,21 @@ export interface CustomerMetrics {
   recurrentCustomers: number;
   retentionRate: number;
   averageTicket: number;
+}
+
+export interface StockTransfer {
+  id: string;
+  productId: string;
+  fromStoreId: string;
+  toStoreId: string;
+  quantity: number;
+  reason?: string;
+  status: 'COMPLETED' | 'CANCELLED';
+  createdAt: string;
+  product?: { name: string };
+  fromStore?: { name: string };
+  toStore?: { name: string };
+  requestedBy?: { name: string; email: string };
 }
 
 class ManagerService {
@@ -268,6 +284,26 @@ class ManagerService {
     const response = await api.get(`/analytics/customers`, {
       params: { startDate, endDate },
     });
+    return response.data;
+  }
+
+  // ==================== TRANSFERÊNCIA DE ESTOQUE ====================
+
+  async getStockTransfers(storeId?: string): Promise<StockTransfer[]> {
+    const response = await api.get(`/products/transfers`, {
+      params: { storeId },
+    });
+    return response.data;
+  }
+
+  async createStockTransfer(data: {
+    productId: string;
+    fromStoreId: string;
+    toStoreId: string;
+    quantity: number;
+    reason?: string;
+  }): Promise<StockTransfer> {
+    const response = await api.post(`/products/transfers`, data);
     return response.data;
   }
 }

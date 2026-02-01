@@ -12,6 +12,15 @@ export interface UserData {
   updatedAt?: string;
 }
 
+export interface StoreData {
+  id: string;
+  name: string;
+  slug: string;
+  phone?: string;
+  address?: string;
+  isActive: boolean;
+}
+
 export interface CreateUserDto {
   name: string;
   email: string;
@@ -54,5 +63,10 @@ export const userManagementService = {
 
   async deleteUser(id: string): Promise<void> {
     await api.delete(`/manager/users/${id}`);
+  },
+
+  async getStores(): Promise<StoreData[]> {
+    const response = await api.get('/stores');
+    return response.data;
   },
 };
