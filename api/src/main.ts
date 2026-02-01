@@ -31,9 +31,9 @@ async function bootstrap() {
         callback(null, true);
         return;
       }
-      if (allowedOrigins.includes(origin)) {
+      if (allowedOrigins.includes(origin) || origin.endsWith('.ngrok-free.dev')) {
         callback(null, true);
-        return; // Fixed: added return
+        return;
       } else {
         callback(new Error(`Origin ${origin} not allowed by CORS`));
       }
