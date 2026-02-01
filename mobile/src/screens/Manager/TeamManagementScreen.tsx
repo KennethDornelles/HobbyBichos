@@ -317,6 +317,12 @@ export default function TeamManagementScreen() {
                                         </View>
                                     </View>
                                     <View style={{ gap: 8 }}>
+                                        <Pressable onPress={() => router.push({
+                                            pathname: '/manager/schedule',
+                                            params: { userId: userItem.id, userName: userItem.name }
+                                        })}>
+                                            <Ionicons name="calendar-outline" size={24} color="#F59E0B" />
+                                        </Pressable>
                                         <Pressable onPress={() => openEditModal(userItem)}>
                                             <Ionicons name="create-outline" size={24} color="#3B82F6" />
                                         </Pressable>

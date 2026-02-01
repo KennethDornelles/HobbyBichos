@@ -164,6 +164,26 @@ export interface StockTransfer {
   requestedBy?: { name: string; email: string };
 }
 
+export interface WorkSchedule {
+  weekday: number;
+  startTime: string;
+  endTime: string;
+  startBreak?: string;
+  endBreak?: string;
+  isDayOff: boolean;
+}
+
+export interface BenchmarkingData {
+  storeId: string;
+  storeName: string;
+  city: string;
+  state: string;
+  totalRevenue: number;
+  orderCount: number;
+  appointmentCount: number;
+  averageTicket: number;
+}
+
 class ManagerService {
   // ==================== DASHBOARD ====================
   
@@ -172,12 +192,27 @@ class ManagerService {
     return response.data;
   }
 
-  async getFinancialDashboard(startDate?: string, endDate?: string): Promise<FinancialDashboard> {
+  async getFinancialDashboard(startDate?: string, endDate?: string, city?: string, state?: string): Promise<FinancialDashboard> {
     const params: any = {};
     if (startDate) params.startDate = startDate;
     if (endDate) params.endDate = endDate;
+    if (city) params.city = city;
+    if (state) params.state = state;
     
     const response = await api.get(`/manager/dashboard/financial`, {
+      params,
+    });
+    return response.data;
+  }
+
+  async getBenchmarking(startDate?: string, endDate?: string, city?: string, state?: string): Promise<BenchmarkingData[]> {
+    const params: any = {};
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
+    if (city) params.city = city;
+    if (state) params.state = state;
+
+    const response = await api.get(`/manager/analytics/benchmarking`, {
       params,
     });
     return response.data;
@@ -255,6 +290,15 @@ class ManagerService {
       params,
     });
     return response.data;
+  }
+
+  async getEmployeeSchedule(userId: string): Promise<WorkSchedule[]> {
+    const response = await api.get(`/manager/users/${userId}/schedule`);
+    return response.data;
+  }
+
+  async updateEmployeeSchedule(userId: string, schedules: WorkSchedule[]): Promise<void> {
+    await api.put(`/manager/users/${userId}/schedule`, schedules);
   }
 
   // ==================== ADVANCED ANALYTICS ====================

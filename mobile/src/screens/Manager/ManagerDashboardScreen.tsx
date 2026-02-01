@@ -11,16 +11,23 @@ import {
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { managerService, ManagerDashboard, LowStockItem } from '../../services/managerService';
+import { managerService, ManagerDashboard, LowStockItem, BenchmarkingData } from '../../services/managerService';
 import { Ionicons } from '@expo/vector-icons';
+import { TextInput } from 'react-native';
 
 export default function ManagerDashboardScreen() {
     const { isDark } = useTheme();
     const { user } = useAuth();
     const router = useRouter();
     const [dashboard, setDashboard] = useState<ManagerDashboard | null>(null);
+    const [benchmarking, setBenchmarking] = useState<BenchmarkingData[]>([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
+
+    // Filters
+    const [city, setCity] = useState('');
+    const [state, setState] = useState('');
+    const [appliedFilters, setAppliedFilters] = useState({ city: '', state: '' });
 
     useEffect(() => {
         // Verificar se o usuário é MANAGER, OWNER ou SUPER_ADMIN
@@ -38,14 +45,26 @@ export default function ManagerDashboardScreen() {
     const loadDashboard = async () => {
         try {
             setLoading(true);
-            const data = await managerService.getDashboard();
-            setDashboard(data);
+            const [dashboardData, benchmarkingData] = await Promise.all([
+                managerService.getDashboard(), // Dashboard backend doesn't support filters yet on main route, only financial/benchmarking
+                managerService.getBenchmarking(undefined, undefined, appliedFilters.city, appliedFilters.state)
+            ]);
+            setDashboard(dashboardData);
+            setBenchmarking(benchmarkingData);
         } catch (error: any) {
             Alert.alert('Erro', error.message || 'Erro ao carregar dashboard');
         } finally {
             setLoading(false);
         }
     };
+
+    const applyFilters = () => {
+        setAppliedFilters({ city, state });
+    };
+
+    useEffect(() => {
+        loadDashboard();
+    }, [appliedFilters]);
 
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
@@ -80,6 +99,33 @@ export default function ManagerDashboardScreen() {
                     <Text style={{ fontSize: 16, color: '#8B92A9' }}>
                         Visão geral do negócio
                     </Text>
+                </View>
+
+                {/* Filtros */}
+                <View style={{ marginBottom: 24, padding: 16, backgroundColor: cardBgColor, borderRadius: 12 }}>
+                    <Text style={{ fontSize: 16, fontWeight: 'bold', color: textColor, marginBottom: 12 }}>Filtrar por Região</Text>
+                    <View style={{ flexDirection: 'row', gap: 12 }}>
+                        <TextInput
+                            placeholder="Cidade"
+                            value={city}
+                            onChangeText={setCity}
+                            placeholderTextColor="#8B92A9"
+                            style={{ flex: 1, backgroundColor: bgColor, borderRadius: 8, padding: 10, color: textColor, borderWidth: 1, borderColor }}
+                        />
+                        <TextInput
+                            placeholder="UF"
+                            value={state}
+                            onChangeText={setState}
+                            placeholderTextColor="#8B92A9"
+                            style={{ width: 60, backgroundColor: bgColor, borderRadius: 8, padding: 10, color: textColor, borderWidth: 1, borderColor }}
+                        />
+                        <Pressable
+                            onPress={applyFilters}
+                            style={{ backgroundColor: '#FF6B35', borderRadius: 8, padding: 10, justifyContent: 'center' }}
+                        >
+                            <Ionicons name="search" size={20} color="#FFF" />
+                        </Pressable>
+                    </View>
                 </View>
 
                 {/* Cards de Resumo */}
@@ -137,6 +183,52 @@ export default function ManagerDashboardScreen() {
                                 />
                             </View>
                         </View>
+
+
+                        {/* Benchmarking */}
+                        {benchmarking.length > 0 && (
+                            <View style={{ marginBottom: 24 }}>
+                                <Text style={{ fontSize: 20, fontWeight: 'bold', color: textColor, marginBottom: 12 }}>
+                                    Ranking de Lojas
+                                </Text>
+                                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                                    {benchmarking.map((item, index) => (
+                                        <View
+                                            key={item.storeId}
+                                            style={{
+                                                width: 200,
+                                                backgroundColor: cardBgColor,
+                                                borderRadius: 12,
+                                                padding: 16,
+                                                marginRight: 12,
+                                                borderWidth: 1,
+                                                borderColor: index === 0 ? '#F59E0B' : borderColor
+                                            }}
+                                        >
+                                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                                                <Text style={{ fontWeight: 'bold', fontSize: 40, color: index === 0 ? '#F59E0B' : '#8B92A9', opacity: 0.3, position: 'absolute', right: 0, top: -10 }}>
+                                                    #{index + 1}
+                                                </Text>
+                                                <Text style={{ fontSize: 16, fontWeight: 'bold', color: textColor, maxWidth: '80%' }} numberOfLines={1}>
+                                                    {item.storeName}
+                                                </Text>
+                                            </View>
+                                            <Text style={{ fontSize: 12, color: '#8B92A9', marginBottom: 8 }}>
+                                                {item.city}/{item.state}
+                                            </Text>
+                                            <View style={{ gap: 4 }}>
+                                                <Text style={{ fontSize: 14, color: textColor }}>
+                                                    <Text style={{ fontWeight: 'bold' }}>R$ {item.totalRevenue.toFixed(2)}</Text>
+                                                </Text>
+                                                <Text style={{ fontSize: 12, color: '#8B92A9' }}>
+                                                    {item.orderCount} pedidos
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    ))}
+                                </ScrollView>
+                            </View>
+                        )}
 
                         {/* Alertas de Estoque Baixo */}
                         {dashboard.lowStockItems.length > 0 && (
@@ -280,7 +372,7 @@ export default function ManagerDashboardScreen() {
                     </>
                 )}
             </View>
-        </ScrollView>
+        </ScrollView >
     );
 }
 
