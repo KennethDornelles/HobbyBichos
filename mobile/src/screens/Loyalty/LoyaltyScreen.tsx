@@ -8,6 +8,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useUserStore } from '../../store/userStore';
 import { api } from '../../../api'; // Importar API helper
 import { StampCard } from '../../components/StampCard';
+import { EmptyState } from '../../components/EmptyState';
 
 interface Reward {
     id: string;
@@ -159,13 +160,21 @@ export default function LoyaltyScreen() {
                         </Text>
                     </View>
 
-                    {REWARDS.map((reward) => (
-                        <RewardCard
-                            key={reward.id}
-                            reward={reward}
-                            userPoints={points}
+                    {REWARDS.length > 0 ? (
+                        REWARDS.map((reward) => (
+                            <RewardCard
+                                key={reward.id}
+                                reward={reward}
+                                userPoints={points}
+                            />
+                        ))
+                    ) : (
+                        <EmptyState
+                            title="Nenhuma recompensa disponível"
+                            description="No momento não temos recompensas para troca. Volte em breve!"
+                            icon={Gift}
                         />
-                    ))}
+                    )}
                 </View>
 
                 {/* QR Code */}

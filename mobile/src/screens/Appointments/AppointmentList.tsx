@@ -9,6 +9,8 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { useCartStore } from '../../store/cartStore';
 import { useThemeColors } from '../../hooks/useThemeColors';
 import { appointmentService, Appointment } from '../../services/appointmentService';
+import { EmptyState } from '../../components/EmptyState';
+import { Calendar } from 'lucide-react-native';
 
 export default function AppointmentList() {
     const router = useRouter();
@@ -96,16 +98,14 @@ export default function AppointmentList() {
                         </Pressable>
                     </View>
                 ) : filteredAppointments.length === 0 ? (
-                    <View className="flex-1 items-center justify-center px-6">
-                        <Ionicons name="calendar-outline" size={64} color={colors.textSecondary} />
-                        <Text className="text-center mt-4 text-lg" style={{ color: colors.textMain }}>
-                            {search ? 'Nenhum agendamento encontrado' : 'Você ainda não tem agendamentos'}
-                        </Text>
-                        {!search && (
-                            <Text className="text-center mt-2" style={{ color: colors.textSecondary }}>
-                                Toque no botão + para criar seu primeiro agendamento
-                            </Text>
-                        )}
+                    <View className="flex-1 pt-10">
+                        <EmptyState
+                            title={search ? "Nenhum resultado" : "Sem agendamentos"}
+                            description={search ? `Nenhum agendamento encontrado para "${search}"` : "Você ainda não possui agendamentos marcados."}
+                            icon={Calendar}
+                            actionLabel={search ? "Limpar busca" : "Agendar Agora"}
+                            onAction={search ? () => setSearch('') : () => router.push('/appointments/create')}
+                        />
                     </View>
                 ) : (
                     <>

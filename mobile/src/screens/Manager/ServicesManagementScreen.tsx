@@ -15,6 +15,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { managerService, ServiceWithStats } from '../../services/managerService';
 import { Ionicons } from '@expo/vector-icons';
+import { EmptyState } from '../../components/EmptyState';
 
 export default function ServicesManagementScreen() {
     const { isDark } = useTheme();
@@ -175,79 +176,88 @@ export default function ServicesManagementScreen() {
                     </View>
 
                     {/* Lista de Serviços */}
-                    {services.map((service) => (
-                        <View
-                            key={service.id}
-                            style={{
-                                backgroundColor: cardBgColor,
-                                borderRadius: 12,
-                                padding: 16,
-                                marginBottom: 12,
-                                borderWidth: 1,
-                                borderColor,
-                                opacity: service.isActive ? 1 : 0.5,
-                            }}
-                        >
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                                <View style={{ flex: 1 }}>
-                                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: textColor, marginBottom: 4 }}>
-                                        {service.name}
-                                    </Text>
-                                    <Text style={{ fontSize: 16, color: '#FF6B35', fontWeight: '600', marginBottom: 8 }}>
-                                        R$ {Number(service.price).toFixed(2)}
-                                    </Text>
-                                    <Text style={{ fontSize: 14, color: '#8B92A9' }}>
-                                        Duração: {service.durationMin} min
-                                    </Text>
-                                    {!service.isActive && (
-                                        <Text style={{ fontSize: 14, color: '#EF4444', fontWeight: '600', marginTop: 4 }}>
-                                            INATIVO
-                                        </Text>
-                                    )}
-                                </View>
-                                <View style={{ gap: 8 }}>
-                                    <Pressable onPress={() => openEditModal(service)}>
-                                        <Ionicons name="create-outline" size={24} color="#3B82F6" />
-                                    </Pressable>
-                                    <Pressable onPress={() => handleDeactivate(service)}>
-                                        <Ionicons
-                                            name={service.isActive ? 'close-circle-outline' : 'checkmark-circle-outline'}
-                                            size={24}
-                                            color={service.isActive ? '#EF4444' : '#10B981'}
-                                        />
-                                    </Pressable>
-                                </View>
-                            </View>
-
-                            {/* Estatísticas */}
+                    {services.length > 0 ? (
+                        services.map((service) => (
                             <View
+                                key={service.id}
                                 style={{
-                                    flexDirection: 'row',
-                                    gap: 16,
-                                    paddingTop: 12,
-                                    borderTopWidth: 1,
-                                    borderTopColor: borderColor,
+                                    backgroundColor: cardBgColor,
+                                    borderRadius: 12,
+                                    padding: 16,
+                                    marginBottom: 12,
+                                    borderWidth: 1,
+                                    borderColor,
+                                    opacity: service.isActive ? 1 : 0.5,
                                 }}
                             >
-                                <View style={{ flex: 1 }}>
-                                    <Text style={{ fontSize: 12, color: '#8B92A9', marginBottom: 4 }}>
-                                        Agendamentos
-                                    </Text>
-                                    <Text style={{ fontSize: 16, fontWeight: '600', color: textColor }}>
-                                        {service.stats.appointmentCount}
-                                    </Text>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: textColor, marginBottom: 4 }}>
+                                            {service.name}
+                                        </Text>
+                                        <Text style={{ fontSize: 16, color: '#FF6B35', fontWeight: '600', marginBottom: 8 }}>
+                                            R$ {Number(service.price).toFixed(2)}
+                                        </Text>
+                                        <Text style={{ fontSize: 14, color: '#8B92A9' }}>
+                                            Duração: {service.durationMin} min
+                                        </Text>
+                                        {!service.isActive && (
+                                            <Text style={{ fontSize: 14, color: '#EF4444', fontWeight: '600', marginTop: 4 }}>
+                                                INATIVO
+                                            </Text>
+                                        )}
+                                    </View>
+                                    <View style={{ gap: 8 }}>
+                                        <Pressable onPress={() => openEditModal(service)}>
+                                            <Ionicons name="create-outline" size={24} color="#3B82F6" />
+                                        </Pressable>
+                                        <Pressable onPress={() => handleDeactivate(service)}>
+                                            <Ionicons
+                                                name={service.isActive ? 'close-circle-outline' : 'checkmark-circle-outline'}
+                                                size={24}
+                                                color={service.isActive ? '#EF4444' : '#10B981'}
+                                            />
+                                        </Pressable>
+                                    </View>
                                 </View>
-                                <View style={{ flex: 1 }}>
-                                    <Text style={{ fontSize: 12, color: '#8B92A9', marginBottom: 4 }}>
-                                        Receita Total
-                                    </Text>
-                                    <Text style={{ fontSize: 16, fontWeight: '600', color: textColor }}>
-                                        R$ {Number(service.stats.totalRevenue).toFixed(2)}
-                                    </Text>
+
+                                {/* Estatísticas */}
+                                <View
+                                    style={{
+                                        flexDirection: 'row',
+                                        gap: 16,
+                                        paddingTop: 12,
+                                        borderTopWidth: 1,
+                                        borderTopColor: borderColor,
+                                    }}
+                                >
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ fontSize: 12, color: '#8B92A9', marginBottom: 4 }}>
+                                            Agendamentos
+                                        </Text>
+                                        <Text style={{ fontSize: 16, fontWeight: '600', color: textColor }}>
+                                            {service.stats.appointmentCount}
+                                        </Text>
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ fontSize: 12, color: '#8B92A9', marginBottom: 4 }}>
+                                            Receita Total
+                                        </Text>
+                                        <Text style={{ fontSize: 16, fontWeight: '600', color: textColor }}>
+                                            R$ {Number(service.stats.totalRevenue).toFixed(2)}
+                                        </Text>
+                                    </View>
                                 </View>
                             </View>
-                        </View>
-                    ))}
+                        ))
+                    ) : (
+                        <EmptyState
+                            title="Nenhum serviço encontrado"
+                            description="Você ainda não tem serviços cadastrados para esta loja."
+                            actionLabel="Criar Primeiro Serviço"
+                            onAction={openCreateModal}
+                        />
+                    )}
                 </View>
             </ScrollView>
 

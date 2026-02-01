@@ -12,13 +12,10 @@ import {
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import {
-    managerService,
-    RevenueData,
-    TopProduct,
-    TopService,
-} from '../../services/managerService';
+import { managerService, RevenueData, TopProduct, TopService, CustomerMetrics } from '../../services/managerService';
 import { Ionicons } from '@expo/vector-icons';
+import { EmptyState } from '../../components/EmptyState';
+import { BarChart, Users as UsersIcon, TrendingUp, Package } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -30,6 +27,7 @@ export default function FinancialDashboardScreen() {
     const [revenue, setRevenue] = useState<RevenueData | null>(null);
     const [topProducts, setTopProducts] = useState<TopProduct[]>([]);
     const [topServices, setTopServices] = useState<TopService[]>([]);
+    const [customerMetrics, setCustomerMetrics] = useState<CustomerMetrics | null>(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -45,15 +43,19 @@ export default function FinancialDashboardScreen() {
 
     const loadData = async () => {
         try {
-            setLoading(true);
-            const [revenueData, products, services] = await Promise.all([
+            const [revenueData, products, services, customers] = await Promise.all([
                 managerService.getRevenue(selectedPeriod),
                 managerService.getTopProducts(5),
                 managerService.getTopServices(5),
+                managerService.getCustomerMetrics(
+                    new Date(new Date().setDate(new Date().getDate() - 30)).toISOString(),
+                    new Date().toISOString()
+                ),
             ]);
             setRevenue(revenueData);
             setTopProducts(products);
             setTopServices(services);
+            setCustomerMetrics(customers);
         } catch (error: any) {
             Alert.alert('Erro', error.message || 'Erro ao carregar dados financeiros');
         } finally {
@@ -211,6 +213,31 @@ export default function FinancialDashboardScreen() {
                                 </View>
                             </View>
                         </View>
+
+                        {/* Métricas de Clientes (Advanced) */}
+                        {customerMetrics && (
+                            <View style={{ marginBottom: 24 }}>
+                                <Text style={{ fontSize: 20, fontWeight: 'bold', color: textColor, marginBottom: 12 }}>
+                                    Métricas de Clientes (30 dias)
+                                </Text>
+                                <View style={{ flexDirection: 'row', gap: 12 }}>
+                                    <View style={{ flex: 1, backgroundColor: cardBgColor, padding: 16, borderRadius: 12, borderWidth: 1, borderColor }}>
+                                        <UsersIcon size={20} color="#8B5CF6" />
+                                        <Text style={{ fontSize: 24, fontWeight: 'bold', color: textColor, marginTop: 8 }}>
+                                            {customerMetrics.totalCustomers}
+                                        </Text>
+                                        <Text style={{ fontSize: 12, color: '#8B92A9' }}>Total de Clientes</Text>
+                                    </View>
+                                    <View style={{ flex: 1, backgroundColor: cardBgColor, padding: 16, borderRadius: 12, borderWidth: 1, borderColor }}>
+                                        <TrendingUp size={20} color="#10B981" />
+                                        <Text style={{ fontSize: 24, fontWeight: 'bold', color: textColor, marginTop: 8 }}>
+                                            {customerMetrics.retentionRate.toFixed(1)}%
+                                        </Text>
+                                        <Text style={{ fontSize: 12, color: '#8B92A9' }}>Taxa de Retenção</Text>
+                                    </View>
+                                </View>
+                            </View>
+                        )}
 
                         {/* Top Produtos */}
                         {topProducts.length > 0 && (

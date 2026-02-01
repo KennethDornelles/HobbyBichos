@@ -18,6 +18,7 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import { userManagementService, UserData, CreateUserDto, UpdateUserDto } from '../../services/userManagementService';
 import { Ionicons } from '@expo/vector-icons';
+import { EmptyState } from '../../components/EmptyState';
 
 export default function TeamManagementScreen() {
     const { isDark } = useTheme();
@@ -274,54 +275,63 @@ export default function TeamManagementScreen() {
                     </View>
 
                     {/* Lista de usuários */}
-                    {users.map((userItem) => (
-                        <View
-                            key={userItem.id}
-                            style={{
-                                backgroundColor: cardBgColor,
-                                borderRadius: 12,
-                                padding: 16,
-                                marginBottom: 12,
-                                borderWidth: 1,
-                                borderColor,
-                            }}
-                        >
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <View style={{ flex: 1 }}>
-                                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: textColor, marginBottom: 4 }}>
-                                        {userItem.name}
-                                    </Text>
-                                    <Text style={{ fontSize: 14, color: '#8B92A9', marginBottom: 8 }}>
-                                        {userItem.email}
-                                    </Text>
-                                    <Text style={{ fontSize: 14, color: '#8B92A9', marginBottom: 8 }}>
-                                        {userItem.phone}
-                                    </Text>
-                                    <View
-                                        style={{
-                                            backgroundColor: getRoleColor(userItem.role) + '20',
-                                            paddingHorizontal: 8,
-                                            paddingVertical: 4,
-                                            borderRadius: 6,
-                                            alignSelf: 'flex-start',
-                                        }}
-                                    >
-                                        <Text style={{ fontSize: 12, fontWeight: '600', color: getRoleColor(userItem.role) }}>
-                                            {getRoleName(userItem.role)}
+                    {users.length > 0 ? (
+                        users.map((userItem) => (
+                            <View
+                                key={userItem.id}
+                                style={{
+                                    backgroundColor: cardBgColor,
+                                    borderRadius: 12,
+                                    padding: 16,
+                                    marginBottom: 12,
+                                    borderWidth: 1,
+                                    borderColor,
+                                }}
+                            >
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: textColor, marginBottom: 4 }}>
+                                            {userItem.name}
                                         </Text>
+                                        <Text style={{ fontSize: 14, color: '#8B92A9', marginBottom: 8 }}>
+                                            {userItem.email}
+                                        </Text>
+                                        <Text style={{ fontSize: 14, color: '#8B92A9', marginBottom: 8 }}>
+                                            {userItem.phone}
+                                        </Text>
+                                        <View
+                                            style={{
+                                                backgroundColor: getRoleColor(userItem.role) + '20',
+                                                paddingHorizontal: 8,
+                                                paddingVertical: 4,
+                                                borderRadius: 6,
+                                                alignSelf: 'flex-start',
+                                            }}
+                                        >
+                                            <Text style={{ fontSize: 12, fontWeight: '600', color: getRoleColor(userItem.role) }}>
+                                                {getRoleName(userItem.role)}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                    <View style={{ gap: 8 }}>
+                                        <Pressable onPress={() => openEditModal(userItem)}>
+                                            <Ionicons name="create-outline" size={24} color="#3B82F6" />
+                                        </Pressable>
+                                        <Pressable onPress={() => handleDelete(userItem)}>
+                                            <Ionicons name="trash-outline" size={24} color="#EF4444" />
+                                        </Pressable>
                                     </View>
                                 </View>
-                                <View style={{ gap: 8 }}>
-                                    <Pressable onPress={() => openEditModal(userItem)}>
-                                        <Ionicons name="create-outline" size={24} color="#3B82F6" />
-                                    </Pressable>
-                                    <Pressable onPress={() => handleDelete(userItem)}>
-                                        <Ionicons name="trash-outline" size={24} color="#EF4444" />
-                                    </Pressable>
-                                </View>
                             </View>
-                        </View>
-                    ))}
+                        ))
+                    ) : (
+                        <EmptyState
+                            title="Nenhum membro encontrado"
+                            description="Você ainda não tem membros na equipe cadastrados."
+                            actionLabel="Adicionar Membro"
+                            onAction={openCreateModal}
+                        />
+                    )}
                 </View>
             </ScrollView>
 

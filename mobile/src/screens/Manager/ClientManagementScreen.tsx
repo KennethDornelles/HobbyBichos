@@ -17,6 +17,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { userManagementService, UserData, CreateUserDto, UpdateUserDto } from '../../services/userManagementService';
 import { Ionicons } from '@expo/vector-icons';
+import { EmptyState } from '../../components/EmptyState';
 
 export default function ClientManagementScreen() {
     const { isDark } = useTheme();
@@ -170,37 +171,46 @@ export default function ClientManagementScreen() {
                     </View>
 
                     {/* Lista de clientes */}
-                    {clients.map((client) => (
-                        <View
-                            key={client.id}
-                            style={{
-                                backgroundColor: cardBgColor,
-                                borderRadius: 12,
-                                padding: 16,
-                                marginBottom: 12,
-                                borderWidth: 1,
-                                borderColor,
-                            }}
-                        >
-                            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <View style={{ flex: 1 }}>
-                                    <Text style={{ fontSize: 18, fontWeight: 'bold', color: textColor, marginBottom: 4 }}>
-                                        {client.name}
-                                    </Text>
-                                    <Text style={{ fontSize: 14, color: '#8B92A9', marginBottom: 4 }}>{client.email}</Text>
-                                    <Text style={{ fontSize: 14, color: '#8B92A9' }}>{client.phone}</Text>
-                                </View>
-                                <View style={{ gap: 8 }}>
-                                    <Pressable onPress={() => openEditModal(client)}>
-                                        <Ionicons name="create-outline" size={24} color="#3B82F6" />
-                                    </Pressable>
-                                    <Pressable onPress={() => handleDelete(client)}>
-                                        <Ionicons name="trash-outline" size={24} color="#EF4444" />
-                                    </Pressable>
+                    {clients.length > 0 ? (
+                        clients.map((client) => (
+                            <View
+                                key={client.id}
+                                style={{
+                                    backgroundColor: cardBgColor,
+                                    borderRadius: 12,
+                                    padding: 16,
+                                    marginBottom: 12,
+                                    borderWidth: 1,
+                                    borderColor,
+                                }}
+                            >
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={{ fontSize: 18, fontWeight: 'bold', color: textColor, marginBottom: 4 }}>
+                                            {client.name}
+                                        </Text>
+                                        <Text style={{ fontSize: 14, color: '#8B92A9', marginBottom: 4 }}>{client.email}</Text>
+                                        <Text style={{ fontSize: 14, color: '#8B92A9' }}>{client.phone}</Text>
+                                    </View>
+                                    <View style={{ gap: 8 }}>
+                                        <Pressable onPress={() => openEditModal(client)}>
+                                            <Ionicons name="create-outline" size={24} color="#3B82F6" />
+                                        </Pressable>
+                                        <Pressable onPress={() => handleDelete(client)}>
+                                            <Ionicons name="trash-outline" size={24} color="#EF4444" />
+                                        </Pressable>
+                                    </View>
                                 </View>
                             </View>
-                        </View>
-                    ))}
+                        ))
+                    ) : (
+                        <EmptyState
+                            title="Nenhum cliente encontrado"
+                            description="Você ainda não tem clientes cadastrados para esta loja."
+                            actionLabel="Cadastrar Novo Cliente"
+                            onAction={openCreateModal}
+                        />
+                    )}
                 </View>
             </ScrollView>
 

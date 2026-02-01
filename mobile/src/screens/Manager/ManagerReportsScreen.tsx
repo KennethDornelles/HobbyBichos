@@ -10,14 +10,17 @@ import {
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
-import { managerService, EmployeePerformance } from '../../services/managerService';
+import { managerService, EmployeePerformance, AppointmentInDepth } from '../../services/managerService';
 import { Ionicons } from '@expo/vector-icons';
+import { EmptyState } from '../../components/EmptyState';
+import { BarChart2, Star, TrendingUp, Users, Calendar, CheckCircle, XCircle, PieChart } from 'lucide-react-native';
 
 export default function ManagerReportsScreen() {
     const { isDark } = useTheme();
     const { user } = useAuth();
     const router = useRouter();
     const [performance, setPerformance] = useState<EmployeePerformance[]>([]);
+    const [appointmentDepth, setAppointmentDepth] = useState<AppointmentInDepth | null>(null);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -33,9 +36,15 @@ export default function ManagerReportsScreen() {
 
     const loadData = async () => {
         try {
-            setLoading(true);
-            const data = await managerService.getEmployeePerformance();
-            setPerformance(data.employees);
+            const [performanceData, depthData] = await Promise.all([
+                managerService.getEmployeePerformance(),
+                managerService.getAppointmentInDepth(
+                    new Date(new Date().setDate(new Date().getDate() - 30)).toISOString(),
+                    new Date().toISOString()
+                ),
+            ]);
+            setPerformance(performanceData.employees);
+            setAppointmentDepth(depthData);
         } catch (error: any) {
             Alert.alert('Erro', error.message || 'Erro ao carregar relatórios');
         } finally {
@@ -78,8 +87,41 @@ export default function ManagerReportsScreen() {
                     </Text>
                 </View>
 
+                {/* Horários de Pico */}
+                {appointmentDepth && appointmentDepth.peakHours.length > 0 && (
+                    <View style={{ marginBottom: 24 }}>
+                        <Text style={{ fontSize: 20, fontWeight: 'bold', color: textColor, marginBottom: 12 }}>
+                            Horários de Pico (Últimos 30 dias)
+                        </Text>
+                        <View style={{ backgroundColor: cardBgColor, borderRadius: 12, padding: 16, borderWidth: 1, borderColor }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'flex-end', height: 100, gap: 8 }}>
+                                {appointmentDepth.peakHours.map((item) => {
+                                    const maxHeight = 80;
+                                    const maxCount = Math.max(...appointmentDepth.peakHours.map(h => h.count));
+                                    const height = maxCount > 0 ? (item.count / maxCount) * maxHeight : 0;
+
+                                    return (
+                                        <View key={item.hour} style={{ flex: 1, alignItems: 'center' }}>
+                                            <View
+                                                style={{
+                                                    width: '100%',
+                                                    height: Math.max(height, 2),
+                                                    backgroundColor: '#FF6B35',
+                                                    borderRadius: 4,
+                                                    opacity: item.count === maxCount ? 1 : 0.6
+                                                }}
+                                            />
+                                            <Text style={{ fontSize: 10, color: '#8B92A9', marginTop: 4 }}>{item.hour}h</Text>
+                                        </View>
+                                    );
+                                })}
+                            </View>
+                        </View>
+                    </View>
+                )}
+
                 {/* Performance dos Funcionários */}
-                {performance.length > 0 && (
+                {performance.length > 0 ? (
                     <View>
                         <Text style={{ fontSize: 20, fontWeight: 'bold', color: textColor, marginBottom: 12 }}>
                             Performance dos Funcionários
@@ -152,14 +194,12 @@ export default function ManagerReportsScreen() {
                             </View>
                         ))}
                     </View>
-                )}
-
-                {performance.length === 0 && (
-                    <View style={{ alignItems: 'center', paddingVertical: 48 }}>
-                        <Text style={{ fontSize: 16, color: '#8B92A9' }}>
-                            Nenhum dado de performance disponível
-                        </Text>
-                    </View>
+                ) : (
+                    <EmptyState
+                        title="Nenhum dado disponível"
+                        description="Não há registros de atividades para o período selecionado."
+                        icon={PieChart}
+                    />
                 )}
             </View>
         </ScrollView>

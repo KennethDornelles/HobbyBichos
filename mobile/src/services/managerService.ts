@@ -119,6 +119,35 @@ export interface EmployeePerformance {
   };
 }
 
+export interface SalesAnalytics {
+  total: number;
+  previousTotal: number;
+  growthPercent: number;
+  dailySales: Array<{ date: string; value: number }>;
+}
+
+export interface ProductPerformance {
+  name: string;
+  category: string;
+  quantity: number;
+  revenue: number;
+}
+
+export interface AppointmentInDepth {
+  total: number;
+  completed: number;
+  cancelled: number;
+  cancellationRate: number;
+  peakHours: Array<{ hour: number; count: number }>;
+}
+
+export interface CustomerMetrics {
+  totalCustomers: number;
+  recurrentCustomers: number;
+  retentionRate: number;
+  averageTicket: number;
+}
+
 class ManagerService {
   // ==================== DASHBOARD ====================
   
@@ -208,6 +237,36 @@ class ManagerService {
     
     const response = await api.get(`/manager/reports/employee-performance`, {
       params,
+    });
+    return response.data;
+  }
+
+  // ==================== ADVANCED ANALYTICS ====================
+
+  async getSalesAnalytics(startDate: string, endDate: string): Promise<SalesAnalytics> {
+    const response = await api.get(`/analytics/sales`, {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  }
+
+  async getProductPerformance(startDate: string, endDate: string): Promise<ProductPerformance[]> {
+    const response = await api.get(`/analytics/products`, {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  }
+
+  async getAppointmentInDepth(startDate: string, endDate: string): Promise<AppointmentInDepth> {
+    const response = await api.get(`/analytics/appointments-detailed`, {
+      params: { startDate, endDate },
+    });
+    return response.data;
+  }
+
+  async getCustomerMetrics(startDate: string, endDate: string): Promise<CustomerMetrics> {
+    const response = await api.get(`/analytics/customers`, {
+      params: { startDate, endDate },
     });
     return response.data;
   }
