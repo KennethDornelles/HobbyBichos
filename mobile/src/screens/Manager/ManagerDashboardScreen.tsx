@@ -138,6 +138,56 @@ export default function ManagerDashboardScreen() {
                             </View>
                         </View>
 
+                        {/* Alertas de Estoque Baixo */}
+                        {dashboard.lowStockItems.length > 0 && (
+                            <View style={{ marginBottom: 24 }}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                                    <Text style={{ fontSize: 20, fontWeight: 'bold', color: textColor }}>
+                                        Alertas de Estoque
+                                    </Text>
+                                    <Pressable
+                                        style={{ backgroundColor: '#FEE2E2', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }}
+                                        onPress={() => Alert.alert('Estoque Crítico', 'Estes produtos estão abaixo do limite mínimo definido.')}
+                                    >
+                                        <Text style={{ color: '#DC2626', fontSize: 12, fontWeight: 'bold' }}>CRÍTICO</Text>
+                                    </Pressable>
+                                </View>
+                                {dashboard.lowStockItems.map((item) => (
+                                    <View
+                                        key={item.id}
+                                        style={{
+                                            backgroundColor: isDark ? '#3D1C1C' : '#FFF5F5',
+                                            borderRadius: 12,
+                                            padding: 16,
+                                            marginBottom: 12,
+                                            borderWidth: 1,
+                                            borderColor: isDark ? '#7F1D1D' : '#FEE2E2',
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-between'
+                                        }}
+                                    >
+                                        <View style={{ flex: 1 }}>
+                                            <Text style={{ fontSize: 16, fontWeight: '600', color: textColor }}>
+                                                {item.name}
+                                            </Text>
+                                            <Text style={{ fontSize: 13, color: '#8B92A9', marginTop: 2 }}>
+                                                {item.sku ? `SKU: ${item.sku}` : 'Sem SKU'}
+                                            </Text>
+                                        </View>
+                                        <View style={{ alignItems: 'flex-end' }}>
+                                            <Text style={{ fontSize: 18, fontWeight: 'bold', color: '#DC2626' }}>
+                                                {item.quantity} un
+                                            </Text>
+                                            <Text style={{ fontSize: 11, color: '#991B1B' }}>
+                                                Mín: {item.minStock}
+                                            </Text>
+                                        </View>
+                                    </View>
+                                ))}
+                            </View>
+                        )}
+
                         {/* Ações Rápidas */}
                         <View style={{ marginBottom: 24 }}>
                             <Text style={{ fontSize: 20, fontWeight: 'bold', color: textColor, marginBottom: 12 }}>
