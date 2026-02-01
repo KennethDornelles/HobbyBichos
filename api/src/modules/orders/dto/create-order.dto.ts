@@ -27,6 +27,11 @@ class OrderItemDto {
   @IsNumber()
   @ApiProperty()
   price: number;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ required: false })
+  professionalId?: string;
 }
 
 export class CreateOrderDto {
@@ -53,6 +58,7 @@ export class CreateOrderDto {
         serviceId: { type: 'string', nullable: true },
         quantity: { type: 'number' },
         price: { type: 'number' },
+        professionalId: { type: 'string', nullable: true },
       },
     },
   })

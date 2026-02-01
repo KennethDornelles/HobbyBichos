@@ -17,6 +17,7 @@ export enum AppointmentStatus {
 
 
 import { MailService } from '../mail/mail.service';
+import { CommissionsService } from '../commissions/commissions.service';
 
 @Injectable()
 export class AppointmentsService {
@@ -24,6 +25,7 @@ export class AppointmentsService {
     private readonly prisma: PrismaService, // Ainda usado para infraestrutura (Loja/Horários)
     private readonly appointmentsRepository: AppointmentsRepository,
     private readonly mailService: MailService,
+    private readonly commissionsService: CommissionsService,
   ) {}
 
   async create(
@@ -376,6 +378,9 @@ export class AppointmentsService {
       appointment.user?.email &&
       updateStatusDto.status === AppointmentStatus.COMPLETED
     ) {
+      // Calculate Commission
+      this.commissionsService.calculateForAppointment(appointment.id);
+
       try {
         await this.mailService.sendAppointmentCompleted(
           appointment.user.email,

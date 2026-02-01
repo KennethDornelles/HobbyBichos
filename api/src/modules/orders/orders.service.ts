@@ -16,8 +16,8 @@ export interface AuthUser {
 }
 
 // Tipo estendido da Store com campos opcionais
+// Tipo estendido da Store para garantir a presença dos campos, mesmo se o cache do Prisma estiver desatualizado
 type StoreWithPayment = Store & {
-  whatsappNumber: string | null;
   pixKey: string | null;
 };
 
@@ -37,12 +37,14 @@ type OrderWithRelations = Order & {
 };
 
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { CommissionsService } from '../commissions/commissions.service';
 
 @Injectable()
 export class OrdersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly eventEmitter: EventEmitter2,
+    private readonly commissionsService: CommissionsService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto, user: AuthUser) {
@@ -97,6 +99,7 @@ export class OrdersService {
               serviceId: item.serviceId,
               quantity: item.quantity,
               price: item.price,
+              professionalId: item.professionalId,
             })),
           },
         },
@@ -242,6 +245,9 @@ export class OrdersService {
       userId: updatedOrder.userId,
       total: Number(updatedOrder.total),
     });
+
+    // Calculate Commissions
+    this.commissionsService.calculateForOrder(updatedOrder.id);
 
     return updatedOrder;
   }

@@ -22,6 +22,7 @@ import { CartModule } from './modules/cart/cart.module';
 import { LoyaltyModule } from './modules/loyalty/loyalty.module';
 import { ManagerModule } from './modules/manager/manager.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { CommissionsModule } from './modules/commissions/commissions.module';
 
 import { validate } from './common/config/env.validation';
 
@@ -67,6 +68,7 @@ import { validate } from './common/config/env.validation';
     LoyaltyModule,
     ManagerModule,
     NotificationsModule,
+    CommissionsModule,
   ],
   controllers: [AppController],
   providers: [
