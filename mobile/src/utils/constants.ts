@@ -6,7 +6,7 @@ import { Product, ProductCategory } from '@/types/product';
 export const PRODUCT_CATEGORIES: ProductCategory[] = [
   'Todos',
   'Higiene',
-  'Ração',
+  'Rações',
   'Brinquedos',
   'Acessórios',
   'Medicamentos',
@@ -27,7 +27,7 @@ export const MOCK_PRODUCTS: Product[] = [
   {
     id: '2',
     name: 'Ração Especial Gatos Adultos 3kg',
-    category: 'Ração',
+    category: 'Rações',
     price: 89.9,
     imageUrl: 'https://images.unsplash.com/photo-1589924691995-400dc9ecc119?w=400',
   },
@@ -62,7 +62,7 @@ export const MOCK_PRODUCTS: Product[] = [
   {
     id: '7',
     name: 'Ração Premium Filhotes 1kg',
-    category: 'Ração',
+    category: 'Rações',
     price: 52.9,
     imageUrl: 'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?w=400',
   },
@@ -97,7 +97,7 @@ export const MOCK_PRODUCTS: Product[] = [
   {
     id: '12',
     name: 'Ração Light 2kg',
-    category: 'Ração',
+    category: 'Rações',
     price: 64.9,
     imageUrl: 'https://images.unsplash.com/photo-1585178471295-3f36bc02f0a1?w=400',
   },

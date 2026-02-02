@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, StyleProp, ViewStyle } from 'react-native';
 import { twMerge } from 'tailwind-merge';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -9,6 +9,7 @@ export interface StandardButtonProps {
     icon?: React.ReactNode;
     variant?: 'primary' | 'secondary';
     className?: string;
+    style?: StyleProp<ViewStyle>;
     disabled?: boolean;
 }
 
@@ -19,6 +20,7 @@ export const StandardButton: React.FC<StandardButtonProps> = ({
     variant = 'primary',
     className = '',
     disabled = false,
+    style,
 }) => (
     <Pressable
         onPress={onPress}
@@ -31,7 +33,7 @@ export const StandardButton: React.FC<StandardButtonProps> = ({
             disabled && 'opacity-50',
             className
         )}
-        style={{ gap: 8 }}
+        style={[style, { gap: 8 }]}
     >
         {icon && <View>{icon}</View>}
         <Text className={twMerge('text-base font-bold', variant === 'primary' ? 'text-background-dark' : 'text-white')}>{title}</Text>

@@ -10,7 +10,7 @@ const Login = () => {
 
     const handleLogin = () => {
         // Simula login bem-sucedido
-        setUser({ name: 'Usuário' });
+        setUser({ id: '1', name: 'Usuário', email: 'teste@demo.com', role: 'CLIENT' });
         router.replace('/'); // Redireciona para a Home
     };
 

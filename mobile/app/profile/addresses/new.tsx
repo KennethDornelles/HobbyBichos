@@ -1,4 +1,4 @@
-import AddressFormScreen from '../../../../src/screens/Profile/AddressFormScreen';
+import AddressFormScreen from '@/screens/Profile/AddressFormScreen';
 
 export default function NewAddress() {
     return <AddressFormScreen />;

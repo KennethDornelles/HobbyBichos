@@ -240,7 +240,7 @@ export default function CheckoutScreen() {
                                     <View className="flex-1">
                                         <View className="flex-row items-center gap-2">
                                             <Text style={{ color: colors.textMain }} className="font-semibold text-sm">{addr.title}</Text>
-                                            {addr.isDefault && <Text style={{ color: colors.green, fontSize: 10 }} className="font-bold bg-green-900/20 px-1 rounded">PADRÃO</Text>}
+                                            {addr.isDefault && <Text style={{ color: colors.accentGreen, fontSize: 10 }} className="font-bold bg-green-900/20 px-1 rounded">PADRÃO</Text>}
                                         </View>
                                         <Text style={{ color: colors.textSecondary }} className="text-xs mt-1">
                                             {addr.street}, {addr.number} - {addr.district}

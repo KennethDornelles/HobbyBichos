@@ -14,7 +14,7 @@ export default function Login() {
     const [password, setPassword] = React.useState('');
 
     const handleLogin = () => {
-        setUser({ name: 'Usuário' });
+        setUser({ id: '1', name: 'Usuário', email: 'teste@demo.com', role: 'CLIENT' });
         router.replace('/');
     };
 
@@ -70,7 +70,7 @@ export default function Login() {
                         onPress={handleLogin}
                         icon={<Ionicons name="log-in-outline" size={26} color="#1A1B2E" />}
                         className="w-full mb-8"
-                        style={{ height: 64, borderRadius: 32, fontSize: 20, backgroundColor: '#FFD600', justifyContent: 'center', alignItems: 'center' }}
+                        style={{ height: 64, borderRadius: 32, backgroundColor: '#FFD600', justifyContent: 'center', alignItems: 'center' }}
                     />
                     <View className="flex-row w-full justify-center gap-4 mt-2">
                         <StandardButton
@@ -79,7 +79,7 @@ export default function Login() {
                             icon={<Ionicons name="logo-google" size={22} color="#1A1B2E" />}
                             variant="secondary"
                             className="flex-1"
-                            style={{ height: 56, borderRadius: 28, fontSize: 18, backgroundColor: '#fff', color: '#23243A', justifyContent: 'center', alignItems: 'center' }}
+                            style={{ height: 56, borderRadius: 28, backgroundColor: '#fff', justifyContent: 'center', alignItems: 'center' }}
                         />
                         <StandardButton
                             title="Apple"
@@ -87,7 +87,7 @@ export default function Login() {
                             icon={<Ionicons name="logo-apple" size={22} color="#fff" />}
                             variant="secondary"
                             className="flex-1"
-                            style={{ height: 56, borderRadius: 28, fontSize: 18, backgroundColor: '#23243A', color: '#fff', borderWidth: 1, borderColor: '#fff', justifyContent: 'center', alignItems: 'center' }}
+                            style={{ height: 56, borderRadius: 28, backgroundColor: '#23243A', borderWidth: 1, borderColor: '#fff', justifyContent: 'center', alignItems: 'center' }}
                         />
                     </View>
                 </View>

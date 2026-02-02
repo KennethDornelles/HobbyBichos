@@ -1,8 +1,13 @@
 import React, { createContext, useState, useContext } from 'react';
 
-const RoleContext = createContext(null);
+interface RoleContextType {
+    role: string;
+    setRole: React.Dispatch<React.SetStateAction<string>>;
+}
 
-export const RoleProvider = ({ children }) => {
+const RoleContext = createContext<RoleContextType | null>(null);
+
+export const RoleProvider = ({ children }: { children: React.ReactNode }) => {
     const [role, setRole] = useState('cliente');
     return (
         <RoleContext.Provider value={{ role, setRole }}>
@@ -11,4 +16,10 @@ export const RoleProvider = ({ children }) => {
     );
 };
 
-export const useRole = () => useContext(RoleContext);
+export const useRole = () => {
+    const context = useContext(RoleContext);
+    if (!context) {
+        throw new Error('useRole must be used within a RoleProvider');
+    }
+    return context;
+};
