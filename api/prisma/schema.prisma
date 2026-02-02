@@ -189,8 +189,29 @@ model User {
   userNotificationPreferences UserNotificationPreference[]
   refreshTokens RefreshToken[]
   workSchedules WorkSchedule[]
+  addresses     Address[]
 
   @@map("users")
+}
+
+model Address {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String   @default("Casa") // e.g. Casa, Trabalho
+  street      String
+  number      String
+  complement  String?
+  district    String
+  city        String
+  state       String
+  zipCode     String
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("addresses")
 }
 
 model WorkSchedule {

@@ -23,6 +23,7 @@ import { LoyaltyModule } from './modules/loyalty/loyalty.module';
 import { ManagerModule } from './modules/manager/manager.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { CommissionsModule } from './modules/commissions/commissions.module';
+import { AddressModule } from './modules/address/address.module';
 
 import { validate } from './common/config/env.validation';
 
@@ -68,7 +69,9 @@ import { validate } from './common/config/env.validation';
     LoyaltyModule,
     ManagerModule,
     NotificationsModule,
+    NotificationsModule,
     CommissionsModule,
+    AddressModule,
   ],
   controllers: [AppController],
   providers: [

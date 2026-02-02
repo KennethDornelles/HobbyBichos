@@ -125,7 +125,7 @@ export class OrdersService {
     }
 
     // Gera o link do WhatsApp
-    const whatsappLink = this.generateWhatsAppLink(order, storeData);
+    const whatsappLink = this.generateWhatsAppLink(order, storeData, createOrderDto);
 
     return {
       order,
@@ -141,6 +141,7 @@ export class OrdersService {
   private generateWhatsAppLink(
     order: OrderWithRelations,
     store: StoreWithPayment,
+    createOrderDto: CreateOrderDto, // Added DTO
   ): string {
     const totalFormatted = Number(order.total).toLocaleString('pt-BR', {
       style: 'currency',
@@ -155,9 +156,8 @@ export class OrdersService {
     console.log('💰 Total formatado:', totalFormatted);
 
     const message =
-      `🛒 *PEDIDO HOBBY BICHOS*\n\n` +
-      `📦 Pedido: ${shortOrderId}\n` +
       `💰 Total: ${totalFormatted}\n\n` +
+      (createOrderDto.shippingAddress ? `📍 Entrega: ${createOrderDto.shippingAddress}\n\n` : '') +
       `Olá! Gostaria de *finalizar o pagamento* do pedido via PIX.\n\n` +
       `🆔 ID Completo: ${order.id}`;
 

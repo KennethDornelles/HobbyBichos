@@ -72,4 +72,9 @@ export class CreateOrderDto {
   @IsString()
   @ApiProperty({ required: false })
   customerPhone?: string;
+
+  @IsOptional()
+  @IsString()
+  @ApiProperty({ required: false, description: 'Endereço de entrega formatado' })
+  shippingAddress?: string;
 }
