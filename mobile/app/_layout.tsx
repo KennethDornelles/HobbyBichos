@@ -1,5 +1,5 @@
 import "../global.css";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack, useRouter, useSegments, Redirect } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from "@expo-google-fonts/poppins";
 import { useEffect } from "react";
@@ -28,41 +28,29 @@ function RootLayoutContent() {
     Poppins_700Bold,
   });
 
-  useEffect(() => {
-    if (isLoading) return;
 
-    const inAuthGroup = segments[0] === '(auth)';
 
-    if (!user && !inAuthGroup) {
-      // Redirecionar para login se não houver usuário
-      router.replace("/(auth)/login");
-    } else if (user && inAuthGroup) {
-      // Redirecionar para home se usuário já estiver logado (evitar login duplo)
-      router.replace("/(main)/home");
-    }
-  }, [user, isLoading, segments]);
+  // ... inside function
+  // Determinar se devemos bloquear a renderização da Stack
+  // 1. Se estiver carregando fontes ou auth -> null (Splash)
+  // 2. Se não houver usuário e não estivermos no grupo de auth -> Redirect
 
-  useEffect(() => {
-    if ((fontsLoaded || fontError) && !isLoading) {
-      SplashScreen.hideAsync();
-      setStatusBarTranslucent(true);
-      setStatusBarStyle(isDark ? "light" : "dark");
-    }
-  }, [fontsLoaded, fontError, isLoading, isDark]);
-
-  // Timeout de segurança
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      // Forçar hide apenas se passou muito tempo
-      SplashScreen.hideAsync();
-    }, 5000);
-    return () => clearTimeout(timeout);
-  }, []);
+  const inAuthGroup = segments[0] === '(auth)';
 
   if ((!fontsLoaded && !fontError) || isLoading) {
-    // Manter Splash Screen (ou retornar null) enquanto carrega
     return null;
   }
+
+  if (!user && !inAuthGroup) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
+  // Effect para redirecionar para home se já logado
+  useEffect(() => {
+    if (user && inAuthGroup) {
+      router.replace("/(main)/home");
+    }
+  }, [user, inAuthGroup]);
 
   return (
     <GlobalErrorBoundary>
