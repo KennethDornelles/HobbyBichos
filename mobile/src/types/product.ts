@@ -5,15 +5,18 @@
 export interface Product {
   id: string;
   name: string;
-  category: string;
+  category: ProductCategory;
   price: number;
   imageUrl: string;
+  description?: string;
+  sku?: string;
+  quantity?: number;
 }
 
 export type ProductCategory = 
   | 'Todos'
   | 'Higiene'
-  | 'Ração'
+  | 'Rações'
   | 'Brinquedos'
   | 'Acessórios'
   | 'Medicamentos';

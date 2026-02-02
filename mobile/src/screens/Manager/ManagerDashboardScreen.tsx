@@ -295,6 +295,14 @@ export default function ManagerDashboardScreen() {
                                     borderColor={borderColor}
                                 />
                                 <QuickActionButton
+                                    label="Produtos / Estoque"
+                                    icon="cube"
+                                    onPress={() => router.push('/manager/products')}
+                                    bgColor={cardBgColor}
+                                    textColor={textColor}
+                                    borderColor={borderColor}
+                                />
+                                <QuickActionButton
                                     label="Financeiro"
                                     icon="analytics"
                                     onPress={() => router.push('/manager/financial')}
