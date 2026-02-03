@@ -93,27 +93,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     const signOut = async () => {
         try {
-            // Manter isLoading true durante todo o processo
             setIsLoading(true);
 
-            // Aguardar limpeza
+            // Aguardar limpeza do storage
             await Promise.all([
                 AsyncStorage.removeItem(USER_KEY),
                 SecureStore.deleteItemAsync('authToken'),
                 SecureStore.deleteItemAsync('refreshToken'),
             ]);
 
-            setUser(null);
+            // Atualiza estados
             setToken(null);
+            setUser(null);
+
             console.log('✅ Logout realizado');
         } catch (error) {
             console.error('❌ Erro ao fazer logout:', error);
         } finally {
-            // Não desativa isLoading aqui. 
-            // O redirecionamento no _layout cuidará disso ou, se for necessário, 
-            // setamos false apenas se não houve redirecionamento (o que é raro no logout).
-            // Mantenha true para evitar renderização da tela protegida com user null.
-            setIsLoading(false);
+            // Pequeno timeout para garantir que os efeitos do _layout (redirecionamento)
+            // sejam disparados assim que isLoading mudar
+            setTimeout(() => {
+                setIsLoading(false);
+            }, 100);
         }
     };
 

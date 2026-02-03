@@ -1,5 +1,5 @@
 import "../global.css";
-import { Stack, useRouter, useSegments, Redirect } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from "@expo-google-fonts/poppins";
 import { useEffect } from "react";
@@ -28,29 +28,55 @@ function RootLayoutContent() {
     Poppins_700Bold,
   });
 
+  // 1. Controle da Splash Screen
+  useEffect(() => {
+    // Timeout de segurança: Se em 5 segundos nada acontecer, forçamos o hide
+    const safetyTimer = setTimeout(() => {
+      SplashScreen.hideAsync();
+    }, 5000);
 
+    if ((fontsLoaded || fontError) && !isLoading) {
+      // Pequeno timeout para garantir que o estado de auth foi processado
+      const timer = setTimeout(() => {
+        SplashScreen.hideAsync();
+        clearTimeout(safetyTimer);
+      }, 500);
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(safetyTimer);
+      };
+    }
+    return () => clearTimeout(safetyTimer);
+  }, [fontsLoaded, fontError, isLoading]);
 
-  // ... inside function
-  // Determinar se devemos bloquear a renderização da Stack
-  // 1. Se estiver carregando fontes ou auth -> null (Splash)
-  // 2. Se não houver usuário e não estivermos no grupo de auth -> Redirect
+  // 2. Controle de Navegação/Redirecionamento
+  useEffect(() => {
+    if (isLoading || !fontsLoaded) return;
 
-  const inAuthGroup = segments[0] === '(auth)';
+    const inAuthGroup = segments[0] === '(auth)';
 
+    if (!user && !inAuthGroup) {
+      // Redirecionar para login se não houver usuário e não estiver em (auth)
+      router.replace("/(auth)/login");
+    } else if (user && inAuthGroup) {
+      // Redirecionar para home se usuário já estiver logado (evitar login duplo)
+      router.replace("/(main)/home");
+    }
+  }, [user, isLoading, segments, fontsLoaded]);
+
+  // Enquanto carrega o estado inicial ou fontes, mantemos o retorno null
+  // (a Splash Screen segurando o app)
   if ((!fontsLoaded && !fontError) || isLoading) {
     return null;
   }
 
-  if (!user && !inAuthGroup) {
-    return <Redirect href="/(auth)/login" />;
-  }
+  const inAuthGroup = segments[0] === '(auth)';
 
-  // Effect para redirecionar para home se já logado
-  useEffect(() => {
-    if (user && inAuthGroup) {
-      router.replace("/(main)/home");
-    }
-  }, [user, inAuthGroup]);
+  // ROTA PROTEGIDA: Se não houver usuário logado e tentarmos acessar rota protegida,
+  // bloqueamos a renderização totalmente para evitar crashes.
+  if (!user && !inAuthGroup) {
+    return null;
+  }
 
   return (
     <GlobalErrorBoundary>
