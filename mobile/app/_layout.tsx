@@ -47,10 +47,11 @@ function RootLayoutContent() {
 
   // 2. Lógica de Redirecionamento Automático
   useEffect(() => {
-    if (!isHydrated || !fontsLoaded) return;
+    // ⚡ CRÍTICO: Não navega se estiver em transição (loading) ou hidratando
+    if (!isHydrated || !fontsLoaded || isLoading) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const isRoot = segments[0] === undefined || segments[0] === '';
+    const isRoot = segments[0] === undefined || segments[0] === '' || segments[0] === 'index';
 
     if (!user && !inAuthGroup) {
       console.log('🔒 Redirecionando para login...');
@@ -60,22 +61,13 @@ function RootLayoutContent() {
       console.log('🏠 Redirecionando para home...');
       router.replace('/(main)/home');
     }
-  }, [user, isHydrated, fontsLoaded, segments]);
+  }, [user, isHydrated, fontsLoaded, isLoading, segments]);
 
-  // AJUSTE CRÍTICO: Bloqueia se não estiver hidratado, se fontes não carregaram OU se estiver em loading (Logout)
-  // Isso evita que a Stack (main) tente renderizar componentes dependentes de user enquanto o logout acontece.
+  // ⚡ AJUSTE CRÍTICO APK-SAFE: Retorna null durante transições (isLoading)
+  // Isso garante que o ViewGroup nativo do Android seja ESVAZIADO completamente
+  // antes de montarmos a nova rota, evitando o erro "child already has a parent".
   if (!isHydrated || (!fontsLoaded && !fontError) || isLoading) {
-    return (
-      <View style={{
-        flex: 1,
-        backgroundColor: isDark ? "#10142D" : "#F4F4F6",
-        justifyContent: 'center',
-        alignItems: 'center'
-      }}>
-        {/* Mostra um carregamento discreto atrás da Splash se demorar ou durante transições de auth */}
-        <ActivityIndicator size="large" color={isDark ? "#FFFFFF" : "#111827"} />
-      </View>
-    );
+    return null;
   }
 
   return (

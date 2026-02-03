@@ -99,40 +99,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (isSigningOut.current) return;
 
         try {
-            console.log('🔄 Iniciando logout seguro (APK-Safe)...');
+            console.log('🔄 Iniciando logout seguro (APK-Safe Semaphore)...');
             isSigningOut.current = true;
+
+            // ⚡ CRÍTICO 1: Marca como loading PRIMEIRO
+            // Isso fará com que os Layouts retornem null, desmontando o ViewGroup nativo.
             setIsLoading(true);
 
-            // 1. Navegação ANTES de qualquer limpeza de estado
-            // Isso inicia a transição de saída enquanto o objeto 'user' ainda é válido
-            router.replace('/(auth)/login');
+            // Aguarda um frame para garantir que os Layouts reagiram ao isLoading(true)
+            await new Promise(resolve => setTimeout(resolve, 50));
 
-            // 2. Pequeno delay para permitir que o Router inicie a desmontagem do grupo (main)
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // ⚡ CRÍTICO 2: Limpa estado React
+            // O RootLayout observará user=null e isLoading=false para navegar depois.
+            setToken(null);
+            setUser(null);
 
-            // 3. Limpeza do Storage (assíncrona)
+            // ⚡ CRÍTICO 3: Limpeza do Storage (pode ser feita em paralelo agora)
             await Promise.allSettled([
                 AsyncStorage.removeItem(USER_KEY),
                 SecureStore.deleteItemAsync('authToken'),
                 SecureStore.deleteItemAsync('refreshToken'),
             ]);
 
-            // 4. Limpeza do Estado (Apenas após o delay de segurança)
-            setToken(null);
-            setUser(null);
-
-            console.log('✅ Logout seguro concluído');
+            console.log('✅ Estado e storage limpos. Aguardando estabilização nativa...');
         } catch (error) {
-            console.error('❌ Erro no logout:', error);
-            // Fallback crítico
-            router.replace('/(auth)/login');
+            console.error('❌ Erro durante o logout:', error);
             setUser(null);
         } finally {
-            // Mantemos isLoading=true por mais um pouco para garantir que ninguém tente re-renderizar main
+            // Mantemos isLoading=true por um tempo extra (300ms) para garantir
+            // que o Android completou a desmontagem do grupo (main) antes de
+            // o RootLayout tentar disparar o redirecionamento.
             setTimeout(() => {
                 setIsLoading(false);
                 isSigningOut.current = false;
-            }, 500);
+            }, 300);
         }
     };
 
