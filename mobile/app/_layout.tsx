@@ -15,12 +15,10 @@ import { useCartAutoSync } from '../src/hooks/useCartAutoSync';
 import { GlobalErrorBoundary } from '../src/components/GlobalErrorBoundary';
 
 function RootLayoutContent() {
-  const { user, isLoading } = useAuth();
+  const { isHydrated, user } = useAuth();
+  const { isDark } = useTheme();
   const segments = useSegments();
   const router = useRouter();
-
-  useCartAutoSync();
-  const { isDark } = useTheme();
 
   const [fontsLoaded, fontError] = useFonts({
     Poppins_400Regular,
@@ -28,29 +26,47 @@ function RootLayoutContent() {
     Poppins_700Bold,
   });
 
+  useCartAutoSync();
 
+  // Lógica Centralizada de Redirecionamento e Proteção
+  useEffect(() => {
+    if (!isHydrated || !fontsLoaded) return;
 
-  // ... inside function
-  // Determinar se devemos bloquear a renderização da Stack
-  // 1. Se estiver carregando fontes ou auth -> null (Splash)
-  // 2. Se não houver usuário e não estivermos no grupo de auth -> Redirect
+    const inAuthGroup = segments[0] === '(auth)';
+    const inMainGroup = segments[0] === '(main)';
 
-  const inAuthGroup = segments[0] === '(auth)';
+    // Usuário deslogado tentando acessar área protegida
+    if (!user && inMainGroup) {
+      console.log('🔒 Redirecionando para login (sem autenticação)');
+      router.replace('/(auth)/login');
+    }
+    // Usuário logado na tela de autenticação ou index
+    else if (user && (inAuthGroup || segments[0] === undefined)) {
+      console.log('🏠 Redirecionando para área principal (já autenticado)');
+      // Redireciona baseado no role
+      switch (user.role) {
+        case 'OWNER':
+          router.replace('/(main)/owner');
+          break;
+        case 'SUPER_ADMIN':
+          router.replace('/(main)/super_admin');
+          break;
+        case 'MANAGER':
+          router.replace('/(main)/manager');
+          break;
+        case 'EMPLOYEE':
+        case 'CLIENT':
+        default:
+          router.replace('/(main)/home');
+          break;
+      }
+    }
+  }, [user, segments, isHydrated, fontsLoaded]);
 
-  if ((!fontsLoaded && !fontError) || isLoading) {
+  // Bloqueia TUDO até as fontes carregarem e a sessão ser restaurada (isHydrated)
+  if ((!fontsLoaded && !fontError) || !isHydrated) {
     return null;
   }
-
-  if (!user && !inAuthGroup) {
-    return <Redirect href="/(auth)/login" />;
-  }
-
-  // Effect para redirecionar para home se já logado
-  useEffect(() => {
-    if (user && inAuthGroup) {
-      router.replace("/(main)/home");
-    }
-  }, [user, inAuthGroup]);
 
   return (
     <GlobalErrorBoundary>
@@ -62,7 +78,11 @@ function RootLayoutContent() {
             backgroundColor: isDark ? "#10142D" : "#F4F4F6"
           },
         }}
-      />
+      >
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        <Stack.Screen name="(main)" options={{ headerShown: false }} />
+      </Stack>
     </GlobalErrorBoundary>
   );
 }

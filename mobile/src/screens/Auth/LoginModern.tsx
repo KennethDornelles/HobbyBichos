@@ -64,8 +64,8 @@ const LoginScreen: React.FC = () => {
             await authLogin(userData, token, refreshToken);
             console.log('✅ Login e sessão salvos:', userData.name, userData.role);
 
-            // Navegar para home
-            router.replace('/home');
+            // ✅ O RootLayout detectará a mudança no user e redirecionará automaticamente
+            // baseado no role do usuário.
         } catch (error: any) {
             console.error('❌ Erro ao fazer login:', {
                 message: error.message,
@@ -148,7 +148,7 @@ const LoginScreen: React.FC = () => {
                             activeOpacity={0.7}
                             onPress={() => {
                                 try {
-                                    router.push('forgot-password');
+                                    router.push('/(auth)/forgot-password');
                                 } catch (error) {
                                     console.error('Erro ao navegar:', error);
                                 }
@@ -213,7 +213,7 @@ const LoginScreen: React.FC = () => {
                             activeOpacity={0.7}
                             onPress={() => {
                                 try {
-                                    router.push('signup');
+                                    router.push('/(auth)/signup');
                                 } catch (error) {
                                     console.error('Erro ao navegar:', error);
                                 }

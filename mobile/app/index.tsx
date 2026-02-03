@@ -16,18 +16,18 @@ export default function IndexRedirect() {
                 // Redireciona para a home/tela correta conforme o role
                 switch (user.role) {
                     case 'OWNER':
-                        router.replace('/owner');
+                        router.replace('/(main)/owner');
                         break;
                     case 'SUPER_ADMIN':
-                        router.replace('/super_admin');
+                        router.replace('/(main)/super_admin');
                         break;
                     case 'MANAGER':
-                        router.replace('/manager');
+                        router.replace('/(main)/manager');
                         break;
                     case 'EMPLOYEE':
                     case 'CLIENT':
                     default:
-                        router.replace('/home');
+                        router.replace('/(main)/home');
                         break;
                 }
             }

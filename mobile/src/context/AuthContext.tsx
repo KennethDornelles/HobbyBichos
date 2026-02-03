@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
+import { router } from 'expo-router';
 
 interface User {
     id: string;
@@ -16,6 +17,7 @@ interface AuthContextType {
     setUser: (user: User | null) => void;
     signOut: () => Promise<void>;
     isLoading: boolean;
+    isHydrated: boolean;
     token: string | null;
     login: (userData: User, authToken: string, refreshToken?: string) => Promise<void>;
     updateUser: (userData: User) => Promise<void>;
@@ -23,13 +25,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-const TOKEN_KEY = '@app:token';
 const USER_KEY = '@app:user';
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const [user, setUser] = useState<User | null>(null);
     const [token, setToken] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isHydrated, setIsHydrated] = useState(false);
+    const isSigningOut = React.useRef(false);
 
     // Busca usuário e token salvos ao iniciar o app
     useEffect(() => {
@@ -58,6 +61,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setToken(null);
         } finally {
             setIsLoading(false);
+            setIsHydrated(true);
         }
     };
 
@@ -92,33 +96,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     const signOut = async () => {
+        if (isSigningOut.current) return;
+
         try {
-            // Manter isLoading true durante todo o processo
+            isSigningOut.current = true;
             setIsLoading(true);
 
-            // Aguardar limpeza
-            await Promise.all([
+            // 1. Limpeza síncrona do estado React
+            setUser(null);
+            setToken(null);
+
+            // Aguardar um frame para garantir que o React processou o setUser(null)
+            await new Promise(resolve => setTimeout(resolve, 0));
+
+            // 2. Limpeza assíncrona do Storage (tolera falhas individuais)
+            await Promise.allSettled([
                 AsyncStorage.removeItem(USER_KEY),
                 SecureStore.deleteItemAsync('authToken'),
                 SecureStore.deleteItemAsync('refreshToken'),
             ]);
 
-            setUser(null);
-            setToken(null);
-            console.log('✅ Logout realizado');
+            // Delay estratégico para o Router processar a mudança de estado
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // ✅ Redirecionamento forçado para garantir saída
+            router.replace('/(auth)/login');
+
+            console.log('✅ Logout realizado e storage limpo');
         } catch (error) {
-            console.error('❌ Erro ao fazer logout:', error);
+            console.error('❌ Erro crítico ao fazer logout:', error);
+            // Mesmo com erro, tenta garantir que o usuário saia
+            router.replace('/(auth)/login');
         } finally {
-            // Não desativa isLoading aqui. 
-            // O redirecionamento no _layout cuidará disso ou, se for necessário, 
-            // setamos false apenas se não houve redirecionamento (o que é raro no logout).
-            // Mantenha true para evitar renderização da tela protegida com user null.
-            setIsLoading(false);
+            // Pequeno delay final antes de liberar a flag para evitar re-cliques imediatos
+            setTimeout(() => {
+                setIsLoading(false);
+                isSigningOut.current = false;
+            }, 150);
         }
     };
 
     return (
-        <AuthContext.Provider value={{ user, setUser, signOut, isLoading, token, login, updateUser }}>
+        <AuthContext.Provider value={{ user, setUser, signOut, isLoading, isHydrated, token, login, updateUser }}>
             {children}
         </AuthContext.Provider>
     );
