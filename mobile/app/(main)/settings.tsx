@@ -2,8 +2,8 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { Stack } from 'expo-router';
 import { Palette, Sun, Moon, Smartphone } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
-import { useTheme } from '../src/context/ThemeContext';
-import { useThemeColors } from '../src/hooks/useThemeColors';
+import { useTheme } from "@/context/ThemeContext";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 type ThemeMode = 'system' | 'light' | 'dark';
 

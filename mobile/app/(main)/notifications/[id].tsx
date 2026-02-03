@@ -1,3 +1,3 @@
-import NotificationDetailScreen from '../../src/screens/Notifications/NotificationDetailScreen';
+import NotificationDetailScreen from "@/screens/Notifications/NotificationDetailScreen";
 
 export default NotificationDetailScreen;

@@ -1,7 +1,7 @@
 import React from 'react';
-import { useUserStore } from '../src/store/userStore';
-import ClientHomeScreen from '../src/screens/Home/HomeScreen';
-import EmployeeHomeScreen from '../src/screens/Home/EmployeeHomeScreen';
+import { useUserStore } from "@/store/userStore";
+import ClientHomeScreen from "@/screens/Home/HomeScreen";
+import EmployeeHomeScreen from "@/screens/Home/EmployeeHomeScreen";
 import ManagerHomeScreen from './manager/index';
 
 export default function Home() {

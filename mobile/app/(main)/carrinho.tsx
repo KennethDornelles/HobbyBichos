@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, Alert, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCartStore } from '../src/store/cartStore';
+import { useCartStore } from "@/store/cartStore";
 import { useRouter } from 'expo-router';
 import { X, Plus, Minus } from 'lucide-react-native';
-import { useThemeColors } from '../src/hooks/useThemeColors';
-import api from '../src/services/api';
-import { Ionicons } from '@expo/vector-icons';
+import { useThemeColors } from "@/hooks/useThemeColors";
+import api from "@/services/api";
+import { Ionicons } from "@expo/vector-icons";
 
 interface StockInfo {
     productId: string;

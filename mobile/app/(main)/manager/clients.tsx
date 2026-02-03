@@ -1,3 +1,3 @@
-import ClientManagementScreen from '../../src/screens/Manager/ClientManagementScreen';
+import ClientManagementScreen from "@/screens/Manager/ClientManagementScreen";
 
 export default ClientManagementScreen;

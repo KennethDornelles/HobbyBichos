@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useRouter } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
-import { useAuth } from "../src/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function IndexRedirect() {
     const router = useRouter();

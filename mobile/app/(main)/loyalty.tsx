@@ -1,1 +1,1 @@
-export { default } from '../src/screens/Loyalty/LoyaltyScreen';
+export { default } from "@/screens/Loyalty/LoyaltyScreen";

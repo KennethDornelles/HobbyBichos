@@ -1,1 +1,1 @@
-export { default } from '../../src/screens/Employee/UpdateStatusScreen';
+export { default } from "@/screens/Employee/UpdateStatusScreen";

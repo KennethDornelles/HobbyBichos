@@ -1,3 +1,3 @@
-import TeamManagementScreen from '../../src/screens/Manager/TeamManagementScreen';
+import TeamManagementScreen from "@/screens/Manager/TeamManagementScreen";
 
 export default TeamManagementScreen;

@@ -11,9 +11,9 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ShoppingBag, Package } from 'lucide-react-native';
-import api from '../src/services/api';
-import { useThemeColors } from '../src/hooks/useThemeColors';
-import type { OrderListItem } from '../src/types/order.types';
+import api from "@/services/api";
+import { useThemeColors } from "@/hooks/useThemeColors";
+import type { OrderListItem } from "@/types/order.types";
 
 export default function OrdersListScreen() {
     const router = useRouter();

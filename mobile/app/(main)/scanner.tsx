@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Alert } from 'react-native';
-import { useUserStore } from '../src/store/userStore';
-import ScannerScreen from '../src/screens/ScannerScreen';
+import { useUserStore } from "@/store/userStore";
+import ScannerScreen from "@/screens/ScannerScreen";
 
 /**
  * Rota protegida do scanner

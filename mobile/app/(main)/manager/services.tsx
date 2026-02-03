@@ -1,4 +1,4 @@
-import ServicesManagementScreen from '../../src/screens/Manager/ServicesManagementScreen';
+import ServicesManagementScreen from "@/screens/Manager/ServicesManagementScreen";
 
 export default function ManagerServices() {
   return <ServicesManagementScreen />;

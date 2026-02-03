@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { View, ScrollView, FlatList, Text, Alert } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { HomeHeader } from '../../src/components/HomeHeader';
-import { QuickAction } from '../../src/components/QuickAction';
-import { ActionCard } from '../../src/components/ActionCard';
-import { SideMenu } from '../../src/components/SideMenu';
-import { useThemeColors } from '../../src/hooks/useThemeColors';
-import { useAuth } from '../../src/context/AuthContext';
-import { managerService } from '../../src/services/managerService';
+import { HomeHeader } from "@/components/HomeHeader";
+import { QuickAction } from "@/components/QuickAction";
+import { ActionCard } from "@/components/ActionCard";
+import { SideMenu } from "@/components/SideMenu";
+import { useThemeColors } from "@/hooks/useThemeColors";
+import { useAuth } from "@/context/AuthContext";
+import { managerService } from "@/services/managerService";
 import { Calendar, BarChart4, Wrench, Wallet, Users, Package, AlertTriangle, UserCog, ArrowLeftRight } from 'lucide-react-native';
 
 interface QuickActionItem {

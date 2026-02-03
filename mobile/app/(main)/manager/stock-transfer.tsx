@@ -1,4 +1,4 @@
-import StockTransferScreen from '../../src/screens/Manager/StockTransferScreen';
+import StockTransferScreen from "@/screens/Manager/StockTransferScreen";
 
 export default function StockTransferRoute() {
     return <StockTransferScreen />;

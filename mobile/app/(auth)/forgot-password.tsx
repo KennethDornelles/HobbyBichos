@@ -1,4 +1,4 @@
-import ForgotPasswordScreen from "../src/screens/Auth/ForgotPassword";
+import ForgotPasswordScreen from "@/screens/Auth/ForgotPassword";
 
 export default function ForgotPassword() {
     return <ForgotPasswordScreen />;

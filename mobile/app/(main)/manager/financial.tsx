@@ -1,4 +1,4 @@
-import FinancialDashboardScreen from '../../src/screens/Manager/FinancialDashboardScreen';
+import FinancialDashboardScreen from "@/screens/Manager/FinancialDashboardScreen";
 
 export default function ManagerFinancial() {
   return <FinancialDashboardScreen />;

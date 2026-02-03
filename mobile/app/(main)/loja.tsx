@@ -1,3 +1,3 @@
-import ProductSelectionScreen from '../src/screens/ProductSelectionScreen';
+import ProductSelectionScreen from "@/screens/ProductSelectionScreen";
 
 export default ProductSelectionScreen;

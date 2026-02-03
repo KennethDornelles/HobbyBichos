@@ -12,10 +12,10 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ArrowLeft, Clock, CheckCircle, Truck, AlertCircle, MessageCircle, MapPin, RefreshCw } from 'lucide-react-native';
-import api from '../../src/services/api';
-import { useDeliveryTracking } from '../../src/hooks/useDeliveryTracking';
-import { useThemeColors } from '../../src/hooks/useThemeColors';
-import type { OrderDetailsResponse } from '../../src/types/order.types';
+import api from "@/services/api";
+import { useDeliveryTracking } from "@/hooks/useDeliveryTracking";
+import { useThemeColors } from "@/hooks/useThemeColors";
+import type { OrderDetailsResponse } from "@/types/order.types";
 
 interface StatusConfig {
     text: string;

@@ -1,4 +1,4 @@
-import ManagerDashboardScreen from '../../src/screens/Manager/ManagerDashboardScreen';
+import ManagerDashboardScreen from "@/screens/Manager/ManagerDashboardScreen";
 
 export default function ManagerDashboard() {
   return <ManagerDashboardScreen />;

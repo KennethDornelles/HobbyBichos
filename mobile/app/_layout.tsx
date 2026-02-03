@@ -9,10 +9,10 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 SplashScreen.preventAutoHideAsync();
 
-import { AuthProvider, useAuth } from '../src/context/AuthContext';
-import { ThemeProvider, useTheme } from '../src/context/ThemeContext';
-import { useCartAutoSync } from '../src/hooks/useCartAutoSync';
-import { GlobalErrorBoundary } from '../src/components/GlobalErrorBoundary';
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { ThemeProvider, useTheme } from "@/context/ThemeContext";
+import { useCartAutoSync } from "@/hooks/useCartAutoSync";
+import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 
 function RootLayoutContent() {
   const { isHydrated, user } = useAuth();

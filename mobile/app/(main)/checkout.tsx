@@ -8,13 +8,13 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useCartStore } from '../src/store/cartStore';
-import api from '../src/services/api';
+import { useCartStore } from "@/store/cartStore";
+import api from "@/services/api";
 import { useRouter, useFocusEffect } from 'expo-router';
 import { ArrowLeft, MessageCircle, MapPin, Plus } from 'lucide-react-native';
-import { useThemeColors } from '../src/hooks/useThemeColors';
-import type { CreateOrderResponse } from '../src/types/order.types';
-import { addressService, Address } from '../src/services/addressService';
+import { useThemeColors } from "@/hooks/useThemeColors";
+import type { CreateOrderResponse } from "@/types/order.types";
+import { addressService, Address } from "@/services/addressService";
 
 interface Store {
     id: string;

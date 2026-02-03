@@ -3,9 +3,9 @@ import { Stack, router } from 'expo-router';
 import { User, Mail, Phone, MapPin, Camera, ArrowLeft } from 'lucide-react-native';
 import { useState, useEffect } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '../../src/context/AuthContext';
-import { useTheme } from '../../src/context/ThemeContext';
-import { Card, CardInput } from '../../src/components/ui/Card';
+import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
+import { Card, CardInput } from "@/components/ui/Card";
 
 export default function EditProfile() {
     const auth = useAuth() as any;

@@ -1,3 +1,3 @@
-import AppointmentDetail from '../../src/screens/Appointments/AppointmentDetail';
+import AppointmentDetail from "@/screens/Appointments/AppointmentDetail";
 
 export default AppointmentDetail;

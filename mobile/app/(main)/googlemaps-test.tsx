@@ -11,11 +11,11 @@ import {
     StatusBar,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNearbyPetShops } from '../src/hooks/useNearbyPetShops';
-import { useDeliveryLocation } from '../src/hooks/useDeliveryLocation';
-import DeliveryTracking from '../src/components/DeliveryTracking';
-import { getGoogleMapsService } from '../src/services/googleMapsService';
-import { useThemeColors } from '../src/hooks/useThemeColors';
+import { useNearbyPetShops } from "@/hooks/useNearbyPetShops";
+import { useDeliveryLocation } from "@/hooks/useDeliveryLocation";
+import DeliveryTracking from "@/components/DeliveryTracking";
+import { getGoogleMapsService } from "@/services/googleMapsService";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 type Tab = 'nearby' | 'delivery';
 

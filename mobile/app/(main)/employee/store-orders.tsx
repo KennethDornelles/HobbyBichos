@@ -1,4 +1,4 @@
-import StoreOrdersScreen from '../../src/screens/Employee/StoreOrdersScreen';
+import StoreOrdersScreen from "@/screens/Employee/StoreOrdersScreen";
 
 export default function StoreOrders() {
     return <StoreOrdersScreen />;
