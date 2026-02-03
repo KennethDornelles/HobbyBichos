@@ -99,37 +99,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (isSigningOut.current) return;
 
         try {
-            console.log('🔄 Iniciando logout seguro...');
+            console.log('🔄 Iniciando logout seguro (APK-Safe)...');
             isSigningOut.current = true;
             setIsLoading(true);
 
-            // 1. Limpeza do Storage (assíncrona e persistente)
+            // 1. Navegação ANTES de qualquer limpeza de estado
+            // Isso inicia a transição de saída enquanto o objeto 'user' ainda é válido
+            router.replace('/(auth)/login');
+
+            // 2. Pequeno delay para permitir que o Router inicie a desmontagem do grupo (main)
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // 3. Limpeza do Storage (assíncrona)
             await Promise.allSettled([
                 AsyncStorage.removeItem(USER_KEY),
                 SecureStore.deleteItemAsync('authToken'),
                 SecureStore.deleteItemAsync('refreshToken'),
             ]);
 
-            // 2. Navegação ANTES de limpar o estado do usuário
-            // Isso evita que as telas protegidas tentem renderizar com user null
-            router.replace('/(auth)/login');
-
-            // 3. Pequeno delay para garantir que a navegação foi iniciada/processada
-            await new Promise(resolve => setTimeout(resolve, 300));
-
-            // 4. Agora sim limpamos o estado
+            // 4. Limpeza do Estado (Apenas após o delay de segurança)
             setToken(null);
             setUser(null);
 
             console.log('✅ Logout seguro concluído');
         } catch (error) {
             console.error('❌ Erro no logout:', error);
-            // Fallback: tenta sair de qualquer jeito
+            // Fallback crítico
             router.replace('/(auth)/login');
             setUser(null);
         } finally {
-            setIsLoading(false);
-            isSigningOut.current = false;
+            // Mantemos isLoading=true por mais um pouco para garantir que ninguém tente re-renderizar main
+            setTimeout(() => {
+                setIsLoading(false);
+                isSigningOut.current = false;
+            }, 500);
         }
     };
 

@@ -4,19 +4,21 @@ import { useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 export default function MainLayout() {
-    const { user, isHydrated } = useAuth();
+    const { user, isHydrated, isLoading } = useAuth();
 
     // Double-check: Se o usuário não existe após hydration, RootLayout redireciona,
     // mas aqui garantimos que não renderizamos nada que dependa do user.
     useEffect(() => {
-        if (isHydrated && !user) {
+        if (isHydrated && !user && !isLoading) {
             console.warn('⚠️ Usuário null detectado em (main), redirecionando...');
             router.replace('/(auth)/login');
         }
-    }, [user, isHydrated]);
+    }, [user, isHydrated, isLoading]);
 
-    // Bloqueia renderização se não houver usuário para evitar crash "property of null"
-    if (!user) {
+    // Bloqueia renderização se:
+    // 1. Estiver carregando (ex: durante logout)
+    // 2. O usuário for null (evidencia que o logout limpou o estado ou acesso indevido)
+    if (isLoading || !user) {
         return (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                 <ActivityIndicator size="large" color="#FF6B35" />

@@ -62,16 +62,17 @@ function RootLayoutContent() {
     }
   }, [user, isHydrated, fontsLoaded, segments]);
 
-  // AJUSTE CRÍTICO: Não retorne null para não travar os useEffects acima
-  if (!isHydrated || (!fontsLoaded && !fontError)) {
+  // AJUSTE CRÍTICO: Bloqueia se não estiver hidratado, se fontes não carregaram OU se estiver em loading (Logout)
+  // Isso evita que a Stack (main) tente renderizar componentes dependentes de user enquanto o logout acontece.
+  if (!isHydrated || (!fontsLoaded && !fontError) || isLoading) {
     return (
-      <View style={{ 
-        flex: 1, 
-        backgroundColor: isDark ? "#10142D" : "#F4F4F6", 
-        justifyContent: 'center', 
-        alignItems: 'center' 
+      <View style={{
+        flex: 1,
+        backgroundColor: isDark ? "#10142D" : "#F4F4F6",
+        justifyContent: 'center',
+        alignItems: 'center'
       }}>
-        {/* Mostra um carregamento discreto atrás da Splash se demorar */}
+        {/* Mostra um carregamento discreto atrás da Splash se demorar ou durante transições de auth */}
         <ActivityIndicator size="large" color={isDark ? "#FFFFFF" : "#111827"} />
       </View>
     );
