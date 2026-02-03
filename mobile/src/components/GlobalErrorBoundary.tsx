@@ -36,6 +36,30 @@ export class GlobalErrorBoundary extends Component<Props, State> {
         this.setState({ hasError: false, error: null, errorInfo: null });
     };
 
+    handleReset = async () => {
+        try {
+            const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+            const SecureStore = require('expo-secure-store');
+
+            await Promise.all([
+                AsyncStorage.clear(),
+                SecureStore.deleteItemAsync('authToken'),
+                SecureStore.deleteItemAsync('refreshToken'),
+            ]);
+
+            // Forçar recarregamento/reboot do JS (se expo-updates estiver disponível)
+            try {
+                const Updates = require('expo-updates');
+                await Updates.reloadAsync();
+            } catch (e) {
+                // Se não houver updates, apenas limpa o estado e tenta reiniciar
+                this.handleRestart();
+            }
+        } catch (e) {
+            alert('Erro ao resetar dados. Por favor, limpe os dados do app nas configurações do Android.');
+        }
+    };
+
     toggleDetails = () => {
         this.setState(prev => ({ showDetails: !prev.showDetails }));
     };
@@ -51,12 +75,18 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
                         <Text style={styles.title}>Ops! Algo deu errado.</Text>
                         <Text style={styles.subtitle}>
-                            Ocorreu um erro inesperado. Nossa equipe já foi notificada.
-                            Por favor, tente novamente.
+                            Ocorreu um erro inesperado. Você pode tentar reiniciar o aplicativo ou limpar os dados de login se o problema persistir.
                         </Text>
 
                         <TouchableOpacity style={styles.button} onPress={this.handleRestart}>
                             <Text style={styles.buttonText}>Tentar Novamente</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={[styles.button, { backgroundColor: '#444', marginTop: -10 }]}
+                            onPress={this.handleReset}
+                        >
+                            <Text style={styles.buttonText}>Resetar App (Limpar Login)</Text>
                         </TouchableOpacity>
 
                         {/* Área de Debug - Discreta ou oculta em produção */}
