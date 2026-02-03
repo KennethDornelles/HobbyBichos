@@ -99,40 +99,37 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (isSigningOut.current) return;
 
         try {
+            console.log('🔄 Iniciando logout seguro...');
             isSigningOut.current = true;
             setIsLoading(true);
 
-            // 1. Limpeza síncrona do estado React
-            setUser(null);
-            setToken(null);
-
-            // Aguardar um frame para garantir que o React processou o setUser(null)
-            await new Promise(resolve => setTimeout(resolve, 0));
-
-            // 2. Limpeza assíncrona do Storage (tolera falhas individuais)
+            // 1. Limpeza do Storage (assíncrona e persistente)
             await Promise.allSettled([
                 AsyncStorage.removeItem(USER_KEY),
                 SecureStore.deleteItemAsync('authToken'),
                 SecureStore.deleteItemAsync('refreshToken'),
             ]);
 
-            // Delay estratégico para o Router processar a mudança de estado
-            await new Promise(resolve => setTimeout(resolve, 100));
-
-            // ✅ Redirecionamento forçado para garantir saída
+            // 2. Navegação ANTES de limpar o estado do usuário
+            // Isso evita que as telas protegidas tentem renderizar com user null
             router.replace('/(auth)/login');
 
-            console.log('✅ Logout realizado e storage limpo');
+            // 3. Pequeno delay para garantir que a navegação foi iniciada/processada
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            // 4. Agora sim limpamos o estado
+            setToken(null);
+            setUser(null);
+
+            console.log('✅ Logout seguro concluído');
         } catch (error) {
-            console.error('❌ Erro crítico ao fazer logout:', error);
-            // Mesmo com erro, tenta garantir que o usuário saia
+            console.error('❌ Erro no logout:', error);
+            // Fallback: tenta sair de qualquer jeito
             router.replace('/(auth)/login');
+            setUser(null);
         } finally {
-            // Pequeno delay final antes de liberar a flag para evitar re-cliques imediatos
-            setTimeout(() => {
-                setIsLoading(false);
-                isSigningOut.current = false;
-            }, 150);
+            setIsLoading(false);
+            isSigningOut.current = false;
         }
     };
 

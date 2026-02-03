@@ -1,11 +1,12 @@
 import "../global.css";
-import { Stack, useRouter, useSegments, Redirect } from "expo-router";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useFonts, Poppins_400Regular, Poppins_600SemiBold, Poppins_700Bold } from "@expo-google-fonts/poppins";
 import { useEffect } from "react";
 import * as SplashScreen from "expo-splash-screen";
 import { setStatusBarStyle, setStatusBarTranslucent } from "expo-status-bar";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { View, ActivityIndicator } from "react-native";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -15,7 +16,7 @@ import { useCartAutoSync } from "@/hooks/useCartAutoSync";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 
 function RootLayoutContent() {
-  const { isHydrated, user } = useAuth();
+  const { isHydrated, user, isLoading } = useAuth();
   const { isDark } = useTheme();
   const segments = useSegments();
   const router = useRouter();
@@ -28,44 +29,52 @@ function RootLayoutContent() {
 
   useCartAutoSync();
 
-  // Lógica Centralizada de Redirecionamento e Proteção
+  // 1. Controle da Splash Screen - Garante o hide mesmo em caso de erro
+  useEffect(() => {
+    const safetyTimer = setTimeout(() => {
+      SplashScreen.hideAsync().catch(console.warn);
+    }, 5000);
+
+    if ((fontsLoaded || fontError) && isHydrated) {
+      SplashScreen.hideAsync().catch(console.warn);
+      clearTimeout(safetyTimer);
+
+      setStatusBarTranslucent(true);
+      setStatusBarStyle(isDark ? "light" : "dark");
+    }
+    return () => clearTimeout(safetyTimer);
+  }, [fontsLoaded, fontError, isHydrated, isDark]);
+
+  // 2. Lógica de Redirecionamento Automático
   useEffect(() => {
     if (!isHydrated || !fontsLoaded) return;
 
     const inAuthGroup = segments[0] === '(auth)';
-    const inMainGroup = segments[0] === '(main)';
+    const isRoot = segments[0] === undefined || segments[0] === '';
 
-    // Usuário deslogado tentando acessar área protegida
-    if (!user && inMainGroup) {
-      console.log('🔒 Redirecionando para login (sem autenticação)');
+    if (!user && !inAuthGroup) {
+      console.log('🔒 Redirecionando para login...');
       router.replace('/(auth)/login');
     }
-    // Usuário logado na tela de autenticação ou index
-    else if (user && (inAuthGroup || segments[0] === undefined)) {
-      console.log('🏠 Redirecionando para área principal (já autenticado)');
-      // Redireciona baseado no role
-      switch (user.role) {
-        case 'OWNER':
-          router.replace('/(main)/owner');
-          break;
-        case 'SUPER_ADMIN':
-          router.replace('/(main)/super_admin');
-          break;
-        case 'MANAGER':
-          router.replace('/(main)/manager');
-          break;
-        case 'EMPLOYEE':
-        case 'CLIENT':
-        default:
-          router.replace('/(main)/home');
-          break;
-      }
+    else if (user && (inAuthGroup || isRoot)) {
+      console.log('🏠 Redirecionando para home...');
+      router.replace('/(main)/home');
     }
-  }, [user, segments, isHydrated, fontsLoaded]);
+  }, [user, isHydrated, fontsLoaded, segments]);
 
-  // Bloqueia TUDO até as fontes carregarem e a sessão ser restaurada (isHydrated)
-  if ((!fontsLoaded && !fontError) || !isHydrated) {
-    return null;
+  // AJUSTE CRÍTICO: Não retorne null para não travar os useEffects acima
+  if (!isHydrated || (!fontsLoaded && !fontError)) {
+    return (
+      <View style={{ 
+        flex: 1, 
+        backgroundColor: isDark ? "#10142D" : "#F4F4F6", 
+        justifyContent: 'center', 
+        alignItems: 'center' 
+      }}>
+        {/* Mostra um carregamento discreto atrás da Splash se demorar */}
+        <ActivityIndicator size="large" color={isDark ? "#FFFFFF" : "#111827"} />
+      </View>
+    );
   }
 
   return (
